@@ -36,7 +36,7 @@ namespace Formulas
         /// explanatory Message.
         /// </summary>
         public Formula(String formula)
-        {
+        {//this is a commit so I can push
         }
         /// <summary>
         /// Evaluates this Formula, using the Lookup delegate to determine the values of variables.  (The
