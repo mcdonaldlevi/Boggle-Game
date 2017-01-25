@@ -36,7 +36,53 @@ namespace Formulas
         /// explanatory Message.
         /// </summary>
         public Formula(String formula)
-        {//this is a commit so I can push
+        {
+            IEnumerable<string> tokens = GetTokens(formula);
+            List<string> tokenList = new List<string>();
+            foreach (string x in tokens)
+            {
+                tokenList.Add(x);
+            }
+            if (tokenList.Count == 0)
+                throw new FormulaFormatException("Incorrect Syntax for Formula");
+            bool lastTokenWasOperator = true;
+            int value;
+            for(int i =0; i < tokenList.Count; i++)
+            {
+                if(int.TryParse(tokenList[i], out value))
+                {
+                    if (lastTokenWasOperator)
+                        lastTokenWasOperator = false;
+                    else
+                        throw new FormulaFormatException("Incorrect Syntax for Formula");
+                }
+                else if (char.IsLetter(tokenList[i][0]))
+                {
+                    if(lastTokenWasOperator)
+                        lastTokenWasOperator = false;
+                    else
+                        throw new FormulaFormatException("Incorrect Syntax for Formula");
+                }
+                else if((tokenList[i] == "/") || (tokenList[i] == "*") ||(tokenList[i] == "+" )||(tokenList[i] == "-"))
+                {
+                    if (lastTokenWasOperator)
+                        throw new FormulaFormatException("Incorrect Syntax for Formula");
+                    else
+                        lastTokenWasOperator = true;
+                }
+                else if((tokenList[i] == "("))
+                {
+                    if(!lastTokenWasOperator)
+                        throw new FormulaFormatException("Incorrect Syntax for Formula");                      
+                }
+                else if(tokenList[i] == ")")
+                {
+                    if(lastTokenWasOperator)
+                        throw new FormulaFormatException("Incorrect Syntax for Formula");
+                }
+                else
+                    throw new FormulaFormatException("Incorrect Syntax for Formula");
+            }
         }
         /// <summary>
         /// Evaluates this Formula, using the Lookup delegate to determine the values of variables.  (The
@@ -49,7 +95,11 @@ namespace Formulas
         /// </summary>
         public double Evaluate(Lookup lookup)
         {
-            return 0;
+            Stack<int> rands = new Stack<int>();
+            Stack<string> rators = new Stack<string>();
+            foreach(string x in Formula)
+    
+            
         }
 
         /// <summary>
@@ -142,5 +192,5 @@ namespace Formulas
         public FormulaEvaluationException(String message) : base(message)
         {
         }
-    }
+    }    
 }
