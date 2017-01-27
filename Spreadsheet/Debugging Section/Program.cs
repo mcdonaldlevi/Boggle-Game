@@ -11,7 +11,18 @@ namespace Debugging_Section
     {
         static void Main(string[] args)
         {
-            Formula myFormula = new Formula("5+    4+3a43");
+            Formula myFormula = new Formula("x+y");
+            double value = myFormula.Evaluate("z" = 3);
+            Console.WriteLine(value);
+        }
+
+        Lookup myLook(String z)
+        {
+            switch (z)
+            {
+                case "z": return 10.0;
+                default: throw new UndefinedVariableException(z);
+            }
         }
     }
 }
