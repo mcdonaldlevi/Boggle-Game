@@ -15,6 +15,9 @@ namespace Formulas
     /// </summary>
     public class Formula
     {
+        private Stack<string> operators = new Stack<string>();
+        private Stack<double> values = new Stack<double>();
+        private IEnumerable<string> formula_tokens;
         /// <summary>
         /// Creates a Formula from a string that consists of a standard infix expression composed
         /// from non-negative floating-point numbers (using C#-like syntax for double/int literals), 
@@ -37,6 +40,58 @@ namespace Formulas
         /// </summary>
         public Formula(String formula)
         {
+            int left_paren = 0;
+            int right_paren = 0;
+            String last_val = "";
+            Boolean first_value = true;
+            formula_tokens = GetTokens(formula);
+            foreach (var token in formula_tokens)
+            {
+                if (first_value)
+                {
+                    if (Regex.IsMatch(token, @"[-+/*)]"))
+                    {
+                        throw new FormulaFormatException("Cannot start formula with operand");
+                    }
+                    first_value = false;
+                }
+                if (Regex.IsMatch(token, @"[^a-z A-Z\d/*+\-()]") && !Regex.IsMatch(token, @"\d+.\d+"))
+                {
+                    throw new FormulaFormatException("Invalid token: " + token);
+                }
+                else if (Regex.IsMatch(token, @"[-+/*]") && Regex.IsMatch(last_val, @"[-+/*]"))
+                {
+                    throw new FormulaFormatException("Too many operators: " + last_val + token);
+                }
+                else if (Regex.IsMatch(token, @"[\d]") && Regex.IsMatch(last_val, @"[\d]"))
+                {
+                    throw new FormulaFormatException("Too many operators: " + last_val + token);
+                }
+                else if (Regex.IsMatch(last_val, @"[-+/*(]") && Regex.IsMatch(token, @"[-+/*)]"))
+                {
+                    throw new FormulaFormatException("Must have operand after operator or closing parenthesis");
+                }
+                else
+                {
+                    last_val = token;
+                }
+                if (token == "(")
+                {
+                    left_paren++;
+                }
+                else if (token == ")")
+                {
+                    right_paren++;
+                }
+            }
+            if (last_val.Equals(""))
+            {
+                throw new FormulaFormatException("There must be at least one token");
+            }
+            if (right_paren != left_paren)
+            {
+                throw new FormulaFormatException("Too many right parentheses");
+            }
         }
         /// <summary>
         /// Evaluates this Formula, using the Lookup delegate to determine the values of variables.  (The
@@ -49,6 +104,70 @@ namespace Formulas
         /// </summary>
         public double Evaluate(Lookup lookup)
         {
+            double num;
+            String temp_op = "";
+            
+            foreach (String token in formula_tokens)
+            {
+                if (double.TryParse(token, out num))
+                {
+                    values.Push(num);
+                }
+                else if (token == "+" || token == "-" || token == "*" || token == "/" || token == "(")
+                {
+                    operators.Push(token);
+                }
+                else if (token == ")")
+                {
+                    temp_op = operators.Pop();
+                    while (temp_op != "(")
+                    {
+                        values.Push(OperateOnStacks(temp_op));
+                        temp_op = operators.Pop();
+                    }
+                }
+                else
+                    try
+                    {
+                        values.Push(lookup(token));
+                    }
+                    catch (UndefinedVariableException)
+                    {
+                        throw new FormulaEvaluationException("Variable not found");
+                    }
+                if (operators.Count > 0 && values.Count > operators.Count)
+                    if (operators.Peek().Equals("+") || operators.Peek().Equals("-"))
+                    {
+                        values.Push(OperateOnStacks(operators.Pop()));
+                    }
+            }
+            while (values.Count > 1)
+            {
+                values.Push(OperateOnStacks(operators.Pop()));
+            }
+
+            return values.Pop();
+        }
+
+        /// <summary>
+        /// Private function takes in an operator string
+        /// The last value of the stack is saved to use after, to not affect results from - and /
+        /// Switch statements picks the right operation and returns the value
+        /// </summary>
+        private double OperateOnStacks(String op)
+        {
+            double last_val = values.Pop();
+            switch (op)
+            {
+                case "+":
+                    return values.Pop() + last_val;
+                case "-":
+                    return values.Pop() - last_val;
+                case "*":
+                    return values.Pop() * last_val;
+                case "/":
+                    return values.Pop() / last_val;
+            }
             return 0;
         }
 
@@ -97,7 +216,6 @@ namespace Formulas
     /// don't is up to the implementation of the method.
     /// </summary>
     public delegate double Lookup(string var);
-
     /// <summary>
     /// Used to report that a Lookup delegate is unable to determine the value
     /// of a variable.
