@@ -23,7 +23,7 @@ namespace FormulaTestCases
         [ExpectedException(typeof(FormulaFormatException))]
         public void Construct1()
         {
-            Formula f = new Formula("*"); 
+            Formula f = new Formula("_"); 
         }
 
         /// <summary>
