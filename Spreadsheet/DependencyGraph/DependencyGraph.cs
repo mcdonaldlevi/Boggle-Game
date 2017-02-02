@@ -185,6 +185,14 @@ namespace Dependencies
                 {
                     dependees[s].Remove(t);
                     dependents[t].Remove(s);
+                    if(dependees[s].Count == 0)
+                    {
+                        dependees.Remove(s);
+                    }
+                    if(dependents[t].Count == 0)
+                    {
+                        dependents.Remove(t);
+                    }
                     size -= 1;
                 }
             }
