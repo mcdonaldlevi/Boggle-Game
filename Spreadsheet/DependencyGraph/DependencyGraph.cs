@@ -48,6 +48,9 @@ namespace Dependencies
     /// </summary>
     public class DependencyGraph
     {
+        Dictionary<string, List<string>> dependees = new Dictionary<string, List<string>>();
+        Dictionary<string, List<string>> dependents = new Dictionary<string, List<string>>();
+        int size = 0;
         /// <summary>
         /// Creates a DependencyGraph containing no dependencies.
         /// </summary>
@@ -58,9 +61,9 @@ namespace Dependencies
         /// <summary>
         /// The number of dependencies in the DependencyGraph.
         /// </summary>
-        public int Size
+        public int Size()
         {
-            get { return 0; }
+            return size;
         }
 
         /// <summary>
@@ -68,7 +71,14 @@ namespace Dependencies
         /// </summary>
         public bool HasDependents(string s)
         {
-            return false;
+            if (dependees.ContainsKey(s))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         /// <summary>
@@ -76,7 +86,14 @@ namespace Dependencies
         /// </summary>
         public bool HasDependees(string s)
         {
-            return false;
+            if (dependents.ContainsKey(s))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         /// <summary>
@@ -84,7 +101,15 @@ namespace Dependencies
         /// </summary>
         public IEnumerable<string> GetDependents(string s)
         {
-            return null;
+            if (dependees.ContainsKey(s))
+            {
+                return (dependees[s]);
+
+            }
+            else
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -92,7 +117,12 @@ namespace Dependencies
         /// </summary>
         public IEnumerable<string> GetDependees(string s)
         {
-            return null;
+            if (dependents.ContainsKey(s))
+            {
+                return dependents[s];
+            }
+            else
+                return null;
         }
 
         /// <summary>
@@ -102,6 +132,44 @@ namespace Dependencies
         /// </summary>
         public void AddDependency(string s, string t)
         {
+            if (dependees.ContainsKey(s))
+            {
+                if (dependees[s].Contains(t))
+                {
+                    return;
+                }
+                else
+                {
+                    dependees[s].Add(t);
+                    if (dependents.ContainsKey(t))
+                    {
+                        dependents[t].Add(s);
+                    }
+                    else
+                    {
+                        List<string> myDependeeList = new List<string> { s };
+                        dependents.Add(t, myDependeeList);
+                    }
+                    size += 1;
+                }
+            }
+            else
+            {
+                List<string> dependentList = new List<string>();
+                dependentList.Add(t);
+                dependees.Add(s, dependentList);
+                if (dependents.ContainsKey(t))
+                {
+                    dependents[t].Add(s);
+                }
+                else
+                {
+                    List<string> dependeeList = new List<string>();
+                    dependeeList.Add(s);
+                    dependents.Add(t, dependeeList);
+                }
+                size += 1;
+            }
         }
 
         /// <summary>
@@ -111,6 +179,17 @@ namespace Dependencies
         /// </summary>
         public void RemoveDependency(string s, string t)
         {
+            if(dependees.ContainsKey(s))
+            {
+                if(dependees[s].Contains(t))
+                {
+                    dependees[s].Remove(t);
+                    dependents[t].Remove(s);
+                    size -= 1;
+                }
+            }
+            
+            
         }
 
         /// <summary>
@@ -120,6 +199,39 @@ namespace Dependencies
         /// </summary>
         public void ReplaceDependents(string s, IEnumerable<string> newDependents)
         {
+            if (dependees.ContainsKey(s))
+            {
+                foreach(string x in dependees[s])
+                {
+                    if(dependents.ContainsKey(x))
+                    {
+                        dependents[x].Remove(s);
+                        size -= 1;
+                        if (dependents[x].Count == 0)
+                        {
+                            dependents.Remove(x);
+                        }
+                    }
+                }
+                List<string> dependentsList = new List<string>();
+                foreach (string x in newDependents)
+                    dependentsList.Add(x);
+                dependees[s] = dependentsList;
+
+                foreach (string x in newDependents)
+                {
+                    if (dependents.ContainsKey(x))
+                    {
+                        dependents[x].Add(s);
+                    }
+                    else
+                    {
+                        List<string> addList = new List<string> { s };
+                        dependents.Add(x, addList);
+                    }
+                    size += 1;
+                }
+            }
         }
 
         /// <summary>
@@ -129,6 +241,32 @@ namespace Dependencies
         /// </summary>
         public void ReplaceDependees(string t, IEnumerable<string> newDependees)
         {
+            if (dependents.ContainsKey(t))
+            {
+                foreach (string x in dependents[t])
+                {
+                    if (dependees.ContainsKey(x))
+                    {
+                        dependees[x].Remove(t);
+                        if (dependees[x].Count == 0)
+                        {
+                            dependees.Remove(x);
+                        }
+                    }
+                }
+                    List<string> dependeesList = new List<string>();
+                foreach (string x in newDependees)
+                    dependeesList.Add(x);
+                dependents[t] = dependeesList;
+
+                foreach (string x in newDependees)
+                {
+                    if (dependees.ContainsKey(x))
+                    {
+                        dependents[x].Add(t);
+                    }
+                }
+            }
         }
     }
 }
