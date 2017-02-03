@@ -68,6 +68,9 @@ namespace Dependencies
         /// </summary>
         public bool HasDependents(string s)
         {
+            if (s == null)
+                throw new Exception("a");
+
             return false;
         }
 
@@ -76,6 +79,9 @@ namespace Dependencies
         /// </summary>
         public bool HasDependees(string s)
         {
+            if (s == null)
+                throw new Exception("a");
+
             return false;
         }
 
@@ -84,6 +90,9 @@ namespace Dependencies
         /// </summary>
         public IEnumerable<string> GetDependents(string s)
         {
+            if (s == null)
+                throw new Exception("a");
+
             return null;
         }
 
@@ -92,6 +101,9 @@ namespace Dependencies
         /// </summary>
         public IEnumerable<string> GetDependees(string s)
         {
+            if (s == null)
+                throw new Exception("a");
+
             return null;
         }
 
