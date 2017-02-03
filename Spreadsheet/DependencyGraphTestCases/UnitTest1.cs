@@ -7,13 +7,18 @@ namespace DependencyGraphTestCases
 {
     [TestClass]
     public class UnitTest1
-    {
+    {/// <summary>
+    /// This tests to make sure that if no dependencies are added then the size is 0
+    /// </summary>
         [TestMethod]
         public void TestConstructionSize()
         {
             DependencyGraph testGraph = new DependencyGraph();
             Debug.Assert(testGraph.Size() == 0);
         }
+        /// <summary>
+        /// Tests to make sure the expected size is returned after using the AddDependency method
+        /// </summary>
         [TestMethod]
         public void TestAddDependecy()
         {
@@ -23,11 +28,13 @@ namespace DependencyGraphTestCases
             testGraph.AddDependency("c", "3");
             testGraph.AddDependency("d", "4");
             testGraph.AddDependency("e", "5");
-            testGraph.AddDependency("a", "1");
+            testGraph.AddDependency("a", "1");//this line should not add any to the size as it is already present
             testGraph.AddDependency("a", "10");
             testGraph.AddDependency("b", "10");
             Debug.Assert(testGraph.Size() == 7);
-        }
+        }/// <summary>
+        /// Tests if the HasDependees method returns the correct bool value
+        /// </summary>
         [TestMethod]
         public void TestHasDependees()
         {
@@ -42,8 +49,12 @@ namespace DependencyGraphTestCases
             Debug.Assert(testGraph.HasDependees("3"));
             Debug.Assert(testGraph.HasDependees("4"));
             Debug.Assert(testGraph.HasDependees("5"));
+            Debug.Assert(!testGraph.HasDependees("10"));// this line checks for a non-existant Dependee
 
         }
+        /// <summary>
+        /// Tests the HasDependents method and makes sure it returns the correct bool values
+        /// </summary>
         [TestMethod]
         public void TestHasDependents()
         {
@@ -58,8 +69,13 @@ namespace DependencyGraphTestCases
             Debug.Assert(testGraph.HasDependents("c"));
             Debug.Assert(testGraph.HasDependents("d"));
             Debug.Assert(testGraph.HasDependents("e"));
+            Debug.Assert(!testGraph.HasDependents("ff"));// this line checks for a non existant Dependent
 
         }
+        /// <summary>
+        /// Tests the GetDependents Method and sees if Dependees with none, one, or more dependents 
+        /// have those dependents returned properly in an IEnumerable
+        /// </summary>
         [TestMethod]
         public void TestGetDependents()
         {
@@ -179,6 +195,21 @@ namespace DependencyGraphTestCases
             }
             IEnumerable<string> returnedDependees = testGraph.GetDependees("1");
             Debug.Assert(returnedDependees == null);
+            testGraph.AddDependency("d", "5");//testing for a dependent haveing more than one dependee
+            newDependents.Clear();
+            newDependents.Add("5");
+            newDependents.Add("50");
+            newDependents.Add("500");
+            newDependents.Add("5000");
+            testGraph.ReplaceDependents("e", newDependents);
+            returnedDependees =  testGraph.GetDependees("5");
+            newDependents.Clear();
+            foreach(string x in returnedDependees)
+            {
+                newDependents.Add(x);
+            }
+            Debug.Assert(newDependents[0] == "d");
+            Debug.Assert(newDependents[1] == "e");
         }
         [TestMethod]
         public void TestReplaceDependees()
@@ -188,18 +219,66 @@ namespace DependencyGraphTestCases
             testGraph.AddDependency("b", "2");
             testGraph.AddDependency("c", "3");
             testGraph.AddDependency("d", "4");
+            testGraph.AddDependency("d", "5");//this is to check to have a dependant with multiple dependees
             testGraph.AddDependency("e", "5");
-            testGraph.AddDependency("a", "10");
-            testGraph.AddDependency("a", "100");
-            List<string> newDependees = new List<string> { "aa", "aaa", "aaaa" };
+            IEnumerable<string> returnedDependees = testGraph.GetDependees("dog");//checking random string to make sure it returns null
+            Debug.Assert(returnedDependees == null);
+            List<string> newDependees = new List<string> { "a", "aa", "aaa" };
             testGraph.ReplaceDependees("1", newDependees);
-            IEnumerable<string> returnedDependees = testGraph.GetDependees("1");
-            string testString = "aa";
+            returnedDependees = testGraph.GetDependees("1");
+            string testString = "a";
             foreach (string x in returnedDependees)
             {
                 Debug.Assert(x == testString);
                 testString = testString + "a";
             }
+            testGraph.ReplaceDependees("5", newDependees);
+            returnedDependees = testGraph.GetDependees("5");
+            testString = "a";
+            foreach (string x in returnedDependees)
+            {
+                Debug.Assert(x == testString);
+                testString = testString + "a";
+            }
+
+
+        }
+        /// <summary>
+        /// This will stress test the ReplaceDependents and the AddDependency methods just to see how long they take
+        /// </summary>
+        [TestMethod]
+        public void StressTestReplaceDepenents()
+        {
+            DependencyGraph testGraph = new DependencyGraph();
+            int theDependant = 0;
+            for(int i = 0; i < 10000; i++)
+            {
+                testGraph.AddDependency("a", theDependant.ToString());
+                theDependant += 1;
+            }
+            List<string> newDependentList = new List<string>();
+            for(int i = 15000; i > 0; i--)
+            {
+                newDependentList.Add(i.ToString());
+            }
+            testGraph.ReplaceDependents("a", newDependentList);           
+        }
+        [TestMethod]
+        public void StressTestReplaceDepenees()
+        {
+            DependencyGraph testGraph = new DependencyGraph();
+            int theDependee = 0;
+            for (int i = 0; i < 10000; i++)
+            {
+                testGraph.AddDependency(theDependee.ToString(), "a");
+                theDependee += 1;
+            }
+            List<string> newDependeeList = new List<string>();
+            for (int i = 15000; i > 0; i--)
+            {
+                newDependeeList.Add(i.ToString());
+            }
+            testGraph.ReplaceDependees("a", newDependeeList);
         }
     }
     }

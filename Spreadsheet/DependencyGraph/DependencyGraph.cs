@@ -179,17 +179,23 @@ namespace Dependencies
         /// </summary>
         public void RemoveDependency(string s, string t)
         {
-            if(dependees.ContainsKey(s))
+            if (dependees.ContainsKey(s))
             {
-                if(dependees[s].Contains(t))
+                if (dependees[s].Contains(t))
                 {
                     dependees[s].Remove(t);
                     dependents[t].Remove(s);
+                    if (dependees[s].Count == 0)
+                    {
+                        dependees.Remove(s);
+                    }
+                    if (dependents[t].Count == 0)
+                    {
+                        dependents.Remove(t);
+                    }
                     size -= 1;
                 }
             }
-            
-            
         }
 
         /// <summary>
@@ -248,13 +254,14 @@ namespace Dependencies
                     if (dependees.ContainsKey(x))
                     {
                         dependees[x].Remove(t);
+                        size -= 1;
                         if (dependees[x].Count == 0)
                         {
                             dependees.Remove(x);
                         }
                     }
                 }
-                    List<string> dependeesList = new List<string>();
+                List<string> dependeesList = new List<string>();
                 foreach (string x in newDependees)
                     dependeesList.Add(x);
                 dependents[t] = dependeesList;
@@ -263,8 +270,15 @@ namespace Dependencies
                 {
                     if (dependees.ContainsKey(x))
                     {
-                        dependents[x].Add(t);
+                        dependees[x].Add(t);
                     }
+                    else
+                    {
+                        List<string> addList = new List<string> { t };
+                        dependees.Add(x, addList);
+                        
+                    }
+                    size += 1;
                 }
             }
         }
