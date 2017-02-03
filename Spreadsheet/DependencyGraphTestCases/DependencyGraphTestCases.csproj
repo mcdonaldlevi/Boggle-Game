@@ -53,6 +53,12 @@
     <Compile Include="DependencyGraphTestCases.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DependencyGraph\DependencyGraph.csproj">
+      <Project>{862EAD85-346F-4D2B-A53C-98074FF813BA}</Project>
+      <Name>DependencyGraph</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>

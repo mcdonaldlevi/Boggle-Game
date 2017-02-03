@@ -48,19 +48,22 @@ namespace Dependencies
     /// </summary>
     public class DependencyGraph
     {
+        private int size;
+        private Dictionary<string, List<string>> DG;
         /// <summary>
         /// Creates a DependencyGraph containing no dependencies.
         /// </summary>
         public DependencyGraph()
         {
+            size = 0;
         }
 
         /// <summary>
         /// The number of dependencies in the DependencyGraph.
         /// </summary>
-        public int Size
+        private int Size
         {
-            get { return 0; }
+            get { return size; }
         }
 
         /// <summary>
@@ -114,6 +117,11 @@ namespace Dependencies
         /// </summary>
         public void AddDependency(string s, string t)
         {
+            if (DG.ContainsKey(s))
+                DG[s].Add(t);
+            else
+                DG.Add(s, new List<string> { t });
+            size++;
         }
 
         /// <summary>
@@ -123,6 +131,7 @@ namespace Dependencies
         /// </summary>
         public void RemoveDependency(string s, string t)
         {
+            size--;
         }
 
         /// <summary>
@@ -140,6 +149,20 @@ namespace Dependencies
         /// Requires s != null and t != null.
         /// </summary>
         public void ReplaceDependees(string t, IEnumerable<string> newDependees)
+        {
+        }
+    }
+
+    [Serializable]
+    public class UndefinedVariableException : Exception
+    {
+        /// <summary>
+        /// Constructs an UndefinedVariableException containing whose message is the
+        /// undefined variable.
+        /// </summary>
+        /// <param name="variable"></param>
+        public UndefinedVariableException(String variable)
+            : base(variable)
         {
         }
     }
