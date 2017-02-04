@@ -75,9 +75,11 @@ namespace Dependencies
         {
             checkInputString(s);
 
-            if (!Dependents.ContainsKey(s))
-                return false;
-            return (Dependents[s] != null);
+            //Returns true if key is in Dependents and it is not empty
+            if (Dependents.ContainsKey(s))
+                if (Dependents[s].Count != 0)
+                    return true;
+            return false;
         }
 
         /// <summary>
@@ -85,9 +87,13 @@ namespace Dependencies
         /// </summary>
         public bool HasDependees(string s)
         {
-            if (!Dependees.ContainsKey(s))
-                return false;
-            return (Dependees[s] != null);
+            checkInputString(s);
+
+            //Returns true if key is in Dependees and it is not empty
+            if (Dependees.ContainsKey(s))
+                if (Dependees[s].Count != 0)
+                    return true;
+            return false;
         }
 
         /// <summary>
@@ -96,12 +102,10 @@ namespace Dependencies
         public IEnumerable<string> GetDependents(string s)
         {
             checkInputString(s);
-
-            if (!Dependees.ContainsKey(s))
-                throw new Exception();
-            foreach (string dependent in Dependees[s])
+            
+            foreach (string dependee in Dependees[s])
             {
-                yield return dependent;
+                yield return dependee;
             }
         }
 
@@ -112,11 +116,9 @@ namespace Dependencies
         {
             checkInputString(s);
 
-            if (!Dependents.ContainsKey(s))
-                throw new Exception();
-            foreach (string dependee in Dependents[s])
+            foreach (string dependent in Dependents[s])
             {
-                yield return dependee;
+                yield return dependent;
             }
         }
 
@@ -130,16 +132,25 @@ namespace Dependencies
             checkInputString(s);
             checkInputString(t);
 
-            if (Dependents.ContainsKey(s))
+            //If first parameter is not added before, it creates a dependents and dependees list
+            if (!Dependents.ContainsKey(s))
+                Dependents.Add(s, new List<string>());
+            if(!Dependees.ContainsKey(s))
+                Dependees.Add(s, new List<string>());
+
+            //If second parameter is not added before, it creates a dependents and dependees list
+            if (!Dependents.ContainsKey(t))
+                Dependents.Add(t, new List<string>());
+            if(!Dependees.ContainsKey(t))
+                Dependees.Add(t, new List<string>());
+
+            //If it has not been added to the Dependents list yet, it is added
+            if (!Dependents[s].Contains(t))
                 Dependents[s].Add(t);
-            else
-                Dependents.Add(s, new List<string> { t });
-
-            if (Dependees.ContainsKey(t))
+            //If it has not been added to the Dependees list yet, it is added
+            if (!Dependees[t].Contains(s))
                 Dependees[t].Add(s);
-            else
-                Dependees.Add(t, new List<string> { s });
-
+                
             size++;
         }
 
@@ -153,8 +164,21 @@ namespace Dependencies
             checkInputString(s);
             checkInputString(t);
 
+            //Removed from both lists
             Dependents[s].Remove(t);
             Dependees[t].Remove(s);
+
+            //If either value has no dependents or dependeees remaining, it is removed from the lists
+            if (Dependents[t].Count == 0 && Dependees[t].Count == 0)
+            {
+                Dependents.Remove(t);
+                Dependees.Remove(t);
+            }
+            if (Dependents[s].Count == 0 && Dependees[s].Count == 0)
+            {
+                Dependents.Remove(s);
+                Dependees.Remove(s);
+            }
 
             size--;
         }
@@ -168,17 +192,17 @@ namespace Dependencies
         {
             checkInputString(s);
 
-            if (!Dependees.ContainsKey(s))
-            {
-                throw new Exception();
-            }
-
+            //Removes all dependees and decrements size
             foreach(string dependee in Dependees[s])
             {
                 Dependents[dependee].Remove(s);
                 size--;
             }
+
+            //Clears list
             Dependees[s] = new List<string>();
+
+            //Iterates ands every value from newDependents after checking input string is valid
             foreach(string dependent in newDependents)
             {
                 checkInputString(dependent);
@@ -195,17 +219,17 @@ namespace Dependencies
         {
             checkInputString(t);
 
-            if (!Dependents.ContainsKey(t))
-            {
-                throw new Exception();
-            }
-
+            //Removes all dependents and decrements size
             foreach (string dependent in Dependents[t])
             {
                 Dependees[dependent].Remove(t);
                 size--;
             }
+
+            //Clears list
             Dependents[t] = new List<string>();
+
+            //Iterates ands every value from newDependees after checking input string is valid
             foreach (string dependee in newDependees)
             {
                 checkInputString(dependee);
@@ -221,8 +245,10 @@ namespace Dependencies
         /// <param name="input"></param>
         private void checkInputString(string input)
         {
+            if (input.Length == 0)
+                throw new InvalidFormatException("Empty token");
             //First regex statement verifies the first value of the string is a letter, second verfies that there is only numbers and letters
-            if (!Regex.IsMatch(input.Substring(0, 1), @"[a-zA-Z]") || Regex.IsMatch(input, @"[^a-z A-Z\d]"))
+            else if(!Regex.IsMatch(input.Substring(0, 1), @"[a-zA-Z]") || Regex.IsMatch(input, @"[^a-z A-Z\d]"))
                 throw new InvalidFormatException("Invalid token");
         }
     }
