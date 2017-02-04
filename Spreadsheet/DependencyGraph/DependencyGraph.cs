@@ -49,7 +49,8 @@ namespace Dependencies
     public class DependencyGraph
     {
         private int size;
-        private Dictionary<string, List<string>> DG;
+        private Dictionary<string, List<string>> Dependents = new Dictionary<string, List<string>>();
+        private Dictionary<string, List<string>> Dependees = new Dictionary<string, List<string>>();
         /// <summary>
         /// Creates a DependencyGraph containing no dependencies.
         /// </summary>
@@ -61,7 +62,7 @@ namespace Dependencies
         /// <summary>
         /// The number of dependencies in the DependencyGraph.
         /// </summary>
-        private int Size
+        public int Size
         {
             get { return size; }
         }
@@ -71,10 +72,9 @@ namespace Dependencies
         /// </summary>
         public bool HasDependents(string s)
         {
-            if (s == null)
-                throw new Exception("a");
-
-            return false;
+            if (!Dependents.ContainsKey(s))
+                return false;
+            return (Dependents[s] != null);
         }
 
         /// <summary>
@@ -82,10 +82,9 @@ namespace Dependencies
         /// </summary>
         public bool HasDependees(string s)
         {
-            if (s == null)
-                throw new Exception("a");
-
-            return false;
+            if (!Dependees.ContainsKey(s))
+                return false;
+            return (Dependees[s] != null);
         }
 
         /// <summary>
@@ -93,10 +92,12 @@ namespace Dependencies
         /// </summary>
         public IEnumerable<string> GetDependents(string s)
         {
-            if (s == null)
-                throw new Exception("a");
-
-            return null;
+            if (!Dependees.ContainsKey(s))
+                throw new Exception();
+            foreach (string dependent in Dependees[s])
+            {
+                yield return dependent;
+            }
         }
 
         /// <summary>
@@ -104,10 +105,12 @@ namespace Dependencies
         /// </summary>
         public IEnumerable<string> GetDependees(string s)
         {
-            if (s == null)
-                throw new Exception("a");
-
-            return null;
+            if (!Dependents.ContainsKey(s))
+                throw new Exception();
+            foreach (string dependee in Dependents[s])
+            {
+                yield return dependee;
+            }
         }
 
         /// <summary>
@@ -117,10 +120,16 @@ namespace Dependencies
         /// </summary>
         public void AddDependency(string s, string t)
         {
-            if (DG.ContainsKey(s))
-                DG[s].Add(t);
+            if (Dependents.ContainsKey(s))
+                Dependents[s].Add(t);
             else
-                DG.Add(s, new List<string> { t });
+                Dependents.Add(s, new List<string> { t });
+
+            if (Dependees.ContainsKey(t))
+                Dependees[t].Add(s);
+            else
+                Dependees.Add(t, new List<string> { s });
+
             size++;
         }
 
@@ -131,6 +140,9 @@ namespace Dependencies
         /// </summary>
         public void RemoveDependency(string s, string t)
         {
+            Dependents[s].Remove(t);
+            Dependees[t].Remove(s);
+
             size--;
         }
 
@@ -141,6 +153,27 @@ namespace Dependencies
         /// </summary>
         public void ReplaceDependents(string s, IEnumerable<string> newDependents)
         {
+            if (!Dependees.ContainsKey(s))
+            {
+                throw new Exception();
+            }
+
+            foreach(string dependee in Dependees[s])
+            {
+                Dependents[dependee].Remove(s);
+                size--;
+            }
+            Dependees[s] = new List<string>();
+            foreach(string dependent in newDependents)
+            {
+                //Dependees[s].Add(dependent);
+                AddDependency(dependent, s);
+            }
+
+            //foreach(string dependent in replaceList)
+            //{
+            //    Dependents[dependent].Remove(s);
+            //}
         }
 
         /// <summary>
