@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Dependencies;
 using System.Diagnostics;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace DependencyGraphTestCases
 {
@@ -49,12 +50,13 @@ namespace DependencyGraphTestCases
             DG.AddDependency("a", "c");
             DG.AddDependency("a", "d");
             DG.AddDependency("a", "e");
-            int i = 0;
-            string[] test_list = { "b", "c", "d", "e" };
-            foreach(string dependee in DG.GetDependees("a"))
+
+            List<string> expected = new List<string> { "b", "c", "d", "e" };
+            List<string> results = DG.GetDependees("a").ToList();
+
+            for (int i = 0; i < expected.Count; i++)
             {
-                Debug.Assert(dependee.Equals(test_list[i]));
-                i++;
+                Debug.Assert(results[i] == expected[i]);
             }
         }
 
@@ -133,21 +135,69 @@ namespace DependencyGraphTestCases
             DG.AddDependency("d", "e");
             DG.AddDependency("f", "e");
 
-            DG.ReplaceDependents("b", new List<string> { "l", "o", "p" });
-
-            Debug.Assert(DG.GetDependents("b") == new List<string> { "l", "o", "p" });
+            List<string> expected = new List<string> { "l", "o", "p" };
+            DG.ReplaceDependents("b", expected);
+            List<string> results = DG.GetDependents("b").ToList();
+            
+            for (int i = 0; i < expected.Count; i++)
+            {
+                Debug.Assert(results[i] == expected[i]);
+            }
 
         }
 
-        ///// <summary>
-        ///// This tests that a syntactically incorrect parameter to Formula results
-        ///// in a FormulaFormatException.
-        ///// </summary>
-        //[TestMethod]
-        //[ExpectedException(typeof(FormulaFormatException))]
-        //public void Construct1()
-        //{
-        //    Formula f = new Formula("_");
-        //}
+        [TestMethod]
+        public void ReplaceDependeesTest()
+        {
+            DependencyGraph DG = new DependencyGraph();
+            DG.AddDependency("a", "b");
+            DG.AddDependency("a", "c");
+            DG.AddDependency("d", "e");
+            DG.AddDependency("d", "f");
+
+            List<string> expected = new List<string> { "p", "q", "z", "o", "y" };
+            DG.ReplaceDependees("a", expected);
+            List<string> results = DG.GetDependees("a").ToList();
+
+            for (int i = 0; i < expected.Count; i++)
+            {
+                Debug.Assert(results[i] == expected[i]);
+            }
+
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidFormatException))]
+        public void AddInvalidDependent()
+        {
+            DependencyGraph DG = new DependencyGraph();
+            DG.AddDependency("1", "c");
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidFormatException))]
+        public void AddInvalidDependee()
+        {
+            DependencyGraph DG = new DependencyGraph();
+            DG.AddDependency("f", "c#");
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidFormatException))]
+        public void InvalidParameter1()
+        {
+            DependencyGraph DG = new DependencyGraph();
+            DG.AddDependency("s", "c");
+            DG.GetDependees("1a").First();
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(InvalidFormatException))]
+        public void InvalidParameter2()
+        {
+            DependencyGraph DG = new DependencyGraph();
+            DG.AddDependency("vcx", "we32");
+            DG.GetDependents("33").First();
+        }
     }
 }

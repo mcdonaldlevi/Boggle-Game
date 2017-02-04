@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace Dependencies
 {
@@ -72,6 +73,8 @@ namespace Dependencies
         /// </summary>
         public bool HasDependents(string s)
         {
+            checkInputString(s);
+
             if (!Dependents.ContainsKey(s))
                 return false;
             return (Dependents[s] != null);
@@ -92,6 +95,8 @@ namespace Dependencies
         /// </summary>
         public IEnumerable<string> GetDependents(string s)
         {
+            checkInputString(s);
+
             if (!Dependees.ContainsKey(s))
                 throw new Exception();
             foreach (string dependent in Dependees[s])
@@ -105,6 +110,8 @@ namespace Dependencies
         /// </summary>
         public IEnumerable<string> GetDependees(string s)
         {
+            checkInputString(s);
+
             if (!Dependents.ContainsKey(s))
                 throw new Exception();
             foreach (string dependee in Dependents[s])
@@ -120,6 +127,9 @@ namespace Dependencies
         /// </summary>
         public void AddDependency(string s, string t)
         {
+            checkInputString(s);
+            checkInputString(t);
+
             if (Dependents.ContainsKey(s))
                 Dependents[s].Add(t);
             else
@@ -140,6 +150,9 @@ namespace Dependencies
         /// </summary>
         public void RemoveDependency(string s, string t)
         {
+            checkInputString(s);
+            checkInputString(t);
+
             Dependents[s].Remove(t);
             Dependees[t].Remove(s);
 
@@ -153,6 +166,8 @@ namespace Dependencies
         /// </summary>
         public void ReplaceDependents(string s, IEnumerable<string> newDependents)
         {
+            checkInputString(s);
+
             if (!Dependees.ContainsKey(s))
             {
                 throw new Exception();
@@ -166,14 +181,9 @@ namespace Dependencies
             Dependees[s] = new List<string>();
             foreach(string dependent in newDependents)
             {
-                //Dependees[s].Add(dependent);
+                checkInputString(dependent);
                 AddDependency(dependent, s);
             }
-
-            //foreach(string dependent in replaceList)
-            //{
-            //    Dependents[dependent].Remove(s);
-            //}
         }
 
         /// <summary>
@@ -183,18 +193,50 @@ namespace Dependencies
         /// </summary>
         public void ReplaceDependees(string t, IEnumerable<string> newDependees)
         {
+            checkInputString(t);
+
+            if (!Dependents.ContainsKey(t))
+            {
+                throw new Exception();
+            }
+
+            foreach (string dependent in Dependents[t])
+            {
+                Dependees[dependent].Remove(t);
+                size--;
+            }
+            Dependents[t] = new List<string>();
+            foreach (string dependee in newDependees)
+            {
+                checkInputString(dependee);
+                AddDependency(t, dependee);
+            }
+        }
+
+        /// <summary>
+        /// If both dependent and dependency don't start with a letter,
+        /// or contain a value that is not a letter or number,
+        /// it will throw an exception
+        /// </summary>
+        /// <param name="input"></param>
+        private void checkInputString(string input)
+        {
+            //First regex statement verifies the first value of the string is a letter, second verfies that there is only numbers and letters
+            if (!Regex.IsMatch(input.Substring(0, 1), @"[a-zA-Z]") || Regex.IsMatch(input, @"[^a-z A-Z\d]"))
+                throw new InvalidFormatException("Invalid token");
         }
     }
 
+
     [Serializable]
-    public class UndefinedVariableException : Exception
+    public class InvalidFormatException : Exception
     {
         /// <summary>
-        /// Constructs an UndefinedVariableException containing whose message is the
+        /// Constructs an InvalidFormatException containing whose message is the
         /// undefined variable.
         /// </summary>
         /// <param name="variable"></param>
-        public UndefinedVariableException(String variable)
+        public InvalidFormatException(String variable)
             : base(variable)
         {
         }
