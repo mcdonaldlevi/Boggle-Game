@@ -65,7 +65,7 @@ namespace Formulas
                 }
                 else if (Regex.IsMatch(token, @"[\d]") && Regex.IsMatch(last_val, @"[\d]"))
                 {
-                    throw new FormulaFormatException("Too many operators: " + last_val + token);
+                    throw new FormulaFormatException("Too many operands: " + last_val + token);
                 }
                 else if (Regex.IsMatch(last_val, @"[-+/*(]") && Regex.IsMatch(token, @"[-+/*)]"))
                 {
