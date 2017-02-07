@@ -61,9 +61,13 @@ namespace Dependencies
         /// <summary>
         /// The number of dependencies in the DependencyGraph.
         /// </summary>
-        public int Size()
+        public int Size
         {
-            return size;
+            get
+            {
+                return size;
+            }
+            
         }
 
         /// <summary>
@@ -104,11 +108,12 @@ namespace Dependencies
             if (dependees.ContainsKey(s))
             {
                 return (dependees[s]);
-
             }
             else
             {
-                return null;
+                List<string> nullList = new List<string>();
+                IEnumerable<string> nullEnumerable = nullList;
+                return nullEnumerable;
             }
         }
 
@@ -122,7 +127,11 @@ namespace Dependencies
                 return dependents[s];
             }
             else
-                return null;
+            {
+                List<string> nullList = new List<string>();
+                IEnumerable<string> nullEnumerable = nullList;
+                return nullEnumerable;
+            }
         }
 
         /// <summary>
@@ -256,6 +265,7 @@ namespace Dependencies
                     if (dependees.ContainsKey(x))
                     {
                         dependees[x].Remove(t);
+                        size -= 1;
                         if (dependees[x].Count == 0)
                         {
                             dependees.Remove(x);
@@ -264,14 +274,23 @@ namespace Dependencies
                 }
                 List<string> dependeesList = new List<string>();
                 foreach (string x in newDependees)
+                {
                     dependeesList.Add(x);
+                    size += 1;
+                }
+             
                 dependents[t] = dependeesList;
 
                 foreach (string x in newDependees)
                 {
                     if (dependees.ContainsKey(x))
                     {
-                        dependents[x].Add(t);
+                        dependees[x].Add(t);
+                    }
+                    else
+                    {
+                        List<string> newDependents = new List<string>{ t };
+                        dependees.Add(x, newDependents);
                     }
                 }
             }
