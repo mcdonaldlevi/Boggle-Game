@@ -63,7 +63,7 @@ namespace Formulas
                 {
                     throw new FormulaFormatException("Too many operators: " + last_val + token);
                 }
-                else if (Regex.IsMatch(token, @"[\d]") && Regex.IsMatch(last_val, @"[\d]"))
+                else if (Regex.IsMatch(token, @"[\da-zA-z]") && Regex.IsMatch(last_val, @"[\da-zA-z]"))
                 {
                     throw new FormulaFormatException("Too many operands: " + last_val + token);
                 }
@@ -92,6 +92,10 @@ namespace Formulas
             {
                 throw new FormulaFormatException("Too many right parentheses");
             }
+            if (Regex.IsMatch(last_val, @"[-+/*]"))
+            {
+                throw new FormulaFormatException("Cannot end formula with operator");
+                }
         }
         /// <summary>
         /// Evaluates this Formula, using the Lookup delegate to determine the values of variables.  (The
@@ -105,6 +109,7 @@ namespace Formulas
         public double Evaluate(Lookup lookup)
         {
             double num;
+            int paren = 0;
             String temp_op = "";
             
             foreach (String token in formula_tokens)
@@ -116,6 +121,10 @@ namespace Formulas
                 else if (token == "+" || token == "-" || token == "*" || token == "/" || token == "(")
                 {
                     operators.Push(token);
+                    if (token == "(")
+                    {
+                        paren++;
+                    }
                 }
                 else if (token == ")")
                 {
@@ -125,8 +134,17 @@ namespace Formulas
                         values.Push(OperateOnStacks(temp_op));
                         temp_op = operators.Pop();
                     }
+                    paren--;
+                    if (operators.Count > 0 && values.Count > (operators.Count - paren % 2))
+                    {
+                        if (operators.Peek().Equals("*") || operators.Peek().Equals("/"))
+                        {
+                            values.Push(OperateOnStacks(operators.Pop()));
+                        }
+                    }
                 }
                 else
+                {
                     try
                     {
                         values.Push(lookup(token));
@@ -135,18 +153,16 @@ namespace Formulas
                     {
                         throw new FormulaEvaluationException("Variable not found");
                     }
-                if (operators.Count > 0 && values.Count > operators.Count)
-                    if (operators.Peek().Equals("+") || operators.Peek().Equals("-"))
+                }
+                if (operators.Count > 0 && values.Count > (operators.Count - paren % 2))
+                {
+                    if (operators.Peek().Equals("*") || operators.Peek().Equals("/"))
                     {
                         values.Push(OperateOnStacks(operators.Pop()));
                     }
+                }
             }
-            while (values.Count > 1)
-            {
-                values.Push(OperateOnStacks(operators.Pop()));
-            }
-
-            return values.Pop();
+            return EndOperation();
         }
 
         /// <summary>
@@ -156,17 +172,47 @@ namespace Formulas
         /// </summary>
         private double OperateOnStacks(String op)
         {
+            double temp_val;
             double last_val = values.Pop();
             switch (op)
             {
                 case "+":
-                    return values.Pop() + last_val;
+                    temp_val = values.Pop() + last_val;
+                    return temp_val;
                 case "-":
                     return values.Pop() - last_val;
                 case "*":
                     return values.Pop() * last_val;
                 case "/":
-                    return values.Pop() / last_val;
+                    temp_val = values.Pop() / last_val;
+                    if (Double.IsInfinity(temp_val))
+                    {
+                        throw new FormulaEvaluationException("Cannot divide by 0");
+                    }
+                    return temp_val;
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// Private function takes in an operator string
+        /// The last value of the stack is saved to use after, to not affect results from - and /
+        /// Switch statements picks the right operation and returns the value
+        /// </summary>
+        private double EndOperation()
+        {
+            double temp_val;
+            if (values.Count < 2)
+            {
+                return values.Pop();
+            }
+            temp_val = values.Pop();
+            switch (operators.Pop())
+            {
+                case "+":
+                    return EndOperation() + temp_val;
+                case "-":
+                    return EndOperation() - temp_val;
             }
             return 0;
         }
