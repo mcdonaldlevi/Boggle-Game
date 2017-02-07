@@ -94,7 +94,11 @@ namespace Formulas
             }
             if(leftParenthCounter != rightParenthCount)//after the loop is done, it makes sure the parentheses match up
             {
-                throw new FormulaEvaluationException("Incorrect Parentheses");
+                throw new FormulaFormatException("Incorrect Parentheses");
+            }
+            if(lastTokenWasOperator)
+            {
+                throw new FormulaFormatException("Cannot end formula with an operator");
             }
         }
         /// <summary>
@@ -126,7 +130,11 @@ namespace Formulas
                         else if(oper == "/")
                         {
                             double pushValue = value2 / value;
-                            rands.Push(pushValue);
+                            if (double.IsInfinity(pushValue))
+                            {
+                                throw new FormulaEvaluationException("Can't divide by 0");
+                            }
+                            rands.Push(pushValue);                          
                         }
                         else
                         {
@@ -181,7 +189,7 @@ namespace Formulas
                         double num2 = rands.Pop();
                         double pushValue = num2 + num1;
                         rands.Push(pushValue);
-                        rators.Pop();
+                        rators.Pop();                      
                     }
                     else if (oper == "-")
                     {
@@ -192,11 +200,7 @@ namespace Formulas
                         rators.Pop();
                     }
                     else if (oper == "(")
-                    { }
-                    else
-                    {
-                        rators.Pop();
-                    }
+                    {}
                     if (rators.Count > 0)
                     {
                         oper = rators.Pop();
@@ -212,9 +216,26 @@ namespace Formulas
                             double num1 = rands.Pop();
                             double num2 = rands.Pop();
                             double pushValue = num2 / num1;
+                            if (double.IsInfinity(pushValue))
+                            {
+                                throw new FormulaEvaluationException("Can't divide by 0");
+                            }
                             rands.Push(pushValue);
                         }
+                        else if(oper == "(")
+                        {
+                            rators.Push(oper);
+                        }
+                        else if (oper == "+")
+                        {
+                            rators.Push(oper);
+                        }
+                        else if (oper == "-")
+                        {
+                            rators.Push(oper);
+                        }
                     }
+
                 }
                 else
                 {
