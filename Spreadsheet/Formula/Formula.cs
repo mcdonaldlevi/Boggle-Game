@@ -14,7 +14,7 @@ namespace Formulas
     /// the four binary operator symbols +, -, *, and /.  (The unary operators + and -
     /// are not allowed.)
     /// </summary>
-    public class Formula
+    public struct Formula
     {
         List<string> baseList = new List<string>();
         /// <summary>
@@ -340,6 +340,8 @@ namespace Formulas
     /// to a value. Exactly how a Lookup method decides which strings map to doubles and which
     /// don't is up to the implementation of the method.
     /// </summary>
+    public delegate string Normalizer (string s);
+    public delegate bool Validator(string s);
     public delegate double Lookup(string var);
 
     /// <summary>
