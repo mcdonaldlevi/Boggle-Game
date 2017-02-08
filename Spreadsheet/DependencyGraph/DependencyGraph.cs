@@ -64,9 +64,13 @@ namespace Dependencies
         /// <summary>
         /// The number of dependencies in the DependencyGraph.
         /// </summary>
-        public int Size()
+        public int Size
         {
-            return size;
+            get
+            {
+                return size;
+            }
+            
         }
 
         /// <summary>
@@ -107,11 +111,12 @@ namespace Dependencies
             if (dependees.ContainsKey(s))//checks to see if s is a dependee and then returns s's list of dependents
             {
                 return (dependees[s]);
-
             }
             else
             {
-                return null;
+                List<string> nullList = new List<string>();
+                IEnumerable<string> nullEnumerable = nullList;
+                return nullEnumerable;
             }
         }
 
@@ -125,7 +130,11 @@ namespace Dependencies
                 return dependents[s];
             }
             else
-                return null;
+            {
+                List<string> nullList = new List<string>();
+                IEnumerable<string> nullEnumerable = nullList;
+                return nullEnumerable;
+            }
         }
 
         /// <summary>
@@ -269,20 +278,18 @@ namespace Dependencies
                 }
                 List<string> dependeesList = new List<string>();
                 foreach (string x in newDependees)
+                {
                     dependeesList.Add(x);
+                    size += 1;
+                }
+             
                 dependents[t] = dependeesList;
 
                 foreach (string x in newDependees)
                 {
                     if (dependees.ContainsKey(x))
                     {
-                        dependees[x].Add(t);
-                    }
-                    else
-                    {
-                        List<string> addList = new List<string> { t };
-                        dependees.Add(x, addList);
-                        
+                        dependents[x].Add(t);
                     }
                     size += 1;
                 }
