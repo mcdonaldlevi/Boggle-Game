@@ -39,12 +39,19 @@ namespace Formulas
         /// </summary>
         public Formula(String formula)
         {
+            if(formula == null)
+            {
+                throw new ArgumentNullException("Formula has no input");
+            }
             baseList = new List<string>();
             baseList = syntaxCheck(formula);
         }
         public Formula(String formula, Normalizer norm, Validator valid)
         {
-
+            if (formula == null)
+            {
+                throw new ArgumentNullException("Formula has no input");
+            }
             baseList = new List<string>();
             try
             {
@@ -140,6 +147,15 @@ namespace Formulas
                 throw new FormulaFormatException("Cannot end formula with an operator");
             }
             return tokenList;
+        }
+        public override string ToString()
+        {
+            string returnString = "";
+            foreach(string x in baseList)
+            {
+                returnString = returnString + x;
+            }
+            return returnString;
         }
         /// <summary>
         /// Evaluates this Formula, using the Lookup delegate to determine the values of variables.  (The

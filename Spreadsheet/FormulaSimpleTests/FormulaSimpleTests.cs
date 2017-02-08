@@ -3,6 +3,7 @@
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Formulas;
+using System.Collections.Generic;
 
 namespace FormulaTestCases
 {
@@ -15,49 +16,6 @@ namespace FormulaTestCases
     [TestClass]
     public class UnitTests
     {
-        /// <summary>
-        /// This tests that a syntactically incorrect parameter to Formula results
-        /// in a FormulaFormatException.
-        /// </summary>
-        [TestMethod]
-        [ExpectedException(typeof(FormulaFormatException))]
-        public void Construct1()
-        {
-            Formula f = new Formula("_");
-        }
-
-        /// <summary>
-        /// This is another syntax error
-        /// </summary>
-        [TestMethod]
-        [ExpectedException(typeof(FormulaFormatException))]
-        public void Construct2()
-        {
-            Formula f = new Formula("2++3");
-        }
-
-        /// <summary>
-        /// Another syntax error.
-        /// </summary>
-        [TestMethod]
-        [ExpectedException(typeof(FormulaFormatException))]
-        public void Construct3()
-        {
-            Formula f = new Formula("2 3");
-        }
-
-        /// <summary>
-        /// Makes sure that "2+3" evaluates to 5.  Since the Formula
-        /// contains no variables, the delegate passed in as the
-        /// parameter doesn't matter.  We are passing in one that
-        /// maps all variables to zero.
-        /// </summary>
-        [TestMethod]
-        public void Evaluate1()
-        {
-            Formula f = new Formula("2+3");
-            Assert.AreEqual(f.Evaluate(v => 0), 5.0, 1e-6);
-        }
 
         /// <summary>
         /// The Formula consists of a single variable (x5).  The value of
@@ -70,20 +28,6 @@ namespace FormulaTestCases
         {
             Formula f = new Formula("x5");
             Assert.AreEqual(f.Evaluate(v => 22.5), 22.5, 1e-6);
-        }
-
-        /// <summary>
-        /// Here, the delegate passed to Evaluate always throws a
-        /// UndefinedVariableException (meaning that no variables have
-        /// values).  The test case checks that the result of
-        /// evaluating the Formula is a FormulaEvaluationException.
-        /// </summary>
-        [TestMethod]
-        [ExpectedException(typeof(FormulaEvaluationException))]
-        public void Evaluate3()
-        {
-            Formula f = new Formula("x + y");
-            f.Evaluate(v => { throw new UndefinedVariableException(v); });
         }
 
         /// <summary>
@@ -101,10 +45,107 @@ namespace FormulaTestCases
         /// This uses one of each kind of token.
         /// </summary>
         [TestMethod]
-        public void Evaluate5 ()
+        public void Evaluate5()
         {
             Formula f = new Formula("(x + y) * (z / x) * 1.0");
             Assert.AreEqual(f.Evaluate(Lookup4), 20.0, 1e-6);
+        }
+        [TestMethod]
+        public void Evaluate6()
+        {
+            Formula f = new Formula("5/(1+4)");
+            Assert.AreEqual(f.Evaluate(Lookup4), 1, 1e-6);
+        }
+        [TestMethod]
+        public void Evaluate7()
+        {
+            Formula f = new Formula("5-(1+4)");
+            Assert.AreEqual(f.Evaluate(Lookup4), 0, 1e-6);
+        }
+        [TestMethod]
+        [ExpectedException(typeof(FormulaFormatException))]
+        public void ConstructTest()
+        {
+            Formula f = new Formula("1(a)");
+        }
+        [TestMethod]
+        public void normAndValidTest()
+        {
+            Formula f = new Formula("a + b", Norm1, Valid1);
+            ISet<string> myVaribles = f.GetVariables();
+            Assert.IsTrue(myVaribles.Contains("A"));
+            Assert.IsTrue(myVaribles.Contains("B"));
+            Assert.IsTrue(myVaribles.Count == 2);
+            
+        }
+        [TestMethod]
+        [ExpectedException(typeof(FormulaFormatException))]
+        public void falseValidTest()
+        {
+            Formula g = new Formula("a+b", formula => "a", Valid1);
+        }
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void nullArgumentTest()
+        {
+            Formula f = new Formula(null);
+        }
+        [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
+        public void nullArgumentTestWithNormAndValid()
+        {
+            Formula f = new Formula(null, Norm1, Valid1);
+        }
+        [TestMethod]
+        [ExpectedException(typeof(FormulaFormatException))]
+        public void NormalizeCausesIncorrectSyntaxTest()
+        {
+            Formula f = new Formula("a+b", Norm2, Valid1);
+        }
+        [TestMethod]
+        [ExpectedException(typeof(FormulaFormatException))]
+        public void NormalizeCausesValidFailTest()
+        {
+            Formula f = new Formula("A+B", Norm3, Valid1);
+        }
+        [TestMethod]
+        public void ValidIsNullTest()
+        {
+            Formula f = new Formula("a+b", Norm1, null);
+            ISet<string> myVaribles = f.GetVariables();
+            Assert.IsTrue(myVaribles.Contains("A"));
+            Assert.IsTrue(myVaribles.Contains("B"));
+        }
+        [TestMethod]
+        public void NewToStringTest()
+        {
+            Formula f = new Formula("a+b");
+            Assert.IsTrue(f.ToString() == "a+b");
+            Formula g = new Formula("a+b+c", Norm1, Valid1);
+            Assert.IsTrue(g.ToString() == "A+B+C");
+        }
+        public string Norm1(string formula)
+        {
+            return formula.ToUpper();
+        }
+        public string Norm2(string formula)
+        {
+            return "^*&&";
+        }
+        public string Norm3(string formula)
+        {
+            return formula.ToLower();
+        }
+        public bool Valid1(string formula)
+        {
+            foreach (char x in formula)
+            {
+                if (char.IsLower(x))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         /// <summary>
