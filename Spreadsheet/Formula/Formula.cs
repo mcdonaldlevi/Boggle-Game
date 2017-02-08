@@ -16,7 +16,7 @@ namespace Formulas
     /// </summary>
     public struct Formula
     {
-        List<string> baseList = new List<string>();
+        List<string> baseList;
         /// <summary>
         /// Creates a Formula from a string that consists of a standard infix expression composed
         /// from non-negative floating-point numbers (using C#-like syntax for double/int literals), 
@@ -39,6 +39,45 @@ namespace Formulas
         /// </summary>
         public Formula(String formula)
         {
+            baseList = new List<string>();
+            baseList = syntaxCheck(formula);
+        }
+        public Formula(String formula, Normalizer norm, Validator valid)
+        {
+
+            baseList = new List<string>();
+            try
+            {
+                baseList = syntaxCheck(norm(formula));
+            }
+            catch
+            {
+                throw new FormulaFormatException("Incorrect syntax for normalized formula");
+            }
+            if (valid == null)
+            { }
+            else if(!valid(norm(formula)))
+            {
+                throw new FormulaFormatException("formula not valid for Validator input");
+            }
+        }
+        public ISet<string> GetVariables()
+        {
+            string allLetters = @"[a-z]|[A-Z]";
+            Regex letters = new Regex( allLetters);
+            HashSet<string> myVariables = new HashSet<string>();
+            foreach(string x in baseList)                
+            {
+                string firstElement = char.ToString(x[0]);
+                if(letters.IsMatch(firstElement))
+                {
+                    myVariables.Add(x);
+                }
+            }
+            return myVariables;
+        }
+        public List<string> syntaxCheck(string formula)
+        {
             IEnumerable<string> tokens = GetTokens(formula);
             List<string> tokenList = new List<string>();
             foreach (string x in tokens)//Turned the Ienumerable tokens into a more malleable List
@@ -51,9 +90,9 @@ namespace Formulas
                 throw new FormulaFormatException("Incorrect Syntax for Formula");
             bool lastTokenWasOperator = true;//A bool to keep track of the type of the last token
             double value;
-            for(int i =0; i < tokenList.Count; i++)//loop to go through all the tokens
+            for (int i = 0; i < tokenList.Count; i++)//loop to go through all the tokens
             {
-                if(double.TryParse(tokenList[i], out value))//checks to see if the token is a double
+                if (double.TryParse(tokenList[i], out value))//checks to see if the token is a double
                 {
                     if (lastTokenWasOperator)
                         lastTokenWasOperator = false;
@@ -62,27 +101,27 @@ namespace Formulas
                 }
                 else if (char.IsLetter(tokenList[i][0]))//checks to see if the first char in the token is a letter to denote a variable
                 {
-                    if(lastTokenWasOperator)
+                    if (lastTokenWasOperator)
                         lastTokenWasOperator = false;
                     else
                         throw new FormulaFormatException("Incorrect Syntax for Formula");
                 }
-                else if((tokenList[i] == "/") || (tokenList[i] == "*") ||(tokenList[i] == "+" )||(tokenList[i] == "-"))
+                else if ((tokenList[i] == "/") || (tokenList[i] == "*") || (tokenList[i] == "+") || (tokenList[i] == "-"))
                 {//Checks for operators
                     if (lastTokenWasOperator)
                         throw new FormulaFormatException("Incorrect Syntax for Formula");
                     else
                         lastTokenWasOperator = true;
                 }
-                else if((tokenList[i] == "("))//Checks for Parentheses and adds to the appropriate counter
+                else if ((tokenList[i] == "("))//Checks for Parentheses and adds to the appropriate counter
                 {
-                    if(!lastTokenWasOperator)
+                    if (!lastTokenWasOperator)
                         throw new FormulaFormatException("Incorrect Syntax for Formula");
-                    leftParenthCounter++;                    
+                    leftParenthCounter++;
                 }
-                else if(tokenList[i] == ")")
+                else if (tokenList[i] == ")")
                 {
-                    if(lastTokenWasOperator)
+                    if (lastTokenWasOperator)
                         throw new FormulaFormatException("Incorrect Syntax for Formula");
                     rightParenthCount++;
                     if (rightParenthCount > leftParenthCounter)
@@ -90,16 +129,17 @@ namespace Formulas
                 }
                 else//if the token fell into none of these catagories it is not recognized
                     throw new FormulaFormatException("Incorrect Syntax for Formula");
-                baseList = tokenList;
+                
             }
-            if(leftParenthCounter != rightParenthCount)//after the loop is done, it makes sure the parentheses match up
+            if (leftParenthCounter != rightParenthCount)//after the loop is done, it makes sure the parentheses match up
             {
                 throw new FormulaFormatException("Incorrect Parentheses");
             }
-            if(lastTokenWasOperator)
+            if (lastTokenWasOperator)
             {
                 throw new FormulaFormatException("Cannot end formula with an operator");
             }
+            return tokenList;
         }
         /// <summary>
         /// Evaluates this Formula, using the Lookup delegate to determine the values of variables.  (The
