@@ -60,6 +60,11 @@ namespace Dependencies
         public DependencyGraph()
         {
         }
+        public DependencyGraph(DependencyGraph copyFromGraph)
+        {
+            this.dependees = copyFromGraph.dependees;
+            this.dependents = copyFromGraph.dependents;            
+        }
 
         /// <summary>
         /// The number of dependencies in the DependencyGraph.
@@ -74,10 +79,14 @@ namespace Dependencies
         }
 
         /// <summary>
-        /// Reports whether dependents(s) is non-empty.  Requires s != null.
+        /// Reports whether dependents(s) is non-empty. if s == null throws an Argument Null Exception
         /// </summary>
         public bool HasDependents(string s)
         {
+            if(s == null)
+            {
+                throw new ArgumentNullException();
+            }
             if (dependees.ContainsKey(s))//checks to see if s is a dependee
             {
                 return true;
@@ -89,10 +98,15 @@ namespace Dependencies
         }
 
         /// <summary>
-        /// Reports whether dependees(s) is non-empty.  Requires s != null.
+        /// Reports whether dependees(s) is non-empty.  if s == null throws an Argument Null Exception
         /// </summary>
         public bool HasDependees(string s)
         {
+
+            if (s == null)
+            {
+                throw new ArgumentNullException();
+            }
             if (dependents.ContainsKey(s))//checks to see if s is a dependent
             {
                 return true;
@@ -104,10 +118,14 @@ namespace Dependencies
         }
 
         /// <summary>
-        /// Enumerates dependents(s).  Requires s != null.
+        /// Enumerates dependents(s).  if s == null throws an Argument Null Exception
         /// </summary>
         public IEnumerable<string> GetDependents(string s)
         {
+            if (s == null)
+            {
+                throw new ArgumentNullException();
+            }
             if (dependees.ContainsKey(s))//checks to see if s is a dependee and then returns s's list of dependents
             {
                 return (dependees[s]);
@@ -121,10 +139,14 @@ namespace Dependencies
         }
 
         /// <summary>
-        /// Enumerates dependees(s).  Requires s != null.
+        /// Enumerates dependees(s).  if s == null throws an Argument Null Exception
         /// </summary>
         public IEnumerable<string> GetDependees(string s)
         {
+            if (s == null)
+            {
+                throw new ArgumentNullException();
+            }
             if (dependents.ContainsKey(s))//checks to see if s is a dependent and if so returns its list of dependees
             {
                 return dependents[s];
@@ -140,10 +162,14 @@ namespace Dependencies
         /// <summary>
         /// Adds the dependency (s,t) to this DependencyGraph.
         /// This has no effect if (s,t) already belongs to this DependencyGraph.
-        /// Requires s != null and t != null.
+        /// if s or t == null throws an Argument Null Exception
         /// </summary>
         public void AddDependency(string s, string t)
         {
+            if ((s == null)|| (t==null))
+            {
+                throw new ArgumentNullException();
+            }
             if (dependees.ContainsKey(s))//checks to see if s already has a dependent
             {
                 if (dependees[s].Contains(t))//if it does checks to see if it is the one already being asked for
@@ -187,10 +213,14 @@ namespace Dependencies
         /// <summary>
         /// Removes the dependency (s,t) from this DependencyGraph.
         /// Does nothing if (s,t) doesn't belong to this DependencyGraph.
-        /// Requires s != null and t != null.
+        ///if s or t == null throws an Argument Null Exception
         /// </summary>
         public void RemoveDependency(string s, string t)
         {
+            if ((s == null) || (t == null))
+            {
+                throw new ArgumentNullException();
+            }
             if (dependees.ContainsKey(s))//checks to make sure s exists otherwise does nothing
             {
                 if (dependees[s].Contains(t))//checks to make sure t exists in s
@@ -213,16 +243,28 @@ namespace Dependencies
         /// <summary>
         /// Removes all existing dependencies of the form (s,r).  Then, for each
         /// t in newDependents, adds the dependency (s,t).
-        /// Requires s != null and t != null.
+        /// if s or t == null throws an Argument Null Exception
         /// </summary>
         public void ReplaceDependents(string s, IEnumerable<string> newDependents)
         {/// to remove all the dependents from s, first we need to take those dependents and remove their 
          /// connection to s in the dependent dictionary then remove them from s in the dependee dictionary
          ///  Afterwards, s gets connected
          /// to a new set of dependents, and then those dependents are all added to the dependent dictionary
+            if ((s == null) || (newDependents == null))
+            {
+                throw new ArgumentNullException();
+            }
+            foreach(string x in newDependents)
+            {
+                if(x== null)
+                {
+                    throw new ArgumentNullException();
+                }
+            }
             if (dependees.ContainsKey(s))
             {
-                foreach(string x in dependees[s])//going through s's dependents and finding them in the dependent 
+                
+                foreach (string x in dependees[s])//going through s's dependents and finding them in the dependent 
                 {//dictionary and removes s from their list
                     if(dependents.ContainsKey(x))
                     {
@@ -258,10 +300,21 @@ namespace Dependencies
         /// <summary>
         /// Removes all existing dependencies of the form (r,t).  Then, for each 
         /// s in newDependees, adds the dependency (s,t).
-        /// Requires s != null and t != null.
+        /// if s or t == null throws an Argument Null Exception
         /// </summary>
         public void ReplaceDependees(string t, IEnumerable<string> newDependees)
         {// this does the same exact thing as above, just in reverse
+            if ((t == null) || (newDependees == null))
+            {
+                throw new ArgumentNullException();
+            }
+            foreach (string x in newDependees)
+            {
+                if (x == null)
+                {
+                    throw new ArgumentNullException();
+                }
+            }
             if (dependents.ContainsKey(t))
             {
                 foreach (string x in dependents[t])
