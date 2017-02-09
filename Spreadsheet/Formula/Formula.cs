@@ -39,34 +39,55 @@ namespace Formulas
         /// </summary>
         public Formula(String formula)
         {
-            if(formula == null)
+            if (formula == null)
             {
-                throw new ArgumentNullException("Formula has no input");
+                baseList = new List<string> { "0" };
             }
-            baseList = new List<string>();
-            baseList = syntaxCheck(formula);
+            else
+            {
+                baseList = new List<string>();
+                baseList = syntaxCheck(formula);
+            }
         }
         public Formula(String formula, Normalizer norm, Validator valid)
         {
             if (formula == null)
             {
-                throw new ArgumentNullException("Formula has no input");
+                baseList = new List<string> { "0" };
+                try
+                {
+                    baseList = syntaxCheck(norm("0"));
+                }
+                catch
+                {
+                    throw new FormulaFormatException("Incorrect syntax for normalized formula");
+                }
+                if (valid == null)
+                { }
+                else if (!valid(norm("0")))
+                {
+                    throw new FormulaFormatException("formula not valid for Validator input");
+                }
             }
-            baseList = new List<string>();
-            try
+            else
             {
-                baseList = syntaxCheck(norm(formula));
+                baseList = new List<string>();
+                try
+                {
+                    baseList = syntaxCheck(norm(formula));
+                }
+                catch
+                {
+                    throw new FormulaFormatException("Incorrect syntax for normalized formula");
+                }
+                if (valid == null)
+                { }
+                else if (!valid(norm(formula)))
+                {
+                    throw new FormulaFormatException("formula not valid for Validator input");
+                }
             }
-            catch
-            {
-                throw new FormulaFormatException("Incorrect syntax for normalized formula");
-            }
-            if (valid == null)
-            { }
-            else if(!valid(norm(formula)))
-            {
-                throw new FormulaFormatException("formula not valid for Validator input");
-            }
+            
         }
         public ISet<string> GetVariables()
         {

@@ -85,16 +85,16 @@ namespace FormulaTestCases
             Formula g = new Formula("a+b", formula => "a", Valid1);
         }
         [TestMethod]
-        [ExpectedException(typeof(ArgumentNullException))]
         public void nullArgumentTest()
         {
             Formula f = new Formula(null);
+            Assert.IsTrue(f.ToString() == "0");
         }
         [TestMethod]
-        [ExpectedException(typeof(ArgumentNullException))]
         public void nullArgumentTestWithNormAndValid()
         {
             Formula f = new Formula(null, Norm1, Valid1);
+            Assert.IsTrue(f.ToString() == "0");
         }
         [TestMethod]
         [ExpectedException(typeof(FormulaFormatException))]
