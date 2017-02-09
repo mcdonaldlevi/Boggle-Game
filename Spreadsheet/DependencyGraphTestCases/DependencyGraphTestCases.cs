@@ -80,7 +80,7 @@ namespace DependencyGraphTestCases
         /// Checks if correct output is given with GetDependees function
         /// </summary>
         [TestMethod]
-        public void GetDependeesTest()
+        public void GetDependentsTest()
         {
             DependencyGraph DG = new DependencyGraph();
             DG.AddDependency("a", "b");
@@ -89,7 +89,7 @@ namespace DependencyGraphTestCases
             DG.AddDependency("a", "e");
 
             List<string> expected = new List<string> { "b", "c", "d", "e" };
-            List<string> results = DG.GetDependees("a").ToList();
+            List<string> results = DG.GetDependents("a").ToList();
 
             for (int i = 0; i < expected.Count; i++)
             {
@@ -98,34 +98,10 @@ namespace DependencyGraphTestCases
         }
 
         /// <summary>
-        /// Checks if correct exception is given when invalid dependent is sent
-        /// </summary>
-        [TestMethod]
-        [ExpectedException(typeof(KeyNotFoundException))]
-        public void KeyNotFoundtest1()
-        {
-            DependencyGraph DG = new DependencyGraph();
-            
-            List<string> results = DG.GetDependees("m").ToList();
-        }
-
-        /// <summary>
-        /// Checks if correct exception is given when invalid dependee is sent
-        /// </summary>
-        [TestMethod]
-        [ExpectedException(typeof(KeyNotFoundException))]
-        public void KeyNotFoundTest2()
-        {
-            DependencyGraph DG = new DependencyGraph();
-
-            List<string> results = DG.GetDependents("m").ToList();
-        }
-
-        /// <summary>
         /// Checks if correct output is given with GetDependees function
         /// </summary>
         [TestMethod]
-        public void GetDependentsTest()
+        public void GetDependeesTest()
         {
             DependencyGraph DG = new DependencyGraph();
             DG.AddDependency("b", "a");
@@ -133,7 +109,7 @@ namespace DependencyGraphTestCases
             DG.AddDependency("d", "a");
             DG.AddDependency("e", "a");
             List<string> expected = new List<string> { "b", "c", "d", "e" };
-            List<string> results = DG.GetDependents("a").ToList();
+            List<string> results = DG.GetDependees("a").ToList();
 
             for (int i = 0; i < expected.Count; i++)
             {
@@ -194,7 +170,7 @@ namespace DependencyGraphTestCases
             DG.RemoveDependency("c", "b");
             DG.RemoveDependency("l", "d");
 
-            DG.ReplaceDependees("a", new List<string> { "d", "m", "z" });
+            DG.ReplaceDependents("a", new List<string> { "d", "m", "z" });
 
             Debug.Assert(DG.Size == 3);
         }
@@ -242,76 +218,6 @@ namespace DependencyGraphTestCases
                 Debug.Assert(results[i] == expected[i]);
             }
 
-        }
-
-        /// <summary>
-        /// Checks if correct Exception is given when an invalid token is sent
-        /// </summary>
-        [TestMethod]
-        [ExpectedException(typeof(InvalidFormatException))]
-        public void AddInvalidDependent()
-        {
-            DependencyGraph DG = new DependencyGraph();
-            DG.AddDependency("1", "c");
-        }
-
-        /// <summary>
-        /// Checks if correct Exception is given when an invalid token is sent
-        /// </summary>
-        [TestMethod]
-        [ExpectedException(typeof(InvalidFormatException))]
-        public void AddInvalidDependee()
-        {
-            DependencyGraph DG = new DependencyGraph();
-            DG.AddDependency("f", "c#");
-        }
-
-        /// <summary>
-        /// Checks if correct Exception is given when an invalid token is sent
-        /// </summary>
-        [TestMethod]
-        [ExpectedException(typeof(InvalidFormatException))]
-        public void InvalidParameter1()
-        {
-            DependencyGraph DG = new DependencyGraph();
-            DG.AddDependency("s", "c");
-            DG.GetDependees("1a").First();
-        }
-
-        /// <summary>
-        /// Checks if correct Exception is given when an invalid token is sent
-        /// </summary>
-        [TestMethod]
-        [ExpectedException(typeof(InvalidFormatException))]
-        public void InvalidParameter2()
-        {
-            DependencyGraph DG = new DependencyGraph();
-            DG.AddDependency("vcx", "we32");
-            DG.GetDependents("33").First();
-        }
-
-        /// <summary>
-        /// Checks if correct Exception is given when an invalid token is sent
-        /// </summary>
-        [TestMethod]
-        [ExpectedException(typeof(InvalidFormatException))]
-        public void InvalidParameter3()
-        {
-            DependencyGraph DG = new DependencyGraph();
-            DG.AddDependency("a", "b");
-            DG.GetDependents("").First();
-        }
-
-        /// <summary>
-        /// Checks if correct Exception is given when an invalid token is sent
-        /// </summary>
-        [TestMethod]
-        [ExpectedException(typeof(InvalidFormatException))]
-        public void InvalidParameter4()
-        {
-            DependencyGraph DG = new DependencyGraph();
-            DG.AddDependency("b", "l");
-            DG.GetDependents(" ").First();
         }
     }
 }

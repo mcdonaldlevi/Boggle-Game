@@ -218,19 +218,4 @@ namespace Dependencies
             }
         }
     }
-
-
-    [Serializable]
-    public class InvalidFormatException : Exception
-    {
-        /// <summary>
-        /// Constructs an InvalidFormatException containing whose message is the
-        /// undefined variable.
-        /// </summary>
-        /// <param name="variable"></param>
-        public InvalidFormatException(String variable)
-            : base(variable)
-        {
-        }
-    }
 }
