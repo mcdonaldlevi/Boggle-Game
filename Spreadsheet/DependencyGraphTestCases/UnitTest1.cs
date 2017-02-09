@@ -8,13 +8,13 @@ namespace DependencyGraphTestCases
     [TestClass]
     public class UnitTest1
     {/// <summary>
-    /// This tests to make sure that if no dependencies are added then the size is 0
-    /// </summary>
+     /// This tests to make sure that if no dependencies are added then the size is 0
+     /// </summary>
         [TestMethod]
         public void TestConstructionSize()
         {
             DependencyGraph testGraph = new DependencyGraph();
-            Debug.Assert(testGraph.Size() == 0);
+            Debug.Assert(testGraph.Size == 0);
         }
         /// <summary>
         /// Tests to make sure the expected size is returned after using the AddDependency method
@@ -31,10 +31,10 @@ namespace DependencyGraphTestCases
             testGraph.AddDependency("a", "1");//this line should not add any to the size as it is already present
             testGraph.AddDependency("a", "10");
             testGraph.AddDependency("b", "10");
-            Debug.Assert(testGraph.Size() == 7);
+            Debug.Assert(testGraph.Size == 7);
         }/// <summary>
-        /// Tests if the HasDependees method returns the correct bool value
-        /// </summary>
+         /// Tests if the HasDependees method returns the correct bool value
+         /// </summary>
         [TestMethod]
         public void TestHasDependees()
         {
@@ -85,8 +85,7 @@ namespace DependencyGraphTestCases
             testGraph.AddDependency("c", "3");
             testGraph.AddDependency("d", "4");
             testGraph.AddDependency("e", "5");
-            IEnumerable<string> nullList = testGraph.GetDependents("dog");
-            Debug.Assert(nullList == null);//testing for a non existant dependee
+
             IEnumerable<string> dependantList = testGraph.GetDependents("a");
             foreach (string x in dependantList)//testing all the IEnuerables to make sure they have the right value
                 Debug.Assert(x == "1");
@@ -137,8 +136,8 @@ namespace DependencyGraphTestCases
             testGraph.AddDependency("3", "c");
             testGraph.AddDependency("4", "d");
             testGraph.AddDependency("5", "e");
-            IEnumerable<string> nullList = testGraph.GetDependees("dog");//testing non existent dependant
-            Debug.Assert(nullList == null);
+
+
             IEnumerable<string> dependeeList = testGraph.GetDependees("a");
             foreach (string x in dependeeList)
                 Debug.Assert(x == "1");
@@ -177,10 +176,10 @@ namespace DependencyGraphTestCases
             testGraph.AddDependency("d", "4");
             testGraph.AddDependency("e", "5");
             testGraph.RemoveDependency("a", "1");
-            Debug.Assert(testGraph.Size() == 4);
+            Debug.Assert(testGraph.Size == 4);
             Debug.Assert(testGraph.HasDependees("1") == false);
             Debug.Assert(testGraph.HasDependents("a") == false);
-            
+
         }
         /// <summary>
         /// Tests the ReplaceDependents Method checking for dependents with more than one dependee and 
@@ -201,13 +200,13 @@ namespace DependencyGraphTestCases
             testGraph.ReplaceDependents("a", newDependents);//gave "a" new dependents
             IEnumerable<string> returnedDependents = testGraph.GetDependents("a");
             string testString = "20";
-            foreach(string x in returnedDependents)//loop making sure "a" has all three of the right dependants
+            foreach (string x in returnedDependents)//loop making sure "a" has all three of the right dependants
             {
                 Debug.Assert(x == testString);
                 testString = testString + "0";
             }
             IEnumerable<string> returnedDependees = testGraph.GetDependees("1");
-            Debug.Assert(returnedDependees == null);
+
             testGraph.AddDependency("d", "5");//testing for a dependent having more than one dependee
             newDependents.Clear();
             newDependents.Add("5");
@@ -215,9 +214,9 @@ namespace DependencyGraphTestCases
             newDependents.Add("500");
             newDependents.Add("5000");
             testGraph.ReplaceDependents("e", newDependents);//"e" gets new dependents
-            returnedDependees =  testGraph.GetDependees("5");
+            returnedDependees = testGraph.GetDependees("5");
             newDependents.Clear();
-            foreach(string x in returnedDependees)
+            foreach (string x in returnedDependees)
             {
                 newDependents.Add(x);
             }
@@ -239,7 +238,7 @@ namespace DependencyGraphTestCases
             testGraph.AddDependency("d", "5");//this is to check to have a dependant with multiple dependees
             testGraph.AddDependency("e", "5");
             IEnumerable<string> returnedDependees = testGraph.GetDependees("dog");//checking random string to make sure it returns null
-            Debug.Assert(returnedDependees == null);
+
             List<string> newDependees = new List<string> { "a", "aa", "aaa" };
             testGraph.ReplaceDependees("1", newDependees);
             returnedDependees = testGraph.GetDependees("1");
@@ -268,17 +267,17 @@ namespace DependencyGraphTestCases
         {
             DependencyGraph testGraph = new DependencyGraph();
             int theDependant = 0;
-            for(int i = 0; i < 10000; i++)
+            for (int i = 0; i < 10000; i++)
             {
                 testGraph.AddDependency("a", theDependant.ToString());
                 theDependant += 1;
             }
             List<string> newDependentList = new List<string>();
-            for(int i = 15000; i > 0; i--)
+            for (int i = 15000; i > 0; i--)
             {
                 newDependentList.Add(i.ToString());
             }
-            testGraph.ReplaceDependents("a", newDependentList);           
+            testGraph.ReplaceDependents("a", newDependentList);
         }
         [TestMethod]
         public void StressTestReplaceDepenees()
@@ -297,5 +296,29 @@ namespace DependencyGraphTestCases
             }
             testGraph.ReplaceDependees("a", newDependeeList);
         }
-    }
+        [TestMethod]
+        public void TestCopyGraph()
+        {
+            DependencyGraph f = new DependencyGraph();
+            f.AddDependency("a", "1");
+            f.AddDependency("b", "2");
+            f.AddDependency("c", "3");
+            DependencyGraph g = new DependencyGraph(f);
+            Assert.IsTrue(g.ToString() == f.ToString());
+            Assert.IsTrue(g.GetDependents("a") == f.GetDependents("a"));
+
+        }
+        [TestMethod]
+        public void NullGetDependentsDependeesTest()
+        {
+            DependencyGraph f = new DependencyGraph();
+            f.AddDependency("a", "1");
+            f.AddDependency("a", "2");
+            f.AddDependency("a", "3");
+            Assert.IsTrue(f.GetDependents("b").GetEnumerator().MoveNext() == false);
+            Assert.IsTrue(f.GetDependees("4").GetEnumerator().MoveNext() == false);
+
+        }
+
+        }
     }
