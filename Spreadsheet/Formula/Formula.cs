@@ -53,21 +53,24 @@ namespace Formulas
                     {
                         throw new FormulaFormatException("Cannot start formula with operand");
                     }
-                    first_value = false;
+                    if (token != "(")
+                    {
+                        first_value = false;
+                    }
                 }
                 if (Regex.IsMatch(token, @"[^a-z A-Z\d/*+\-()]") && !Regex.IsMatch(token, @"\d+.\d+"))
                 {
                     throw new FormulaFormatException("Invalid token: " + token);
                 }
-                else if (Regex.IsMatch(token, @"[-+/*]") && Regex.IsMatch(last_val, @"[-+/*]"))
-                {
-                    throw new FormulaFormatException("Too many operators: " + last_val + token);
-                }
+                //else if (Regex.IsMatch(token, @"[-+/*]") && Regex.IsMatch(last_val, @"[-+/*]"))
+                //{
+                //    throw new FormulaFormatException("Too many operators: " + last_val + token);
+                //}
                 else if (Regex.IsMatch(token, @"[\da-zA-z]") && Regex.IsMatch(last_val, @"[\da-zA-z]"))
                 {
                     throw new FormulaFormatException("Too many operands: " + last_val + token);
                 }
-                else if (Regex.IsMatch(last_val, @"[-+/*(]") && Regex.IsMatch(token, @"[-+/*)]"))
+                else if ((token == "+" || token == "-" || token == "*" || token == "/") && (last_val == "+" || last_val == "-" || last_val == "*" || last_val == "/"))
                 {
                     throw new FormulaFormatException("Must have operand after operator or closing parenthesis");
                 }
