@@ -20,9 +20,11 @@ namespace DependencyGraphTestCases
         /// Tests to make sure the expected size is returned after using the AddDependency method
         /// </summary>
         [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
         public void TestAddDependecy()
         {
             DependencyGraph testGraph = new DependencyGraph();
+            
             testGraph.AddDependency("a", "1");
             testGraph.AddDependency("b", "2");
             testGraph.AddDependency("c", "3");
@@ -32,13 +34,17 @@ namespace DependencyGraphTestCases
             testGraph.AddDependency("a", "10");
             testGraph.AddDependency("b", "10");
             Debug.Assert(testGraph.Size == 7);
+            testGraph.AddDependency(null, null);
         }/// <summary>
          /// Tests if the HasDependees method returns the correct bool value
          /// </summary>
         [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
         public void TestHasDependees()
         {
+
             DependencyGraph testGraph = new DependencyGraph();
+            
             testGraph.AddDependency("a", "1");
             testGraph.AddDependency("b", "2");
             testGraph.AddDependency("c", "3");
@@ -50,15 +56,17 @@ namespace DependencyGraphTestCases
             Debug.Assert(testGraph.HasDependees("4"));
             Debug.Assert(testGraph.HasDependees("5"));
             Debug.Assert(!testGraph.HasDependees("10"));// this line checks for a non-existant Dependee
-
+            testGraph.HasDependees(null);
         }
         /// <summary>
         /// Tests the HasDependents method and makes sure it returns the correct bool values
         /// </summary>
         [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
         public void TestHasDependents()
         {
             DependencyGraph testGraph = new DependencyGraph();
+            
             testGraph.AddDependency("a", "1");
             testGraph.AddDependency("b", "2");
             testGraph.AddDependency("c", "3");
@@ -70,16 +78,18 @@ namespace DependencyGraphTestCases
             Debug.Assert(testGraph.HasDependents("d"));
             Debug.Assert(testGraph.HasDependents("e"));
             Debug.Assert(!testGraph.HasDependents("ff"));// this line checks for a non existant Dependent
-
+            testGraph.HasDependents(null);
         }
         /// <summary>
         /// Tests the GetDependents Method and sees if Dependees with none, one, or more dependents 
         /// have those dependents returned properly in an IEnumerable
         /// </summary>
         [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
         public void TestGetDependents()
         {
             DependencyGraph testGraph = new DependencyGraph();
+            
             testGraph.AddDependency("a", "1");
             testGraph.AddDependency("b", "2");
             testGraph.AddDependency("c", "3");
@@ -121,16 +131,18 @@ namespace DependencyGraphTestCases
             Debug.Assert(dependantIndexList[0] == "2");
             Debug.Assert(dependantIndexList[1] == "10");
             Debug.Assert(dependantIndexList[2] == "100");
-
+            testGraph.GetDependents(null);
         }
         /// <summary>
         /// Tests the GetDependees Method and sees if Dependents with none, one, or more dependenees 
         /// have those dependees returned properly in an IEnumerable
         /// </summary>
         [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
         public void TestGetDependees()
         {
             DependencyGraph testGraph = new DependencyGraph();
+            
             testGraph.AddDependency("1", "a");
             testGraph.AddDependency("2", "b");
             testGraph.AddDependency("3", "c");
@@ -162,14 +174,17 @@ namespace DependencyGraphTestCases
                 Debug.Assert(x == testString);
                 testString = testString + "0";
             }
+            testGraph.GetDependees(null);
         }
         /// <summary>
         /// Tests if the RemoveDependency method removes the dependencies and changes the size properly
         /// </summary>
         [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
         public void TestRemoveDependency()
         {
             DependencyGraph testGraph = new DependencyGraph();
+            
             testGraph.AddDependency("a", "1");
             testGraph.AddDependency("b", "2");
             testGraph.AddDependency("c", "3");
@@ -179,16 +194,18 @@ namespace DependencyGraphTestCases
             Debug.Assert(testGraph.Size == 4);
             Debug.Assert(testGraph.HasDependees("1") == false);
             Debug.Assert(testGraph.HasDependents("a") == false);
-
+            testGraph.RemoveDependency(null, null);
         }
         /// <summary>
         /// Tests the ReplaceDependents Method checking for dependents with more than one dependee and 
         /// dependees with more than one dependent. And if both of those are involved at the same time.
         /// </summary>
         [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
         public void TestReplaceDependents()
         {
             DependencyGraph testGraph = new DependencyGraph();
+            
             testGraph.AddDependency("a", "1");
             testGraph.AddDependency("b", "2");
             testGraph.AddDependency("c", "3");
@@ -222,15 +239,18 @@ namespace DependencyGraphTestCases
             }
             Debug.Assert(newDependents[0] == "d");
             Debug.Assert(newDependents[1] == "e");
+            testGraph.ReplaceDependents(null, null);
         }
         /// <summary>
         /// Test the ReplaceDependees method on checking for dependees with more than one dependent and 
         /// dependents with more than one dependee. And if both of those are involved at the same time.
         /// </summary>
         [TestMethod]
+        [ExpectedException(typeof(ArgumentNullException))]
         public void TestReplaceDependees()
         {
             DependencyGraph testGraph = new DependencyGraph();
+            
             testGraph.AddDependency("a", "1");
             testGraph.AddDependency("b", "2");
             testGraph.AddDependency("c", "3");
@@ -256,7 +276,7 @@ namespace DependencyGraphTestCases
                 Debug.Assert(x == testString);
                 testString = testString + "a";
             }
-
+            testGraph.ReplaceDependees(null, null);
 
         }
         /// <summary>
@@ -267,13 +287,13 @@ namespace DependencyGraphTestCases
         {
             DependencyGraph testGraph = new DependencyGraph();
             int theDependant = 0;
-            for (int i = 0; i < 10000; i++)
+            for (int i = 0; i < 100000; i++)
             {
                 testGraph.AddDependency("a", theDependant.ToString());
                 theDependant += 1;
             }
             List<string> newDependentList = new List<string>();
-            for (int i = 15000; i > 0; i--)
+            for (int i = 150000; i > 0; i--)
             {
                 newDependentList.Add(i.ToString());
             }
@@ -284,13 +304,13 @@ namespace DependencyGraphTestCases
         {
             DependencyGraph testGraph = new DependencyGraph();
             int theDependee = 0;
-            for (int i = 0; i < 10000; i++)
+            for (int i = 0; i < 1000; i++)
             {
                 testGraph.AddDependency(theDependee.ToString(), "a");
                 theDependee += 1;
             }
             List<string> newDependeeList = new List<string>();
-            for (int i = 15000; i > 0; i--)
+            for (int i = 1500; i > 0; i--)
             {
                 newDependeeList.Add(i.ToString());
             }
