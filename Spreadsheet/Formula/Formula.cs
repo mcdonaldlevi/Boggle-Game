@@ -15,8 +15,6 @@ namespace Formulas
     /// </summary>
     public class Formula
     {
-        private Stack<string> operators = new Stack<string>();
-        private Stack<double> values = new Stack<double>();
         private IEnumerable<string> formula_tokens;
         /// <summary>
         /// Creates a Formula from a string that consists of a standard infix expression composed
@@ -40,8 +38,7 @@ namespace Formulas
         /// </summary>
         public Formula(String formula)
         {
-            int left_paren = 0;
-            int right_paren = 0;
+            int paren = 0;
             String last_val = "";
             Boolean first_value = true;
             formula_tokens = GetTokens(formula);
@@ -58,18 +55,17 @@ namespace Formulas
                         first_value = false;
                     }
                 }
+                //throws exception if token is not a valid token or non-double number
                 if (Regex.IsMatch(token, @"[^a-z A-Z\d/*+\-()]") && !Regex.IsMatch(token, @"\d+.\d+"))
                 {
                     throw new FormulaFormatException("Invalid token: " + token);
                 }
-                //else if (Regex.IsMatch(token, @"[-+/*]") && Regex.IsMatch(last_val, @"[-+/*]"))
-                //{
-                //    throw new FormulaFormatException("Too many operators: " + last_val + token);
-                //}
+                //throws exception if token and last value are both operands
                 else if (Regex.IsMatch(token, @"[\da-zA-z]") && Regex.IsMatch(last_val, @"[\da-zA-z]"))
                 {
                     throw new FormulaFormatException("Too many operands: " + last_val + token);
                 }
+                //throws exception if token and last value are both operators
                 else if ((token == "+" || token == "-" || token == "*" || token == "/") && (last_val == "+" || last_val == "-" || last_val == "*" || last_val == "/"))
                 {
                     throw new FormulaFormatException("Must have operand after operator or closing parenthesis");
@@ -80,25 +76,28 @@ namespace Formulas
                 }
                 if (token == "(")
                 {
-                    left_paren++;
+                    paren++;
                 }
                 else if (token == ")")
                 {
-                    right_paren++;
+                    paren--;
                 }
             }
+            //throws exception if no tokens were given
             if (last_val.Equals(""))
             {
                 throw new FormulaFormatException("There must be at least one token");
             }
-            if (right_paren != left_paren)
+            //throws exception if amount of left parentheses is not same as right parentheses
+            if (paren != 0)
             {
                 throw new FormulaFormatException("Too many right parentheses");
             }
+            //throws exception if last token is operator
             if (Regex.IsMatch(last_val, @"[-+/*]"))
             {
                 throw new FormulaFormatException("Cannot end formula with operator");
-                }
+            }
         }
         /// <summary>
         /// Evaluates this Formula, using the Lookup delegate to determine the values of variables.  (The
@@ -111,9 +110,12 @@ namespace Formulas
         /// </summary>
         public double Evaluate(Lookup lookup)
         {
+            Stack<string> operators = new Stack<string>();
+            Stack<double> values = new Stack<double>();
+
             double num;
             int paren = 0;
-            String temp_op = "";
+            String temp_operator = "";
             
             foreach (String token in formula_tokens)
             {
@@ -131,18 +133,18 @@ namespace Formulas
                 }
                 else if (token == ")")
                 {
-                    temp_op = operators.Pop();
-                    while (temp_op != "(")
+                    temp_operator = operators.Pop();
+                    while (temp_operator != "(")
                     {
-                        values.Push(OperateOnStacks(temp_op));
-                        temp_op = operators.Pop();
+                        values.Push(OperateOnStacks(values, temp_operator));
+                        temp_operator = operators.Pop();
                     }
                     paren--;
                     if (operators.Count > 0 && values.Count > (operators.Count - paren % 2))
                     {
                         if (operators.Peek().Equals("*") || operators.Peek().Equals("/"))
                         {
-                            values.Push(OperateOnStacks(operators.Pop()));
+                            values.Push(OperateOnStacks(values, operators.Pop()));
                         }
                     }
                 }
@@ -161,11 +163,11 @@ namespace Formulas
                 {
                     if (operators.Peek().Equals("*") || operators.Peek().Equals("/"))
                     {
-                        values.Push(OperateOnStacks(operators.Pop()));
+                        values.Push(OperateOnStacks(values, operators.Pop()));
                     }
                 }
             }
-            return EndOperation();
+            return EndOperation(values, operators);
         }
 
         /// <summary>
@@ -173,11 +175,11 @@ namespace Formulas
         /// The last value of the stack is saved to use after, to not affect results from - and /
         /// Switch statements picks the right operation and returns the value
         /// </summary>
-        private double OperateOnStacks(String op)
+        private double OperateOnStacks(Stack<double> values, String operator_value)
         {
             double temp_val;
             double last_val = values.Pop();
-            switch (op)
+            switch (operator_value)
             {
                 case "+":
                     temp_val = values.Pop() + last_val;
@@ -202,7 +204,7 @@ namespace Formulas
         /// The last value of the stack is saved to use after, to not affect results from - and /
         /// Switch statements picks the right operation and returns the value
         /// </summary>
-        private double EndOperation()
+        private double EndOperation(Stack<double> values, Stack<string> operators)
         {
             double temp_val;
             if (values.Count < 2)
@@ -213,9 +215,9 @@ namespace Formulas
             switch (operators.Pop())
             {
                 case "+":
-                    return EndOperation() + temp_val;
+                    return EndOperation(values, operators) + temp_val;
                 case "-":
-                    return EndOperation() - temp_val;
+                    return EndOperation(values, operators) - temp_val;
             }
             return 0;
         }
