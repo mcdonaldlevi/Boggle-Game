@@ -13,7 +13,7 @@ namespace Formulas
     /// the four binary operator symbols +, -, *, and /.  (The unary operators + and -
     /// are not allowed.)
     /// </summary>
-    public class Formula
+    public struct Formula
     {
         private IEnumerable<string> formula_tokens;
         /// <summary>
@@ -36,7 +36,7 @@ namespace Formulas
         /// If the formula is syntacticaly invalid, throws a FormulaFormatException with an 
         /// explanatory Message.
         /// </summary>
-        public Formula(String formula)
+        public Formula(String formula, Normalizer normalizer, Validator validator)
         {
             int paren = 0;
             String last_val = "";
@@ -271,6 +271,8 @@ namespace Formulas
     /// Used to report that a Lookup delegate is unable to determine the value
     /// of a variable.
     /// </summary>
+    public delegate string Normalizer(string s);
+    public delegate bool Validator(string s);
     [Serializable]
     public class UndefinedVariableException : Exception
     {
