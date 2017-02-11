@@ -32,6 +32,8 @@ namespace Dependencies
     ///     
     /// All of the methods below require their string parameters to be non-null.  This means that 
     /// the behavior of the method is undefined when a string parameter is null.  
+    /// If the parameters are null, it will throw an ArgumentNullException.
+    /// If there are null strings in IEnumerable parameters, it will throw an ArgumentNullException
     ///
     /// IMPORTANT IMPLEMENTATION NOTE
     /// 
@@ -54,6 +56,14 @@ namespace Dependencies
         /// <summary>
         /// Creates a DependencyGraph containing no dependencies.
         /// </summary>
+
+        public DependencyGraph(DependencyGraph dg)
+        {
+            Dependents = dg.Dependents;
+            Dependees = dg.Dependees;
+            size = dg.Size;
+        }
+
         public DependencyGraph()
         {
             size = 0;
@@ -72,6 +82,10 @@ namespace Dependencies
         /// </summary>
         public bool HasDependents(string s)
         {
+            if(s == null)
+            {
+                throw new ArgumentNullException();
+            }
             //Returns true if key is in Dependents and it is not empty
             if (Dependents.ContainsKey(s))
                 return (Dependents[s].Count != 0);
@@ -83,6 +97,10 @@ namespace Dependencies
         /// </summary>
         public bool HasDependees(string s)
         {
+            if (s == null)
+            {
+                throw new ArgumentNullException();
+            }
             //Returns true if key is in Dependees and it is not empty
             if (Dependees.ContainsKey(s))
                 return (Dependees[s].Count != 0);
@@ -94,7 +112,11 @@ namespace Dependencies
         /// </summary>
         public IEnumerable<string> GetDependents(string s)
         {
-            if(Dependents.ContainsKey(s))
+            if (s == null)
+            {
+                throw new ArgumentNullException();
+            }
+            if (Dependents.ContainsKey(s))
                 foreach (string dependent in Dependents[s])
                 {
                     yield return dependent;
@@ -106,7 +128,11 @@ namespace Dependencies
         /// </summary>
         public IEnumerable<string> GetDependees(string s)
         {
-            if(Dependees.ContainsKey(s))
+            if (s == null)
+            {
+                throw new ArgumentNullException();
+            }
+            if (Dependees.ContainsKey(s))
                 foreach (string dependee in Dependees[s])
                 {
                     yield return dependee;
@@ -120,6 +146,10 @@ namespace Dependencies
         /// </summary>
         public void AddDependency(string s, string t)
         {
+            if (s == null && t == null)
+            {
+                throw new ArgumentNullException();
+            }
             if (Dependents.ContainsKey(s) && Dependees.ContainsKey(t))
                 if (Dependents[s].Contains(t) && Dependees[t].Contains(s))
                     return;
@@ -152,6 +182,10 @@ namespace Dependencies
         /// </summary>
         public void RemoveDependency(string s, string t)
         {
+            if (s == null && t == null)
+            {
+                throw new ArgumentNullException();
+            }
             //Remove from both lists if exists 
             if (Dependents.ContainsKey(s) && Dependents.ContainsKey(t))
             {
@@ -175,7 +209,11 @@ namespace Dependencies
         /// </summary>
         public void ReplaceDependees(string s, IEnumerable<string> newDependents)
         {
-            if(Dependees.ContainsKey(s))
+            if (s == null)
+            {
+                throw new ArgumentNullException();
+            }
+            if (Dependees.ContainsKey(s))
                 //Removes all dependees and decrements size
                 foreach(string dependee in Dependees[s])
                 {
@@ -189,6 +227,10 @@ namespace Dependencies
             //Iterates ands every value from newDependents
             foreach(string dependent in newDependents)
             {
+                if (dependent == null)
+                {
+                    throw new ArgumentNullException();
+                }
                 AddDependency(dependent, s);
             }
         }
@@ -200,6 +242,10 @@ namespace Dependencies
         /// </summary>
         public void ReplaceDependents(string t, IEnumerable<string> newDependees)
         {
+            if (t == null)
+            {
+                throw new ArgumentNullException();
+            }
             if (Dependents.ContainsKey(t))
                 //Removes all dependents and decrements size
                 foreach (string dependent in Dependents[t])
@@ -214,6 +260,10 @@ namespace Dependencies
             //Iterates ands every value from newDependees
             foreach (string dependee in newDependees)
             {
+                if (dependee == null)
+                {
+                    throw new ArgumentNullException();
+                }
                 AddDependency(t, dependee);
             }
         }
