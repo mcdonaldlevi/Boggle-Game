@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace Dependencies
 {
@@ -72,9 +73,12 @@ namespace Dependencies
         /// </summary>
         public bool HasDependents(string s)
         {
+            checkInputString(s);
+
             //Returns true if key is in Dependents and it is not empty
             if (Dependents.ContainsKey(s))
-                return (Dependents[s].Count != 0);
+                if (Dependents[s].Count != 0)
+                    return true;
             return false;
         }
 
@@ -83,9 +87,12 @@ namespace Dependencies
         /// </summary>
         public bool HasDependees(string s)
         {
+            checkInputString(s);
+
             //Returns true if key is in Dependees and it is not empty
             if (Dependees.ContainsKey(s))
-                return (Dependees[s].Count != 0);
+                if (Dependees[s].Count != 0)
+                    return true;
             return false;
         }
 
@@ -94,11 +101,12 @@ namespace Dependencies
         /// </summary>
         public IEnumerable<string> GetDependents(string s)
         {
-            if(Dependents.ContainsKey(s))
-                foreach (string dependent in Dependents[s])
-                {
-                    yield return dependent;
-                }
+            checkInputString(s);
+
+            foreach (string dependent in Dependents[s])
+            {
+                yield return dependent;
+            }
         }
 
         /// <summary>
@@ -106,11 +114,12 @@ namespace Dependencies
         /// </summary>
         public IEnumerable<string> GetDependees(string s)
         {
-            if(Dependees.ContainsKey(s))
-                foreach (string dependee in Dependees[s])
-                {
-                    yield return dependee;
-                }
+            checkInputString(s);
+
+            foreach (string dependee in Dependees[s])
+            {
+                yield return dependee;
+            }
         }
 
         /// <summary>
@@ -120,19 +129,19 @@ namespace Dependencies
         /// </summary>
         public void AddDependency(string s, string t)
         {
-            if (Dependents.ContainsKey(s) && Dependees.ContainsKey(t))
-                if (Dependents[s].Contains(t) && Dependees[t].Contains(s))
-                    return;
+            checkInputString(s);
+            checkInputString(t);
+
             //If first parameter is not added before, it creates a dependents and dependees list
             if (!Dependents.ContainsKey(s))
                 Dependents.Add(s, new List<string>());
-            if(!Dependees.ContainsKey(s))
+            if (!Dependees.ContainsKey(s))
                 Dependees.Add(s, new List<string>());
 
             //If second parameter is not added before, it creates a dependents and dependees list
             if (!Dependents.ContainsKey(t))
                 Dependents.Add(t, new List<string>());
-            if(!Dependees.ContainsKey(t))
+            if (!Dependees.ContainsKey(t))
                 Dependees.Add(t, new List<string>());
 
             //If it has not been added to the Dependents list yet, it is added
@@ -141,7 +150,7 @@ namespace Dependencies
             //If it has not been added to the Dependees list yet, it is added
             if (!Dependees[t].Contains(s))
                 Dependees[t].Add(s);
-                
+
             size++;
         }
 
@@ -152,20 +161,26 @@ namespace Dependencies
         /// </summary>
         public void RemoveDependency(string s, string t)
         {
-            //Remove from both lists if exists 
-            if (Dependents.ContainsKey(s) && Dependents.ContainsKey(t))
-            {
-                if(Dependents.ContainsKey(s))
-                {
-                    Dependents[s].Remove(t);
-                }
-                if(Dependees.ContainsKey(t))
-                {
-                    Dependees[t].Remove(s);
-                }
+            checkInputString(s);
+            checkInputString(t);
 
-                size--;
+            //Removed from both lists
+            Dependents[s].Remove(t);
+            Dependees[t].Remove(s);
+
+            //If either value has no dependents or dependeees remaining, it is removed from the lists
+            if (Dependents[t].Count == 0 && Dependees[t].Count == 0)
+            {
+                Dependents.Remove(t);
+                Dependees.Remove(t);
             }
+            if (Dependents[s].Count == 0 && Dependees[s].Count == 0)
+            {
+                Dependents.Remove(s);
+                Dependees.Remove(s);
+            }
+
+            size--;
         }
 
         /// <summary>
@@ -173,22 +188,24 @@ namespace Dependencies
         /// t in newDependents, adds the dependency (s,t).
         /// Requires s != null and t != null.
         /// </summary>
-        public void ReplaceDependees(string s, IEnumerable<string> newDependents)
+        public void ReplaceDependents(string s, IEnumerable<string> newDependents)
         {
-            if(Dependees.ContainsKey(s))
-                //Removes all dependees and decrements size
-                foreach(string dependee in Dependees[s])
-                {
-                    Dependents[dependee].Remove(s);
-                    size--;
-                }
+            checkInputString(s);
+
+            //Removes all dependees and decrements size
+            foreach (string dependee in Dependees[s])
+            {
+                Dependents[dependee].Remove(s);
+                size--;
+            }
 
             //Clears list
             Dependees[s] = new List<string>();
 
-            //Iterates ands every value from newDependents
-            foreach(string dependent in newDependents)
+            //Iterates ands every value from newDependents after checking input string is valid
+            foreach (string dependent in newDependents)
             {
+                checkInputString(dependent);
                 AddDependency(dependent, s);
             }
         }
@@ -198,24 +215,56 @@ namespace Dependencies
         /// s in newDependees, adds the dependency (s,t).
         /// Requires s != null and t != null.
         /// </summary>
-        public void ReplaceDependents(string t, IEnumerable<string> newDependees)
+        public void ReplaceDependees(string t, IEnumerable<string> newDependees)
         {
-            if (Dependents.ContainsKey(t))
-                //Removes all dependents and decrements size
-                foreach (string dependent in Dependents[t])
-                {
-                    Dependees[dependent].Remove(t);
-                    size--;
-                }
+            checkInputString(t);
+
+            //Removes all dependents and decrements size
+            foreach (string dependent in Dependents[t])
+            {
+                Dependees[dependent].Remove(t);
+                size--;
+            }
 
             //Clears list
             Dependents[t] = new List<string>();
 
-            //Iterates ands every value from newDependees
+            //Iterates ands every value from newDependees after checking input string is valid
             foreach (string dependee in newDependees)
             {
+                checkInputString(dependee);
                 AddDependency(t, dependee);
             }
+        }
+
+        /// <summary>
+        /// If both dependent and dependency don't start with a letter,
+        /// or contain a value that is not a letter or number,
+        /// it will throw an exception
+        /// </summary>
+        /// <param name="input"></param>
+        private void checkInputString(string input)
+        {
+            //if (input.Length == 0)
+            //    throw new InvalidFormatException("Empty token");
+            ////First regex statement verifies the first value of the string is a letter, second verfies that there is only numbers and letters
+            //else if(!Regex.IsMatch(input.Substring(0, 1), @"[a-zA-Z]") || Regex.IsMatch(input, @"[^a-z A-Z\d]"))
+            //    throw new InvalidFormatException("Invalid token");
+        }
+    }
+
+
+    [Serializable]
+    public class InvalidFormatException : Exception
+    {
+        /// <summary>
+        /// Constructs an InvalidFormatException containing whose message is the
+        /// undefined variable.
+        /// </summary>
+        /// <param name="variable"></param>
+        public InvalidFormatException(String variable)
+            : base(variable)
+        {
         }
     }
 }
