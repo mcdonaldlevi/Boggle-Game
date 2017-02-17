@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Dependencies
 {
@@ -59,8 +60,16 @@ namespace Dependencies
 
         public DependencyGraph(DependencyGraph dg)
         {
-            Dependents = dg.Dependents;
-            Dependees = dg.Dependees;
+
+            //Makes deep copies of Dependees and Dependents
+            foreach (var dependent in dg.Dependents)
+            {
+                foreach(var dependee in dependent.Value)
+                {
+                    AddDependency(dependent.Key, dependee);
+                }
+            }
+            
             size = dg.Size;
         }
 
