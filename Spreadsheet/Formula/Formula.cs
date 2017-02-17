@@ -16,6 +16,7 @@ namespace Formulas
     public struct Formula
     {
         private IEnumerable<string> formula_tokens;
+        private string formula_string;
         /// <summary>
         /// Creates a Formula from a string that consists of a standard infix expression composed
         /// from non-negative floating-point numbers (using C#-like syntax for double/int literals), 
@@ -36,67 +37,78 @@ namespace Formulas
         /// If the formula is syntacticaly invalid, throws a FormulaFormatException with an 
         /// explanatory Message.
         /// </summary>
-        public Formula(String formula, Normalizer normalizer, Validator validator)
+        public Formula(string formula, Normalizer normalizer = null, Validator validator = null)
         {
+            //Gets tokens
+            formula_tokens = GetTokens(formula);
+            formula_string = formula;
+
+            //Function that normalizer when not null, checks with validator, and changes formula_tokens
+            normalizeAndValidate(formula, normalizer, validator);
+            
+
             int paren = 0;
             String last_val = "";
             Boolean first_value = true;
-            formula_tokens = GetTokens(formula);
-            foreach (var token in formula_tokens)
+
+            if (formula != null)
             {
-                if (first_value)
+                foreach (var token in formula_tokens)
                 {
-                    if (Regex.IsMatch(token, @"[-+/*)]"))
+                    if (first_value)
                     {
-                        throw new FormulaFormatException("Cannot start formula with operand");
+                        if (Regex.IsMatch(token, @"[-+/*)]"))
+                        {
+                            throw new FormulaFormatException("Cannot start formula with operand");
+                        }
+                        if (token != "(")
+                        {
+                            first_value = false;
+                        }
                     }
-                    if (token != "(")
+                    //throws exception if token is not a valid token or non-double number
+                    if (Regex.IsMatch(token, @"[^a-z A-Z\d/*+\-()]") && !Regex.IsMatch(token, @"\d+.\d+"))
                     {
-                        first_value = false;
+                        throw new FormulaFormatException("Invalid token: " + token);
+                    }
+                    //throws exception if token and last value are both operands
+                    else if (Regex.IsMatch(token, @"[\da-zA-z]") && Regex.IsMatch(last_val, @"[\da-zA-z]"))
+                    {
+                        throw new FormulaFormatException("Too many operands: " + last_val + token);
+                    }
+                    //throws exception if token and last value are both operators
+                    else if ((token == "+" || token == "-" || token == "*" || token == "/") && (last_val == "+" || last_val == "-" || last_val == "*" || last_val == "/"))
+                    {
+                        throw new FormulaFormatException("Must have operand after operator or closing parenthesis");
+                    }
+                    else
+                    {
+                        last_val = token;
+                    }
+                    if (token == "(")
+                    {
+                        paren++;
+                    }
+                    else if (token == ")")
+                    {
+                        paren--;
                     }
                 }
-                //throws exception if token is not a valid token or non-double number
-                if (Regex.IsMatch(token, @"[^a-z A-Z\d/*+\-()]") && !Regex.IsMatch(token, @"\d+.\d+"))
+                //throws exception if no tokens were given
+                if (last_val.Equals(""))
                 {
-                    throw new FormulaFormatException("Invalid token: " + token);
+                    throw new FormulaFormatException("There must be at least one token");
                 }
-                //throws exception if token and last value are both operands
-                else if (Regex.IsMatch(token, @"[\da-zA-z]") && Regex.IsMatch(last_val, @"[\da-zA-z]"))
+                //throws exception if amount of left parentheses is not same as right parentheses
+                if (paren != 0)
                 {
-                    throw new FormulaFormatException("Too many operands: " + last_val + token);
+                    throw new FormulaFormatException("Too many right parentheses");
                 }
-                //throws exception if token and last value are both operators
-                else if ((token == "+" || token == "-" || token == "*" || token == "/") && (last_val == "+" || last_val == "-" || last_val == "*" || last_val == "/"))
+                //throws exception if last token is operator
+                if (Regex.IsMatch(last_val, @"[-+/*]"))
                 {
-                    throw new FormulaFormatException("Must have operand after operator or closing parenthesis");
+                    throw new FormulaFormatException("Cannot end formula with operator");
                 }
-                else
-                {
-                    last_val = token;
-                }
-                if (token == "(")
-                {
-                    paren++;
-                }
-                else if (token == ")")
-                {
-                    paren--;
-                }
-            }
-            //throws exception if no tokens were given
-            if (last_val.Equals(""))
-            {
-                throw new FormulaFormatException("There must be at least one token");
-            }
-            //throws exception if amount of left parentheses is not same as right parentheses
-            if (paren != 0)
-            {
-                throw new FormulaFormatException("Too many right parentheses");
-            }
-            //throws exception if last token is operator
-            if (Regex.IsMatch(last_val, @"[-+/*]"))
-            {
-                throw new FormulaFormatException("Cannot end formula with operator");
             }
         }
         /// <summary>
@@ -116,30 +128,51 @@ namespace Formulas
             double num;
             int paren = 0;
             String temp_operator = "";
-            
-            foreach (String token in formula_tokens)
+
+            if (formula_string != null)
             {
-                if (double.TryParse(token, out num))
+                foreach (String token in formula_tokens)
                 {
-                    values.Push(num);
-                }
-                else if (token == "+" || token == "-" || token == "*" || token == "/" || token == "(")
-                {
-                    operators.Push(token);
-                    if (token == "(")
+                    if (double.TryParse(token, out num))
                     {
-                        paren++;
+                        values.Push(num);
                     }
-                }
-                else if (token == ")")
-                {
-                    temp_operator = operators.Pop();
-                    while (temp_operator != "(")
+                    else if (token == "+" || token == "-" || token == "*" || token == "/" || token == "(")
                     {
-                        values.Push(OperateOnStacks(values, temp_operator));
+                        operators.Push(token);
+                        if (token == "(")
+                        {
+                            paren++;
+                        }
+                    }
+                    else if (token == ")")
+                    {
                         temp_operator = operators.Pop();
+                        while (temp_operator != "(")
+                        {
+                            values.Push(OperateOnStacks(values, temp_operator));
+                            temp_operator = operators.Pop();
+                        }
+                        paren--;
+                        if (operators.Count > 0 && values.Count > (operators.Count - paren % 2))
+                        {
+                            if (operators.Peek().Equals("*") || operators.Peek().Equals("/"))
+                            {
+                                values.Push(OperateOnStacks(values, operators.Pop()));
+                            }
+                        }
                     }
-                    paren--;
+                    else
+                    {
+                        try
+                        {
+                            values.Push(lookup(token));
+                        }
+                        catch (UndefinedVariableException)
+                        {
+                            throw new FormulaEvaluationException("Variable not found");
+                        }
+                    }
                     if (operators.Count > 0 && values.Count > (operators.Count - paren % 2))
                     {
                         if (operators.Peek().Equals("*") || operators.Peek().Equals("/"))
@@ -148,26 +181,56 @@ namespace Formulas
                         }
                     }
                 }
-                else
+                return EndOperation(values, operators);
+            }
+            return 0;
+        }
+
+        public ISet<string> GetVariables()
+        {
+            var token_list = new HashSet<string>();
+            if (formula_string != null)
+            {
+                foreach (var token in formula_tokens)
                 {
-                    try
-                    {
-                        values.Push(lookup(token));
-                    }
-                    catch (UndefinedVariableException)
-                    {
-                        throw new FormulaEvaluationException("Variable not found");
-                    }
-                }
-                if (operators.Count > 0 && values.Count > (operators.Count - paren % 2))
-                {
-                    if (operators.Peek().Equals("*") || operators.Peek().Equals("/"))
-                    {
-                        values.Push(OperateOnStacks(values, operators.Pop()));
-                    }
+                    if (Regex.IsMatch(token.Substring(0, 1), @"[a-zA-z]"))
+                        token_list.Add(token);
                 }
             }
-            return EndOperation(values, operators);
+            return token_list;
+        }
+
+        /// <summary>
+        /// takes the formula, normalizer, validator as parameters
+        /// If not null, it normalizes and validates
+        /// </summary>
+        private void normalizeAndValidate(String formula, Normalizer normalizer, Validator validator)
+        {
+            string new_formula = "";
+            if (normalizer != null)
+            {
+                foreach (var token in formula_tokens)
+                {
+                    if (Regex.IsMatch(token.Substring(0, 1), @"[a-zA-z]"))
+                    {
+                        new_formula += normalizer(token);
+                        if (!validator(normalizer(token)))
+                            throw new FormulaFormatException("Validation failed");
+                    }
+                    else
+                        new_formula += token;
+                }
+                formula_string = new_formula;
+                formula_tokens = GetTokens(new_formula);
+            }
+        }
+
+        /// <summary>
+        /// returns the formula string when ToString function is called
+        /// </summary>
+        public override string ToString()
+        {
+            return formula_string;
         }
 
         /// <summary>
@@ -258,6 +321,8 @@ namespace Formulas
             }
         }
     }
+
+    
 
     /// <summary>
     /// A Lookup method is one that maps some strings to double values.  Given a string,
