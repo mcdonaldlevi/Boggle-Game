@@ -9,11 +9,29 @@ using System.Text.RegularExpressions;
 
 namespace SS
 {
-    class Cell
+    struct Cell
     {
-        public string name;
-        public double value;
-        public dynamic contents;
+        public dynamic myValue;
+        public dynamic myContents;
+        public Cell(dynamic value)
+        {
+
+            if(value.GetType() == typeof(string))
+            {
+                myValue = value;
+                myContents = value;
+            }
+            else if(value.GetType() == typeof(double))
+            {
+                myValue = value;
+                myContents = value;
+            }
+            else
+            {
+                myValue = value.ToString();
+                myContents = value.ToString();
+            }
+        }
     }
     /// <summary>
     /// An AbstractSpreadsheet object represents the state of a simple spreadsheet.  A 
@@ -81,7 +99,7 @@ namespace SS
             {
             if(cells.ContainsKey(name))
             {
-                return cells[name].contents;
+                return cells[name].myContents;
             }
             else
             {
@@ -105,15 +123,39 @@ namespace SS
             if (!Regex.IsMatch(name, pattern))
             {
                 throw new InvalidNameException();
-            }            
-            cells[name].contents = number;
-            IEnumerable<string> dependents = dependency.GetDependents(name);
-            ISet<string> dependentSet = (ISet<string>)dependents;
-            foreach (string x in dependents)
-            {
-                dependency.RemoveDependency(name, x);
             }
-            return dependentSet;
+            if (cells.ContainsKey(name))
+            {
+                cells[name] = new Cell(number);
+                IEnumerable<string> dependents = GetCellsToRecalculate(name);
+                foreach (string x in dependents)
+                {
+                    dependency.RemoveDependency(name, x);
+                }
+                ISet<string> dependentSet = new HashSet<string>();
+                foreach (string x in dependents)
+                {
+                    dependentSet.Add(x);
+                }
+                return dependentSet;                
+            }
+            else
+            {
+                Cell myCell = new Cell(number);
+                cells.Add(name, myCell);
+                IEnumerable<string> dependents = GetCellsToRecalculate(name);
+                foreach (string x in dependents)
+                {
+                    dependency.RemoveDependency(name, x);
+                }
+                ISet<string> dependentSet = new HashSet<string>();
+                foreach(string x in dependents)
+                {
+                    dependentSet.Add(x);
+                }
+                return dependentSet;
+            }
+            
             }
 
             
@@ -137,16 +179,38 @@ namespace SS
             {
                 throw new InvalidNameException();
             }
-
-            cells[name].contents = text;
-            IEnumerable<string> dependents = dependency.GetDependents(name);
-            ISet<string> dependentSet = (ISet<string>)dependents;
-            foreach(string x in dependents)
+            if (cells.ContainsKey(name))
             {
-                dependency.RemoveDependency(name, x);
+                cells[name] = new Cell(text);
+                IEnumerable<string> dependents = GetCellsToRecalculate(name);
+                foreach (string x in dependents)
+                {
+                    dependency.RemoveDependency(name, x);
+                }
+                ISet<string> dependentSet = new HashSet<string>();
+                foreach (string x in dependents)
+                {
+                    dependentSet.Add(x);
+                }
+                return dependentSet;
             }
-            return dependentSet;
-            
+            else
+            {
+                Cell myCell = new Cell(text);
+                cells.Add(name, myCell);
+                IEnumerable<string> dependents = GetCellsToRecalculate(name);
+                foreach (string x in dependents)
+                {
+                    dependency.RemoveDependency(name, x);
+                }
+                ISet<string> dependentSet = new HashSet<string>();
+                foreach (string x in dependents)
+                {
+                    dependentSet.Add(x);
+                }
+                return dependentSet;
+            }
+
         }
 
         /// <summary>
@@ -171,21 +235,54 @@ namespace SS
             {
                 throw new InvalidNameException();
             }
-
-            cells[name].contents = formula;
-            IEnumerable<string> dependents = dependency.GetDependents(name);
-            ISet<string> dependentSet = (ISet<string>)dependents;
-            IEnumerable<string> varibles = formula.GetVariables();
-            foreach(string x in varibles)
+            if (cells.ContainsKey(name))
             {
-                dependency.AddDependency(x, name);
-                if(dependency.GetDependents(name).Contains<string>(x))
+                cells[name] = new Cell(formula);
+                IEnumerable<string> dependents = GetCellsToRecalculate(name);
+                IEnumerable<string> varibles = formula.GetVariables();
+                foreach (string x in varibles)
                 {
-                    throw new CircularException();
+                    dependency.AddDependency(x, name);
                 }
+                foreach (string y in dependents)
+                {
+                    dependency.RemoveDependency(name, y);
+                }
+                ISet<string> dependentSet = new HashSet<string>();
+                foreach (string x in dependents)
+                {
+                    dependentSet.Add(x);
+                }
+                return dependentSet;
             }
-
-            return dependentSet;
+            else
+            {
+                Cell myCell = new Cell(formula);
+                cells.Add(name, myCell);
+                IEnumerable<string> dependents = GetCellsToRecalculate(name);
+                IEnumerable<string> varibles = formula.GetVariables();
+                foreach(string x in varibles)
+                {
+                    dependency.AddDependency(x, name);
+                }
+                foreach (string y in dependents)
+                {
+                    dependency.RemoveDependency(name, y);
+                }
+                foreach(string z in varibles)
+                {
+                    if(dependents.Contains(z))
+                    {
+                        throw new CircularException();
+                    }
+                }
+                ISet<string> dependentSet = new HashSet<string>();
+                foreach (string x in dependents)
+                {
+                    dependentSet.Add(x);
+                }
+                return dependentSet;
+            }
 
         }
 
