@@ -19,6 +19,7 @@ namespace PS5GradingTests
         }
 
         [TestMethod]
+        [ExpectedException(typeof(InvalidNameException))]
         public void SetCell2()
         {
             AbstractSpreadsheet sheet = new Spreadsheet();
@@ -67,12 +68,51 @@ namespace PS5GradingTests
         }
 
         [TestMethod]
+        public void Dependencies2()
+        {
+            AbstractSpreadsheet sheet = new Spreadsheet();
+            sheet.SetCellContents("A1", new Formula("B1 + B2"));
+            sheet.SetCellContents("B1", new Formula("A2 + A3"));
+            sheet.SetCellContents("C1", new Formula("D1 + D2"));
+            sheet.SetCellContents("D2", new Formula("A1"));
+        }
+
+        [TestMethod]
         [ExpectedException(typeof(CircularException))]
         public void Circular1()
         {
             AbstractSpreadsheet sheet = new Spreadsheet();
             sheet.SetCellContents("A1", new Formula("B1+5"));
             sheet.SetCellContents("B1", new Formula("A1+3"));
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(CircularException))]
+        public void Circular2()
+        {
+            AbstractSpreadsheet sheet = new Spreadsheet();
+            sheet.SetCellContents("A1", new Formula("B1+1"));
+            sheet.SetCellContents("B1", new Formula("C1-43"));
+            sheet.SetCellContents("C1", new Formula("A1*3"));
+        }
+
+        [TestMethod]
+        public void nonEmptyCells1()
+        {
+            AbstractSpreadsheet sheet = new Spreadsheet();
+            sheet.SetCellContents("A1", 1);
+            sheet.SetCellContents("B1", "A1 * A1");
+            sheet.SetCellContents("B1", "B1 + A1");
+
+            List<string> expected = new List<string> { "A1", "B1" };
+
+            int cell_count = 0;
+            foreach (var cell in sheet.GetNamesOfAllNonemptyCells())
+            {
+                Assert.IsTrue(expected.Contains(cell));
+                cell_count++;
+            }
+            Assert.IsTrue(cell_count == expected.Count);
         }
     }
 }

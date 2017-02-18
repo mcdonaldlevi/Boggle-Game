@@ -1,41 +1,67 @@
-﻿using System;
+﻿using Formulas;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace CellsClass
 {
     public class Cells
     {
-    Dictionary<string, object> cellDict = new Dictionary<string, object>();
+        Dictionary<string, Cell> cellDict = new Dictionary<string, Cell>();
 
-    public void setCell(string cell, object value)
-    {
-        if (cellDict.ContainsKey(cell))
+        public void setCell(string cell, string value)
         {
-            cellDict[cell] = value;
+            if (cellDict.ContainsKey(cell))
+            {
+                cellDict[cell] = new Cell(value);
+            }
+            else
+            {
+                cellDict.Add(cell, new Cell(value));
+            }
         }
-        else
+
+        public void setCell(string cell, Double value)
         {
-            cellDict.Add(cell, value);
+            if (cellDict.ContainsKey(cell))
+            {
+                cellDict[cell] = new Cell(value);
+            }
+            else
+            {
+                cellDict.Add(cell, new Cell(value));
+            }
+        }
+
+        public void setCell(string cell, Formula value)
+        {
+            if (cellDict.ContainsKey(cell))
+            {
+                cellDict[cell] = new Cell(value);
+            }
+            else
+            {
+                cellDict.Add(cell, new Cell(value));
+            }
+        }
+
+        public object getCell(string cell)
+        {
+            if (cellDict.ContainsKey(cell))
+                return cellDict[cell].getCellContent();
+            return "";
+        }
+
+        public Boolean containsCell(string name)
+        {
+            return cellDict.ContainsKey(name);
+        }
+
+        public IEnumerable<string> getUsedCells()
+        {
+            foreach (var cell in cellDict)
+            {
+                yield return cell.Key;
+            }
         }
     }
-
-    public object getCell(string cell)
-    {
-        if (cellDict.ContainsKey(cell))
-            return cellDict[cell];
-         return "";
-    }
-
-    public IEnumerable<string> getUsedCells()
-    {
-        foreach (var cell in cellDict)
-        {
-            yield return cell.Key;
-        }
-    }
-}
 }
