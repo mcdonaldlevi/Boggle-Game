@@ -99,7 +99,7 @@ namespace SS
                 checkCellNameValidity(variable);
             }
 
-            //Removes old dependencies
+            //Removes old dependencies if last value was a formula
             if(cells.containsCell(name))
                 if (cells.getCell(name).GetType() == typeof(Formula))
                 {
@@ -196,6 +196,7 @@ namespace SS
         {
             ISet<string> set = new HashSet<string>();
             set.Add(name);
+            //Adds dependees to set
             foreach (var dependee in dg.GetDependees(name))
             {
                 set.Add(dependee);
