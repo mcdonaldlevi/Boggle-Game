@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using SS;
 using Formulas;
+using System.Collections.Generic;
 
 namespace PS5GradingTests
 {
@@ -47,6 +48,31 @@ namespace PS5GradingTests
         {
             AbstractSpreadsheet sheet = new Spreadsheet();
             sheet.SetCellContents("X04", 3);
+        }
+
+        [TestMethod]
+        public void Dependencies1()
+        {
+            AbstractSpreadsheet sheet = new Spreadsheet();
+            sheet.SetCellContents("B1", new Formula("A1*2"));
+            sheet.SetCellContents("C1", new Formula("B1+A1"));
+            ISet<string> set = sheet.SetCellContents("A1", 5);
+
+            List<string> expected = new List<string> { "A1", "B1", "C1" };
+            Assert.IsTrue(expected.Count == set.Count);
+            foreach (var item in set)
+            {
+                Assert.IsTrue(expected.Contains(item));
+            }
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(CircularException))]
+        public void Circular1()
+        {
+            AbstractSpreadsheet sheet = new Spreadsheet();
+            sheet.SetCellContents("A1", new Formula("B1+5"));
+            sheet.SetCellContents("B1", new Formula("A1+3"));
         }
     }
 }

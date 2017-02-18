@@ -10,14 +10,8 @@ namespace SS
     public class Spreadsheet : AbstractSpreadsheet
     {
         Cells cells = new Cells();
-        AbstractSpreadsheet sheet;
         DependencyGraph dg = new DependencyGraph();
-
         
-
-        public Spreadsheet()
-        {
-        }
 
         public override object GetCellContents(string name)
         {
@@ -36,18 +30,19 @@ namespace SS
                 throw new InvalidNameException();
             }
 
+            cells.setCell(name, formula);
+
             foreach (var variable in formula.GetVariables())
             {
                 dg.AddDependency(name, variable);
+                foreach (var dependent in dg.GetDependents(variable))
+                {
+                    if (dependent == name)
+                        throw new CircularException();
+                }
             }
-            cells.setCell(name, formula);
-            ISet<string> set = new HashSet<string>();
-            set.Add(name);
-            foreach (var dependee in dg.GetDependees(name))
-            {
-                set.Add(dependee);
-            }
-            return set;
+            
+            return returnSet(name);
         }
 
         public override ISet<string> SetCellContents(string name, string text)
@@ -58,7 +53,8 @@ namespace SS
             }
 
             cells.setCell(name, text);
-            return new HashSet<string>();
+
+            return returnSet(name);
         }
 
         public override ISet<string> SetCellContents(string name, double number)
@@ -70,12 +66,24 @@ namespace SS
             }
 
             cells.setCell(name, number);
-            return new HashSet<string>();
+
+            return returnSet(name);
         }
 
         protected override IEnumerable<string> GetDirectDependents(string name)
         {
             throw new NotImplementedException();
+        }
+
+        private ISet<string> returnSet(String name)
+        {
+            ISet<string> set = new HashSet<string>();
+            set.Add(name);
+            foreach (var dependee in dg.GetDependees(name))
+            {
+                set.Add(dependee);
+            }
+            return set;
         }
     }
 }
