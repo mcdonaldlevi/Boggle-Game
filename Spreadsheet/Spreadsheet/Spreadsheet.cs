@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Formulas;
 using Dependencies;
+using System.Text.RegularExpressions;
 
 namespace SS
 {
@@ -56,7 +57,7 @@ namespace SS
     /// A1 depends on B1, which depends on C1, which depends on A1.  That's a circular
     /// dependency.
     /// </summary>
-    class Spreadsheet
+    public class Spreadsheet
     {
         Dictionary<string, Cell> cells = new Dictionary<string, Cell>();
         DependencyGraph dependency = new DependencyGraph();
@@ -100,18 +101,22 @@ namespace SS
             /// </summary>
             public ISet<String> SetCellContents(String name, double number)
             {
-                if(cells.ContainsKey(name))
-            {
-                cells[name].contents = number;
-                IEnumerable<string> dependents = dependency.GetDependents(name);
-                ISet<string> dependentSet = (ISet<string>)dependents;
-                return dependentSet;
-            }
-                else
+            string pattern = @"[a-zA-Z]{1,2}[1-9][0-9]*";
+            if (!Regex.IsMatch(name, pattern))
             {
                 throw new InvalidNameException();
+            }            
+            cells[name].contents = number;
+            IEnumerable<string> dependents = dependency.GetDependents(name);
+            ISet<string> dependentSet = (ISet<string>)dependents;
+            foreach (string x in dependents)
+            {
+                dependency.RemoveDependency(name, x);
             }
+            return dependentSet;
             }
+
+            
 
             /// <summary>
             /// If text is null, throws an ArgumentNullException.
@@ -127,17 +132,21 @@ namespace SS
             /// </summary>
             public ISet<String> SetCellContents(String name, String text)
         {
-            if (cells.ContainsKey(name))
-            {
-                cells[name].contents = text;
-                IEnumerable<string> dependents = dependency.GetDependents(name);
-                ISet<string> dependentSet = (ISet<string>)dependents;
-                return dependentSet;
-            }
-            else
+            string pattern = @"[a-zA-Z]{1,2}[1-9][0-9]*";
+            if (!Regex.IsMatch(name, pattern))
             {
                 throw new InvalidNameException();
             }
+
+            cells[name].contents = text;
+            IEnumerable<string> dependents = dependency.GetDependents(name);
+            ISet<string> dependentSet = (ISet<string>)dependents;
+            foreach(string x in dependents)
+            {
+                dependency.RemoveDependency(name, x);
+            }
+            return dependentSet;
+            
         }
 
         /// <summary>
@@ -157,17 +166,27 @@ namespace SS
         /// </summary>
         public ISet<String> SetCellContents(String name, Formula formula)
         {
-            if (cells.ContainsKey(name))
-            {
-                cells[name].contents = formula;
-                IEnumerable<string> dependents = dependency.GetDependents(name);
-                ISet<string> dependentSet = (ISet<string>)dependents;
-                return dependentSet;
-            }
-            else
+            string pattern = @"[a-zA-Z]{1,2}[1-9][0-9]*";
+            if (!Regex.IsMatch(name, pattern))
             {
                 throw new InvalidNameException();
             }
+
+            cells[name].contents = formula;
+            IEnumerable<string> dependents = dependency.GetDependents(name);
+            ISet<string> dependentSet = (ISet<string>)dependents;
+            IEnumerable<string> varibles = formula.GetVariables();
+            foreach(string x in varibles)
+            {
+                dependency.AddDependency(x, name);
+                if(dependency.GetDependents(name).Contains<string>(x))
+                {
+                    throw new CircularException();
+                }
+            }
+
+            return dependentSet;
+
         }
 
         /// <summary>
