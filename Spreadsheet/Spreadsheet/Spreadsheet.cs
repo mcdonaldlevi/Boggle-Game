@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Formulas;
 using Dependencies;
-using System.Text.RegularExpressions;
+
 namespace SS
 {
     class Cell
@@ -157,12 +157,6 @@ namespace SS
         /// </summary>
         public ISet<String> SetCellContents(String name, Formula formula)
         {
-            string varible = @"[a-zA-Z][0-9a-zA-Z]*";
-            string formulaName = formula.ToString();
-            if(!Regex.IsMatch(formulaName, varible))
-            {
-                throw new InvalidNameException();
-            }
             if (cells.ContainsKey(name))
             {
                 cells[name].contents = formula;
@@ -193,13 +187,9 @@ namespace SS
         /// D1 contains the formula B1 - C1
         /// The direct dependents of A1 are B1 and C1
         /// </summary>
-        public void DetectCircularDependency(DependencyGraph graph)
-        {
-
-        }
         protected IEnumerable<String> GetDirectDependents(String name)
             {
-                return dependency.GetDependents(name);
+            return dependency.GetDependents(name);
             }
 
             /// <summary>
