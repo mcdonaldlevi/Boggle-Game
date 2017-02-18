@@ -333,6 +333,7 @@ namespace Dependencies
                 foreach (string x in newDependees)
                 {
                     dependeesList.Add(x);
+                    size += 1;
                 }
              
                 dependents[t] = dependeesList;
@@ -341,15 +342,9 @@ namespace Dependencies
                 {
                     if (dependees.ContainsKey(x))
                     {
-                        dependees[x].Add(t);
-                        size += 1;
+                        dependents[x].Add(t);
                     }
-                    else
-                    {
-                        List<string> newList = new List<string> { t };
-                        dependees.Add(x, newList);
-                        size += 1;
-                    }
+                    size += 1;
                 }
             }
         }
