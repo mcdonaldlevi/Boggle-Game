@@ -234,7 +234,7 @@ namespace SS
         private void checkCellNameValidity(String name)
         {
             if (name == null)
-                throw new ArgumentNullException();
+                throw new InvalidNameException();
             if (!Regex.IsMatch(name, @"[A-Za-z]+[1-9]\d*"))
                 throw new InvalidNameException();
         }
