@@ -50,9 +50,20 @@ namespace SS
     /// dependency.
     /// </summary>
     public class Spreadsheet : AbstractSpreadsheet
-    {
+    { 
         Cells cells = new Cells();
         DependencyGraph dg = new DependencyGraph();
+        Regex validation;
+
+        public Spreadsheet()
+        {
+            validation = new Regex("");
+        }
+
+        public Spreadsheet(Regex isValid)
+        {
+            validation = isValid;
+        }
 
         /// <summary>
         /// If name is null or invalid, throws an InvalidNameException.
@@ -90,9 +101,8 @@ namespace SS
         /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
         /// set {A1, B1, C1} is returned.
         /// </summary>
-        public override ISet<string> SetCellContents(string name, Formula formula)
+        public ISet<string> SetCellFormula(string name, Formula formula)
         {
-            checkCellNameValidity(name);
             //Checks validity of each variable in formula
             foreach(var variable in formula.GetVariables())
             {
@@ -135,33 +145,31 @@ namespace SS
         /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
         /// set {A1, B1, C1} is returned.
         /// </summary>
-        public override ISet<string> SetCellContents(string name, string text)
+        public override ISet<string> SetContentsOfCell(string name, string text)
         {
             if (text == null)
                 throw new ArgumentException();
             checkCellNameValidity(name);
 
-            cells.setCell(name, text);
+             if(!validation.IsMatch(text.ToUpper()))
+            {
+                throw new InvalidNameException();
+            }
+            double output_num;
 
-            return returnSet(name);
-        }
-
-        /// <summary>
-        /// If name is null or invalid, throws an InvalidNameException.
-        /// 
-        /// Otherwise, the contents of the named cell becomes number.  The method returns a
-        /// set consisting of name plus the names of all other cells whose value depends, 
-        /// directly or indirectly, on the named cell.
-        /// 
-        /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
-        /// set {A1, B1, C1} is returned.
-        /// </summary>
-        public override ISet<string> SetCellContents(string name, double number)
-        {
-            checkCellNameValidity(name);
-
-            cells.setCell(name, number);
-
+             if(Double.TryParse(text, out output_num))
+            {
+                cells.setCell(name, output_num);
+            }
+            else if(text.Substring(0, 1).Equals("="))
+            {
+                return SetCellFormula(name, new Formula(text, s => s.ToUpper()));
+            }
+            else
+            {
+                cells.setCell(name, text);
+            }
+             
             return returnSet(name);
         }
 
@@ -234,7 +242,7 @@ namespace SS
         private void checkCellNameValidity(String name)
         {
             if (name == null)
-                throw new ArgumentNullException();
+                throw new InvalidNameException();
             if (!Regex.IsMatch(name, @"[A-Za-z]+[1-9]\d*"))
                 throw new InvalidNameException();
         }
