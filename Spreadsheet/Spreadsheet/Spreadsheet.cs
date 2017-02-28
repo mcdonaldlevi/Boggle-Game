@@ -6,33 +6,12 @@ using System.Threading.Tasks;
 using Formulas;
 using Dependencies;
 using System.Text.RegularExpressions;
+using System.IO;
+using System.Xml;
 
 namespace SS
 {
-    struct Cell
-    {
-        public dynamic myValue;
-        public dynamic myContents;
-        public Cell(dynamic value)
-        {
 
-            if(value.GetType() == typeof(string))
-            {
-                myValue = value;
-                myContents = value;
-            }
-            else if(value.GetType() == typeof(double))
-            {
-                myValue = value;
-                myContents = value;
-            }
-            else
-            {
-                myValue = value.ToString();
-                myContents = value.ToString();
-            }
-        }
-    }
     /// <summary>
     /// An AbstractSpreadsheet object represents the state of a simple spreadsheet.  A 
     /// spreadsheet consists of an infinite number of named cells.
@@ -77,27 +56,172 @@ namespace SS
     /// </summary>
     public class Spreadsheet
     {
+        
         Dictionary<string, Cell> cells = new Dictionary<string, Cell>();
         DependencyGraph dependency = new DependencyGraph();
+        Regex IsValid;
         
-            /// <summary>
-            /// Enumerates the names of all the non-empty cells in the spreadsheet.
-            /// </summary>
-            public IEnumerable<String> GetNamesOfAllNonemptyCells()
+
+        /// <summary>
+        /// Constructs a Spreadsheet with a Validity checker.
+        /// </summary>
+        /// <param name="IsValid"></param>
+        public Spreadsheet(Regex IsValid)
+        {
+            this.IsValid = IsValid;
+        }
+        /// <summary>
+        /// Creates a spreadsheet where anything is valid.
+        /// </summary>
+        public Spreadsheet()
+        {
+            Regex valid = new Regex(@"(.*)?");
+            IsValid = valid;
+        }
+        struct Cell
+        {
+            
+            public object myValue;
+            public object myContents;
+            public Cell(object value, Lookup lookUp)
             {
-                IEnumerable<String> names = cells.Keys;
-                return names;
+
+                if (value.GetType() == typeof(string))
+                {
+                    myValue = value;
+                    myContents = value;
+                }
+                else if (value.GetType() == typeof(double))
+                {
+                    myValue = value;
+                    myContents = value;
+                }
+                else
+                {
+                    Formula f = (Formula)value;
+                    try
+                    {
+                        myValue = f.Evaluate(lookUp);
+                        myContents = value.ToString();
+                    }
+                    catch
+                    {
+                        myValue = new FormulaError("Cells have no valid value");
+                        myContents = value.ToString();
+                    }
+                    
+                }
             }
 
-            /// <summary>
-            /// If name is null or invalid, throws an InvalidNameException.
-            /// 
-            /// Otherwise, returns the contents (as opposed to the value) of the named cell.  The return
-            /// value should be either a string, a double, or a Formula.
-            /// </summary>
-            public object GetCellContents(String name)
+        }
+        /// <summary>
+        /// makes a lookup function to check the spreadsheet and retreive values of cells.
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns></returns>
+        public double lookUp(string s)
+        {
+
+            if (cells[s].myValue.GetType() == typeof(string))
             {
-            if(cells.ContainsKey(name))
+                throw new FormulaEvaluationException("Cell refrenced was a string");
+            }
+            else
+            {
+                return (double)cells[s].myValue;
+            }
+        }
+        /// <summary>
+        /// turns the Regex input into a valid bool to pass to a Formula
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns></returns>      
+        public bool valid(string s)
+        {
+            return IsValid.IsMatch(s);
+        }
+        /// <summary>
+        /// True if this spreadsheet has been modified since it was created or saved
+        /// (whichever happened most recently); false otherwise.
+        /// </summary>
+        public bool Changed { get; protected set; }
+
+        // ADDED FOR PS6
+        /// <summary>
+        /// Writes the contents of this spreadsheet to dest using an XML format.
+        /// The XML elements should be structured as follows:
+        ///
+        /// <spreadsheet IsValid="IsValid regex goes here">
+        ///   <cell name="cell name goes here" contents="cell contents go here"></cell>
+        ///   <cell name="cell name goes here" contents="cell contents go here"></cell>
+        ///   <cell name="cell name goes here" contents="cell contents go here"></cell>
+        /// </spreadsheet>
+        ///
+        /// The value of the IsValid attribute should be IsValid.ToString()
+        /// 
+        /// There should be one cell element for each non-empty cell in the spreadsheet.
+        /// If the cell contains a string, the string (without surrounding double quotes) should be written as the contents.
+        /// If the cell contains a double d, d.ToString() should be written as the contents.
+        /// If the cell contains a Formula f, f.ToString() with "=" prepended should be written as the contents.
+        ///
+        /// If there are any problems writing to dest, the method should throw an IOException.
+        /// </summary>
+        public void Save(TextWriter dest)
+        {
+            using (XmlWriter writer = XmlWriter.Create(dest))
+            {
+                writer.WriteStartDocument();
+                writer.WriteStartElement(IsValid.ToString());
+                IEnumerable<string> myCells = GetNamesOfAllNonemptyCells();
+
+                foreach (string x in myCells)
+                {
+                    writer.WriteStartElement("cell name =", x);
+                    writer.WriteElementString("contents = ", cells[x].myContents.ToString());
+                    writer.WriteEndElement();
+                }
+
+                writer.WriteEndElement();
+                writer.WriteEndDocument();
+            }
+
+        }
+        // ADDED FOR PS6
+        /// <summary>
+        /// If name is null or invalid, throws an InvalidNameException.
+        ///
+        /// Otherwise, returns the value (as opposed to the contents) of the named cell.  The return
+        /// value should be either a string, a double, or a FormulaError.
+        /// </summary>
+        public object GetCellValue(String name)
+        {
+            if (cells.ContainsKey(name))
+            {
+                return cells[name].myValue;
+            }
+            else
+            {
+                throw new InvalidNameException();
+            }
+        }
+        /// <summary>
+        /// Enumerates the names of all the non-empty cells in the spreadsheet.
+        /// </summary>
+        public IEnumerable<String> GetNamesOfAllNonemptyCells()
+        {
+            IEnumerable<String> names = cells.Keys;
+            return names;
+        }
+
+        /// <summary>
+        /// If name is null or invalid, throws an InvalidNameException.
+        /// 
+        /// Otherwise, returns the contents (as opposed to the value) of the named cell.  The return
+        /// value should be either a string, a double, or a Formula.
+        /// </summary>
+        public object GetCellContents(String name)
+        {
+            if (cells.ContainsKey(name))
             {
                 return cells[name].myContents;
             }
@@ -105,74 +229,112 @@ namespace SS
             {
                 throw new InvalidNameException();
             }
+        }
+        // ADDED FOR PS6
+        /// <summary>
+        /// If content is null, throws an ArgumentNullException.
+        ///
+        /// Otherwise, if name is null or invalid, throws an InvalidNameException.
+        ///
+        /// Otherwise, if content parses as a double, the contents of the named
+        /// cell becomes that double.
+        ///
+        /// Otherwise, if content begins with the character '=', an attempt is made
+        /// to parse the remainder of content into a Formula f using the Formula
+        /// constructor with s => s.ToUpper() as the normalizer and a validator that
+        /// checks that s is a valid cell name as defined in the AbstractSpreadsheet
+        /// class comment.  There are then three possibilities:
+        ///
+        ///   (1) If the remainder of content cannot be parsed into a Formula, a
+        ///       Formulas.FormulaFormatException is thrown.
+        ///
+        ///   (2) Otherwise, if changing the contents of the named cell to be f
+        ///       would cause a circular dependency, a CircularException is thrown.
+        ///
+        ///   (3) Otherwise, the contents of the named cell becomes f.
+        ///
+        /// Otherwise, the contents of the named cell becomes content.
+        ///
+        /// If an exception is not thrown, the method returns a set consisting of
+        /// name plus the names of all other cells whose value depends, directly
+        /// or indirectly, on the named cell.
+        ///
+        /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
+        /// set {A1, B1, C1} is returned.
+        /// </summary>
+        public ISet<String> SetContentsOfCell(String name, String content)
+        {
+            name = name.ToUpper();
+            double myDouble;
+            if (double.TryParse(content, out myDouble))
+            {
+                ISet<string> returnSet = SetCellContents(name, myDouble);
+                IEnumerable<string> cellsToRecalculate = GetCellsToRecalculate(name);
+                if(cellsToRecalculate.Count() > 1)
+                {
+                    foreach (string x in cellsToRecalculate)
+                    {
+                        Formula f = new Formula(cells[x].myContents.ToString());
+                        cells[x] = new Cell(f, lookUp);
+                    }
+                }
+                
+                return returnSet;
             }
+            else if (content[0] == '=')
+            {
+                content = content.Remove(0,1);
+                Formula form;
+                try
+                {
+                    form = new Formula(content, s => s.ToUpper(), valid);
+                }
+                catch
+                {
+                    throw new FormulaFormatException("formula was not valid for Spreadsheet Validitor");
+                }
+                ISet<string> returnSet = SetCellContents(name, form);
+                IEnumerable<string> cellsToRecalculate = GetCellsToRecalculate(name);
+                if (cellsToRecalculate.Count() > 1)
+                {
+                    foreach (string x in cellsToRecalculate)
+                    {
+                        Formula f = new Formula(cells[x].myContents.ToString());
+                        cells[x] = new Cell(f, lookUp);
+                    }
+                }
 
-            /// <summary>
-            /// If name is null or invalid, throws an InvalidNameException.
-            /// 
-            /// Otherwise, the contents of the named cell becomes number.  The method returns a
-            /// set consisting of name plus the names of all other cells whose value depends, 
-            /// directly or indirectly, on the named cell.
-            /// 
-            /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
-            /// set {A1, B1, C1} is returned.
-            /// </summary>
-            public ISet<String> SetCellContents(String name, double number)
-            {
-            string pattern = @"[a-zA-Z]{1,2}[1-9][0-9]*";
-            if (!Regex.IsMatch(name, pattern))
-            {
-                throw new InvalidNameException();
-            }
-            if (cells.ContainsKey(name))
-            {
-                cells[name] = new Cell(number);
-                IEnumerable<string> dependents = GetCellsToRecalculate(name);
-                foreach (string x in dependents)
-                {
-                    dependency.RemoveDependency(name, x);
-                }
-                ISet<string> dependentSet = new HashSet<string>();
-                foreach (string x in dependents)
-                {
-                    dependentSet.Add(x);
-                }
-                return dependentSet;                
+                return returnSet;
             }
             else
             {
-                Cell myCell = new Cell(number);
-                cells.Add(name, myCell);
-                IEnumerable<string> dependents = GetCellsToRecalculate(name);
-                foreach (string x in dependents)
+                ISet<string> returnSet = SetCellContents(name, content);
+                IEnumerable<string> cellsToRecalculate = GetCellsToRecalculate(name);
+                if (cellsToRecalculate.Count() > 1)
                 {
-                    dependency.RemoveDependency(name, x);
+                    foreach (string x in cellsToRecalculate)
+                    {
+                        Formula f = new Formula(cells[x].myContents.ToString());
+                        cells[x] = new Cell(f, lookUp);
+                    }
                 }
-                ISet<string> dependentSet = new HashSet<string>();
-                foreach(string x in dependents)
-                {
-                    dependentSet.Add(x);
-                }
-                return dependentSet;
-            }
-            
-            }
 
-            
+                return returnSet;
+            }
+        }
 
-            /// <summary>
-            /// If text is null, throws an ArgumentNullException.
-            /// 
-            /// Otherwise, if name is null or invalid, throws an InvalidNameException.
-            /// 
-            /// Otherwise, the contents of the named cell becomes text.  The method returns a
-            /// set consisting of name plus the names of all other cells whose value depends, 
-            /// directly or indirectly, on the named cell.
-            /// 
-            /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
-            /// set {A1, B1, C1} is returned.
-            /// </summary>
-            public ISet<String> SetCellContents(String name, String text)
+
+        /// <summary>
+        /// If name is null or invalid, throws an InvalidNameException.
+        /// 
+        /// Otherwise, the contents of the named cell becomes number.  The method returns a
+        /// set consisting of name plus the names of all other cells whose value depends, 
+        /// directly or indirectly, on the named cell.
+        /// 
+        /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
+        /// set {A1, B1, C1} is returned.
+        /// </summary>
+        protected ISet<String> SetCellContents(String name, double number)
         {
             string pattern = @"[a-zA-Z]{1,2}[1-9][0-9]*";
             if (!Regex.IsMatch(name, pattern))
@@ -181,14 +343,15 @@ namespace SS
             }
             if (cells.ContainsKey(name))
             {
-                cells[name] = new Cell(text);
-                IEnumerable<string> dependents = GetCellsToRecalculate(name);
+                cells[name] = new Cell(number, lookUp);
+                IEnumerable<string> dependents = dependency.GetDependees(name);
                 foreach (string x in dependents)
                 {
                     dependency.RemoveDependency(name, x);
                 }
+                IEnumerable<string> dependentEnumerable = GetCellsToRecalculate(name);
                 ISet<string> dependentSet = new HashSet<string>();
-                foreach (string x in dependents)
+                foreach (string x in dependentEnumerable)
                 {
                     dependentSet.Add(x);
                 }
@@ -196,15 +359,74 @@ namespace SS
             }
             else
             {
-                Cell myCell = new Cell(text);
+                Cell myCell = new Cell(number, lookUp);
                 cells.Add(name, myCell);
-                IEnumerable<string> dependents = GetCellsToRecalculate(name);
+                IEnumerable<string> dependents = dependency.GetDependees(name);
                 foreach (string x in dependents)
                 {
                     dependency.RemoveDependency(name, x);
                 }
+                IEnumerable<string> dependentEnumerable = GetCellsToRecalculate(name);
                 ISet<string> dependentSet = new HashSet<string>();
+                foreach(string x in dependentEnumerable)
+                {
+                    dependentSet.Add(x);
+                }
+                return dependentSet;
+            }
+
+        }
+
+
+
+        /// <summary>
+        /// If text is null, throws an ArgumentNullException.
+        /// 
+        /// Otherwise, if name is null or invalid, throws an InvalidNameException.
+        /// 
+        /// Otherwise, the contents of the named cell becomes text.  The method returns a
+        /// set consisting of name plus the names of all other cells whose value depends, 
+        /// directly or indirectly, on the named cell.
+        /// 
+        /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
+        /// set {A1, B1, C1} is returned.
+        /// </summary>
+        protected ISet<String> SetCellContents(String name, String text)
+        {
+            string pattern = @"[a-zA-Z]{1,2}[1-9][0-9]*";
+            if (!Regex.IsMatch(name, pattern))
+            {
+                throw new InvalidNameException();
+            }
+            if (cells.ContainsKey(name))
+            {
+                cells[name] = new Cell(text, lookUp);
+                IEnumerable<string> dependents = dependency.GetDependees(name);
                 foreach (string x in dependents)
+                {
+                    dependency.RemoveDependency(name, x);
+                }
+                IEnumerable<string> dependentEnumerable = GetCellsToRecalculate(name);
+                ISet<string> dependentSet = new HashSet<string>();
+                foreach (string x in dependentEnumerable)
+                {
+                    dependentSet.Add(x);
+                }
+                return dependentSet;
+
+            }
+            else
+            {
+                Cell myCell = new Cell(text, lookUp);
+                cells.Add(name, myCell);
+                IEnumerable<string> dependents = dependency.GetDependees(name);
+                foreach (string x in dependents)
+                {
+                    dependency.RemoveDependency(name, x);
+                }
+                IEnumerable<string> dependentEnumerable = GetCellsToRecalculate(name);
+                ISet<string> dependentSet = new HashSet<string>();
+                foreach (string x in dependentEnumerable)
                 {
                     dependentSet.Add(x);
                 }
@@ -228,7 +450,7 @@ namespace SS
         /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
         /// set {A1, B1, C1} is returned.
         /// </summary>
-        public ISet<String> SetCellContents(String name, Formula formula)
+        protected ISet<String> SetCellContents(String name, Formula formula)
         {
             string pattern = @"[a-zA-Z]{1,2}[1-9][0-9]*";
             if (!Regex.IsMatch(name, pattern))
@@ -237,7 +459,34 @@ namespace SS
             }
             if (cells.ContainsKey(name))
             {
-                cells[name] = new Cell(formula);
+                cells[name] = new Cell(formula, lookUp);
+                IEnumerable<string> dependents = dependency.GetDependees(name);
+                IEnumerable<string> varibles = formula.GetVariables();
+                foreach (string x in varibles)
+                {
+                    foreach(string z in dependency.GetDependees(x))
+                    {
+                        if (z == name)
+                            throw new CircularException();
+                    }
+                    dependency.AddDependency(x, name);                    
+                }
+                foreach (string y in dependents)
+                {
+                    dependency.RemoveDependency(name, y);
+                }
+
+                ISet<string> dependentSet = new HashSet<string>();
+                foreach (string x in dependents)
+                {
+                    dependentSet.Add(x);
+                }
+                return dependentSet;
+            }
+            else
+            {
+                Cell myCell = new Cell(formula, lookUp);
+                cells.Add(name, myCell);
                 IEnumerable<string> dependents = GetCellsToRecalculate(name);
                 IEnumerable<string> varibles = formula.GetVariables();
                 foreach (string x in varibles)
@@ -248,30 +497,9 @@ namespace SS
                 {
                     dependency.RemoveDependency(name, y);
                 }
-                ISet<string> dependentSet = new HashSet<string>();
-                foreach (string x in dependents)
+                foreach (string z in varibles)
                 {
-                    dependentSet.Add(x);
-                }
-                return dependentSet;
-            }
-            else
-            {
-                Cell myCell = new Cell(formula);
-                cells.Add(name, myCell);
-                IEnumerable<string> dependents = GetCellsToRecalculate(name);
-                IEnumerable<string> varibles = formula.GetVariables();
-                foreach(string x in varibles)
-                {
-                    dependency.AddDependency(x, name);
-                }
-                foreach (string y in dependents)
-                {
-                    dependency.RemoveDependency(name, y);
-                }
-                foreach(string z in varibles)
-                {
-                    if(dependents.Contains(z))
+                    if (dependents.Contains(z))
                     {
                         throw new CircularException();
                     }
@@ -304,79 +532,83 @@ namespace SS
         /// The direct dependents of A1 are B1 and C1
         /// </summary>
         protected IEnumerable<String> GetDirectDependents(String name)
-            {
+        {
             return dependency.GetDependents(name);
-            }
+        }
 
-            /// <summary>
-            /// Requires that names be non-null.  Also requires that if names contains s,
-            /// then s must be a valid non-null cell name.
-            /// 
-            /// If any of the named cells are involved in a circular dependency,
-            /// throws a CircularException.
-            /// 
-            /// Otherwise, returns an enumeration of the names of all cells whose values must
-            /// be recalculated, assuming that the contents of each cell named in names has changed.
-            /// The names are enumerated in the order in which the calculations should be done.  
-            /// 
-            /// For example, suppose that 
-            /// A1 contains 5
-            /// B1 contains 7
-            /// C1 contains the formula A1 + B1
-            /// D1 contains the formula A1 * C1
-            /// E1 contains 15
-            /// 
-            /// If A1 and B1 have changed, then A1, B1, and C1, and D1 must be recalculated,
-            /// and they must be recalculated in either the order A1,B1,C1,D1 or B1,A1,C1,D1.
-            /// The method will produce one of those enumerations.
-            /// 
-            /// PLEASE NOTE THAT THIS METHOD DEPENDS ON THE ABSTRACT GetDirectDependents.
-            /// IT WON'T WORK UNTIL GetDirectDependents IS IMPLEMENTED CORRECTLY.  YOU WILL
-            /// NOT NEED TO MODIFY THIS METHOD.
-            /// </summary>
-            protected IEnumerable<String> GetCellsToRecalculate(ISet<String> names)
+        /// <summary>
+        /// Requires that names be non-null.  Also requires that if names contains s,
+        /// then s must be a valid non-null cell name.
+        /// 
+        /// If any of the named cells are involved in a circular dependency,
+        /// throws a CircularException.
+        /// 
+        /// Otherwise, returns an enumeration of the names of all cells whose values must
+        /// be recalculated, assuming that the contents of each cell named in names has changed.
+        /// The names are enumerated in the order in which the calculations should be done.  
+        /// 
+        /// For example, suppose that 
+        /// A1 contains 5
+        /// B1 contains 7
+        /// C1 contains the formula A1 + B1
+        /// D1 contains the formula A1 * C1
+        /// E1 contains 15
+        /// 
+        /// If A1 and B1 have changed, then A1, B1, and C1, and D1 must be recalculated,
+        /// and they must be recalculated in either the order A1,B1,C1,D1 or B1,A1,C1,D1.
+        /// The method will produce one of those enumerations.
+        /// 
+        /// PLEASE NOTE THAT THIS METHOD DEPENDS ON THE ABSTRACT GetDirectDependents.
+        /// IT WON'T WORK UNTIL GetDirectDependents IS IMPLEMENTED CORRECTLY.  YOU WILL
+        /// NOT NEED TO MODIFY THIS METHOD.
+        /// </summary>
+        protected IEnumerable<String> GetCellsToRecalculate(ISet<String> names)
+        {
+            LinkedList<String> changed = new LinkedList<String>();
+            HashSet<String> visited = new HashSet<String>();
+            foreach (String name in names)
             {
-                LinkedList<String> changed = new LinkedList<String>();
-                HashSet<String> visited = new HashSet<String>();
-                foreach (String name in names)
+                if (!visited.Contains(name))
                 {
-                    if (!visited.Contains(name))
-                    {
-                        Visit(name, name, visited, changed);
-                    }
+                    Visit(name, name, visited, changed);
                 }
-                return changed;
             }
+            return changed;
+        }
 
-            /// <summary>
-            /// A convenience method for invoking the other version of GetCellsToRecalculate
-            /// with a singleton set of names.  See the other version for details.
-            /// </summary>
-            protected IEnumerable<String> GetCellsToRecalculate(String name)
-            {
-                return GetCellsToRecalculate(new HashSet<String>() { name });
-            }
+        /// <summary>
+        /// A convenience method for invoking the other version of GetCellsToRecalculate
+        /// with a singleton set of names.  See the other version for details.
+        /// </summary>
+        protected IEnumerable<String> GetCellsToRecalculate(String name)
+        {
+            return GetCellsToRecalculate(new HashSet<String>() { name });
+        }
 
-            /// <summary>
-            /// A helper for the GetCellsToRecalculate method.
-            /// </summary>
-            private void Visit(String start, String name, ISet<String> visited, LinkedList<String> changed)
+        /// <summary>
+        /// A helper for the GetCellsToRecalculate method.
+        /// </summary>
+        private void Visit(String start, String name, ISet<String> visited, LinkedList<String> changed)
+        {
+            visited.Add(name);
+            foreach (String n in GetDirectDependents(name))
             {
-                visited.Add(name);
-                foreach (String n in GetDirectDependents(name))
+                if (n.Equals(start))
                 {
-                    if (n.Equals(start))
-                    {
-                        throw new CircularException();
-                    }
-                    else if (!visited.Contains(n))
-                    {
-                        Visit(start, n, visited, changed);
-                    }
+                    throw new CircularException();
                 }
-                changed.AddFirst(name);
+                else if (!visited.Contains(n))
+                {
+                    Visit(start, n, visited, changed);
+                }
             }
+            changed.AddFirst(name);
+        }
+        private string upper(string s)
+        {
+            return s.ToUpper();
         }
     }
+}
 
 

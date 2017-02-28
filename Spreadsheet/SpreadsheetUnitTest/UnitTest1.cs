@@ -18,71 +18,75 @@ namespace SS
         public void TestGetSetContents1()
         {
             Spreadsheet testSheet = new Spreadsheet();
-            testSheet.SetCellContents("a1", 5);
-            Assert.IsTrue((double)testSheet.GetCellContents("a1") == 5);
+            testSheet.SetContentsOfCell("a1", "5");
+            Assert.IsTrue((double)testSheet.GetCellContents("A1") == 5);
         }
         [TestMethod]
         public void TestGetSetContents2()
         {
             Spreadsheet testSheet = new Spreadsheet();
-            testSheet.SetCellContents("a1", "hello");
-            Assert.IsTrue((string)testSheet.GetCellContents("a1") == "hello");
+            testSheet.SetContentsOfCell("a1", "hello");
+            Assert.IsTrue((string)testSheet.GetCellContents("A1") == "hello");
         }
         [TestMethod]
         public void TestGetSetContents3()
         {
             Spreadsheet testSheet = new Spreadsheet();
-            Formula myFormula = new Formula("a2+a3");
-            testSheet.SetCellContents("a1", myFormula);
-            Assert.IsTrue(testSheet.GetCellContents("a1").ToString() == "a2+a3");
+            testSheet.SetContentsOfCell("a2", "2");
+            testSheet.SetContentsOfCell("a3", "3");
+            testSheet.SetContentsOfCell("a1", "=a2+a3");
+            Assert.IsTrue(testSheet.GetCellContents("A1").ToString() == "A2+A3");
+            Assert.IsTrue((double)testSheet.GetCellValue("A1") == 5);
         }
         [ExpectedException(typeof(InvalidNameException))]
         [TestMethod]
         public void TestGetSetContents4()
         {
             Spreadsheet testSheet = new Spreadsheet();
-            testSheet.SetCellContents("10", 5);
+            testSheet.SetContentsOfCell("10", "5");
         }
         [ExpectedException(typeof(InvalidNameException))]
         [TestMethod]
         public void TestGetSetContents5()
         {
             Spreadsheet testSheet = new Spreadsheet();
-            testSheet.SetCellContents("10", "hello");
+            testSheet.SetContentsOfCell("10", "hello");
         }
         [ExpectedException(typeof(InvalidNameException))]
         [TestMethod]
         public void TestGetSetContents6()
         {
             Spreadsheet testSheet = new Spreadsheet();
-            Formula myFormula = new Formula("a2+a3");
-            testSheet.SetCellContents("10", myFormula);
+            testSheet.SetContentsOfCell("10", "=a2+a3");
         }
         [TestMethod]
         public void TestGetSetContents7()
         {
             Spreadsheet testSheet = new Spreadsheet();
-            testSheet.SetCellContents("a1", 5);
-            testSheet.SetCellContents("a1", 10);
-            Assert.IsTrue((double)testSheet.GetCellContents("a1") == 10);
+            testSheet.SetContentsOfCell("a1", "5");
+            testSheet.SetContentsOfCell("a1", "10");
+            Assert.IsTrue((double)testSheet.GetCellContents("A1") == 10);
         }
         [TestMethod]
         public void TestGetSetContents8()
         {
             Spreadsheet testSheet = new Spreadsheet();
-            testSheet.SetCellContents("a1", "hello");
-            testSheet.SetCellContents("a1", "goodbye");
-            Assert.IsTrue((string)testSheet.GetCellContents("a1") == "goodbye");
+            testSheet.SetContentsOfCell("a1", "hello");
+            testSheet.SetContentsOfCell("a1", "goodbye");
+            Assert.IsTrue((string)testSheet.GetCellContents("A1") == "goodbye");
         }
         [TestMethod]
         public void TestGetSetContents9()
         {
             Spreadsheet testSheet = new Spreadsheet();
-            Formula myFormula = new Formula("a2+a3");
-            Formula myFormula2 = new Formula("a5+a6");
-            testSheet.SetCellContents("a1", myFormula);
-            testSheet.SetCellContents("a1", myFormula2);
-            Assert.IsTrue(testSheet.GetCellContents("a1").ToString() == "a5+a6");
+            testSheet.SetContentsOfCell("a2", "2");
+            testSheet.SetContentsOfCell("a3", "3");
+            testSheet.SetContentsOfCell("a4", "4");
+            testSheet.SetContentsOfCell("a5", "5");
+            testSheet.SetContentsOfCell("a6", "6");
+            testSheet.SetContentsOfCell("a1", "=a5+a6");
+            Assert.IsTrue(testSheet.GetCellContents("A1").ToString() == "A5+A6");
+            Assert.IsTrue((double)testSheet.GetCellValue("A1") == 11);
         }
         [TestMethod]
         public void TestNamesofNonEmptyCells()
@@ -96,10 +100,21 @@ namespace SS
         public void TestCircularDependency()
         {
             Spreadsheet testSheet = new Spreadsheet();
-            Formula myFormula1 = new Formula("a1+a2");
-            Formula myFormula2 = new Formula("a2+a3");
-            testSheet.SetCellContents("a3", myFormula1);
-            testSheet.SetCellContents("a1", myFormula2);
+            testSheet.SetContentsOfCell("a1", "1");
+            testSheet.SetContentsOfCell("a2", "2");
+            testSheet.SetContentsOfCell("a3", "=a1+a2");
+            testSheet.SetContentsOfCell("a1", "=a2+a3");
+        }
+        [TestMethod]
+        public void TestCellRecalculate()
+        {
+            Spreadsheet testSheet = new Spreadsheet();
+            testSheet.SetContentsOfCell("a1", "1");
+            testSheet.SetContentsOfCell("a2", "2");
+            testSheet.SetContentsOfCell("a3", "=a1+a2");
+            Assert.IsTrue((double)testSheet.GetCellValue("A3") == 3);
+            testSheet.SetContentsOfCell("A1", "10");
+            Assert.IsTrue((double)testSheet.GetCellValue("A3") == 12);
         }
     }
 }
