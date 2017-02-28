@@ -8,6 +8,7 @@ using Dependencies;
 using System.Text.RegularExpressions;
 using System.IO;
 using System.Xml;
+using System.Xml.Schema;
 
 namespace SS
 {
@@ -55,13 +56,10 @@ namespace SS
     /// dependency.
     /// </summary>
     public class Spreadsheet
-    {
-        
+    {        
         Dictionary<string, Cell> cells = new Dictionary<string, Cell>();
         DependencyGraph dependency = new DependencyGraph();
         Regex IsValid;
-        
-
         /// <summary>
         /// Constructs a Spreadsheet with a Validity checker.
         /// </summary>
@@ -78,14 +76,65 @@ namespace SS
             Regex valid = new Regex(@"(.*)?");
             IsValid = valid;
         }
-        struct Cell
+        /// <summary>
+        /// Makes a spreadsheet by reading from a source file.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="newIsValid"></param>
+        public Spreadsheet(TextReader source, Regex newIsValid)
         {
-            
+            XmlSchemaSet sc = new XmlSchemaSet();
+            sc.Add(null, "Spreadsheet.xsd");
+            XmlReaderSettings settings = new XmlReaderSettings();
+            settings.ValidationType = ValidationType.Schema;
+            settings.Schemas = sc;
+            settings.ValidationEventHandler += ValidationFail;
+            Regex oldIsValid = newIsValid;
+            this.IsValid = newIsValid;
+            using (XmlReader reader = XmlReader.Create(source, settings))
+            {
+                while (reader.Read())
+                {
+                    if (reader.IsStartElement())
+                    {
+                        switch (reader.Name)
+                        {
+                            case "spreadsheet":
+                                try
+                                {
+                                    oldIsValid = new Regex(reader.GetAttribute("IsValid"));
+                                }
+                                catch
+                                {
+                                    throw new SpreadsheetReadException("IsValid Regex of source not valid");
+                                }
+                                break;
+                            case "cell":
+                                if (cells.ContainsKey(reader.GetAttribute("name")))
+                                {
+                                    throw new SpreadsheetReadException("Duplicate Cell names in source");
+                                }
+                                else if (!oldIsValid.IsMatch(reader.GetAttribute("name")))
+                                {
+                                    throw new SpreadsheetReadException("cell name not valid by Old IsValid");
+                                }
+                                else if (!newIsValid.IsMatch(reader.GetAttribute("name")))
+                                {
+                                    throw new SpreadsheetReadException("cell name not valid by New IsValid");
+                                }
+                                this.SetContentsOfCell(reader.GetAttribute("name"), reader.GetAttribute("contents"));
+                                break;
+                        }
+                    }
+                }
+            }
+        }
+        struct Cell
+        {            
             public object myValue;
             public object myContents;
             public Cell(object value, Lookup lookUp)
             {
-
                 if (value.GetType() == typeof(string))
                 {
                     myValue = value;
@@ -108,11 +157,9 @@ namespace SS
                     {
                         myValue = new FormulaError("Cells have no valid value");
                         myContents = value.ToString();
-                    }
-                    
+                    }                    
                 }
             }
-
         }
         /// <summary>
         /// makes a lookup function to check the spreadsheet and retreive values of cells.
@@ -171,13 +218,15 @@ namespace SS
             using (XmlWriter writer = XmlWriter.Create(dest))
             {
                 writer.WriteStartDocument();
-                writer.WriteStartElement(IsValid.ToString());
+                writer.WriteStartElement("spreadsheet");
+                writer.WriteAttributeString("IsValid", IsValid.ToString());
                 IEnumerable<string> myCells = GetNamesOfAllNonemptyCells();
 
                 foreach (string x in myCells)
                 {
-                    writer.WriteStartElement("cell name =", x);
-                    writer.WriteElementString("contents = ", cells[x].myContents.ToString());
+                    writer.WriteStartElement("cell");
+                    writer.WriteAttributeString("name", x);
+                    writer.WriteAttributeString("contents", cells[x].myContents.ToString());
                     writer.WriteEndElement();
                 }
 
@@ -264,6 +313,11 @@ namespace SS
         /// </summary>
         public ISet<String> SetContentsOfCell(String name, String content)
         {
+            if(!IsValid.IsMatch(name))
+            {
+                throw new InvalidNameException();
+            }
+            Changed = true;
             name = name.ToUpper();
             double myDouble;
             if (double.TryParse(content, out myDouble))
@@ -607,6 +661,10 @@ namespace SS
         private string upper(string s)
         {
             return s.ToUpper();
+        }
+        private void ValidationFail(object sender, ValidationEventArgs e)
+        {
+            throw new SpreadsheetReadException("Spreadsheet did not match Schema");
         }
     }
 }

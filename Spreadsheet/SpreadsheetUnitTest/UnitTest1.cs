@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Formulas;
+using System.IO;
+using System.Text.RegularExpressions;
 namespace SS
 {
     [TestClass]
@@ -88,6 +90,14 @@ namespace SS
             Assert.IsTrue(testSheet.GetCellContents("A1").ToString() == "A5+A6");
             Assert.IsTrue((double)testSheet.GetCellValue("A1") == 11);
         }
+        [ExpectedException(typeof(InvalidNameException))]
+        [TestMethod]
+        public void TestGetSetContents10()
+        {
+            Spreadsheet testSheet = new Spreadsheet();
+            testSheet.SetContentsOfCell("a1", "hello");
+            testSheet.GetCellValue("B1");
+        }
         [TestMethod]
         public void TestNamesofNonEmptyCells()
         {
@@ -116,5 +126,78 @@ namespace SS
             testSheet.SetContentsOfCell("A1", "10");
             Assert.IsTrue((double)testSheet.GetCellValue("A3") == 12);
         }
+        [TestMethod]
+        public void TestSaveMethod()
+        {
+            Spreadsheet testSheet = new Spreadsheet();
+            testSheet.SetContentsOfCell("a1", "1");
+            testSheet.SetContentsOfCell("a2", "2");
+            testSheet.SetContentsOfCell("a3", "3");
+            TextWriter writer = new StreamWriter("../../test.xml");
+            testSheet.Save(writer);
+        }
+        [ExpectedException(typeof(InvalidNameException))]
+        [TestMethod]
+        public void TestSpreadsheetConstrutor()
+        {
+            Regex myValid = new Regex(@"[A](5|6|7)");
+            Spreadsheet testSheet = new Spreadsheet(myValid);
+            testSheet.SetContentsOfCell("A5", "5");
+            testSheet.SetContentsOfCell("A6", "6");
+            testSheet.SetContentsOfCell("A7", "7");
+            Assert.IsTrue((double)testSheet.GetCellValue("A6") == 6);
+            testSheet.SetContentsOfCell("A11", "11");
+        }
+        [TestMethod]
+        public void TestSpreadsheetConstrutorReading()
+        {
+            Regex allValid = new Regex(@"(.*)?");
+            TextReader mySource = new StreamReader("test.ss");
+            Spreadsheet testSheet = new Spreadsheet(mySource, allValid);
+            Assert.IsTrue((double)testSheet.GetCellValue("A1") == 6);
+
+        }
+        [ExpectedException(typeof(SpreadsheetReadException))]
+        [TestMethod]
+        public void TestSpreadsheetConstrutorReadingDupCell()
+        {
+            Regex allValid = new Regex(@"(.*)?");
+            TextReader mySource = new StreamReader("testDup.ss");
+            Spreadsheet testSheet = new Spreadsheet(mySource, allValid);
+        }
+        [ExpectedException(typeof(SpreadsheetReadException))]
+        [TestMethod]
+        public void TestSpreadsheetConstrutorReadingNewInvalid()
+        {
+            Regex allValid = new Regex(@"[A-Z][0-9]*");
+            TextReader mySource = new StreamReader("testnotValid.ss");
+            Spreadsheet testSheet = new Spreadsheet(mySource, allValid);
+        }
+        [ExpectedException(typeof(SpreadsheetReadException))]
+        [TestMethod]
+        public void TestSpreadsheetConstrutorReadingOldInvalid()
+        {
+            Regex allValid = new Regex(@"(.*)?");
+            TextReader mySource = new StreamReader("testOldInvalid.ss");
+            Spreadsheet testSheet = new Spreadsheet(mySource, allValid);
+        }
+        [TestMethod]
+        public void TestCellRecalculateSeveral()
+        {
+            Spreadsheet testSheet = new Spreadsheet();
+            testSheet.SetContentsOfCell("a1", "1");
+            testSheet.SetContentsOfCell("a2", "2");
+            testSheet.SetContentsOfCell("a3", "=a1+a2");
+            testSheet.SetContentsOfCell("a4", "=a3+a2");
+            testSheet.SetContentsOfCell("a5", "=a4+a2");
+            testSheet.SetContentsOfCell("a6", "=5+a2");
+            testSheet.SetContentsOfCell("a7", "=a6+a2");
+            testSheet.SetContentsOfCell("a1", "=a6+a2");
+            testSheet.SetContentsOfCell("A4", "hello");
+            testSheet.SetContentsOfCell("A4", "2");
+            Assert.IsTrue((double)testSheet.GetCellValue("A1") == 9);
+            Assert.IsTrue((double)testSheet.GetCellValue("A3") == 11);
+        }
+
     }
 }
