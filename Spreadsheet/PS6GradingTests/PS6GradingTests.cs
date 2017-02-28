@@ -718,7 +718,6 @@ namespace PS6GradingTests
 
         // The new regex should be used in the new sheet
         [TestMethod()]
-        [ExpectedException(typeof(SpreadsheetVersionException))]
         public void SaveTest10()
         {
             StringWriter sw = new StringWriter();
@@ -726,7 +725,7 @@ namespace PS6GradingTests
             {
                 writer.WriteStartDocument();
                 writer.WriteStartElement("spreadsheet");
-                writer.WriteAttributeString("IsValid", "^A\\d$");
+                writer.WriteAttributeString("IsValid", "^[A-Z]\\d$");
 
                 writer.WriteStartElement("cell");
                 writer.WriteAttributeString("name", "A1");
@@ -734,28 +733,29 @@ namespace PS6GradingTests
                 writer.WriteEndElement();
 
                 writer.WriteStartElement("cell");
-                writer.WriteAttributeString("name", "A2");
+                writer.WriteAttributeString("name", "B2");
                 writer.WriteAttributeString("contents", "5.0");
                 writer.WriteEndElement();
 
                 writer.WriteStartElement("cell");
-                writer.WriteAttributeString("name", "A3");
+                writer.WriteAttributeString("name", "C3");
                 writer.WriteAttributeString("contents", "4.0");
                 writer.WriteEndElement();
 
                 writer.WriteStartElement("cell");
-                writer.WriteAttributeString("name", "A4");
-                writer.WriteAttributeString("contents", "= A2 + A3");
+                writer.WriteAttributeString("name", "D4");
+                writer.WriteAttributeString("contents", "= B2 + C3");
                 writer.WriteEndElement();
 
                 writer.WriteEndElement();
                 writer.WriteEndDocument();
             }
-            AbstractSpreadsheet ss = new Spreadsheet(new StringReader(sw.ToString()), new Regex("^[A-Z]\\d$"));
+            AbstractSpreadsheet ss = new Spreadsheet(new StringReader(sw.ToString()), new Regex("^[A-D]\\d$"));
             ss.SetContentsOfCell("B5", "5");
             ss.SetContentsOfCell("C5", "=B5");
-            try {
-                ss.SetContentsOfCell("A55", "5");
+            try
+            {
+                ss.SetContentsOfCell("E55", "5");
                 Assert.Fail();
             }
             catch (InvalidNameException)
