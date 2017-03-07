@@ -277,15 +277,15 @@ namespace SS
 
             if(text.Substring(0, 1).Equals("="))
             {
-                return SetCellFormula(name, new Formula(text, s => s.ToUpper()));
+                return SetCellContents(name, new Formula(text, s => s.ToUpper()));
             } 
             else if(Double.TryParse(text, out output_num))
             {
-                cells.setCell(name, output_num);
+                return SetCellContents(name, output_num);
             }
             else
             {
-                cells.setCell(name, text);
+                return SetCellContents(name, text);
             }
              
             return returnSet(name);
@@ -375,18 +375,24 @@ namespace SS
             return cells.getCell(name);
         }
 
-        protected override ISet<string> SetCellContents(string name, double number)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override ISet<string> SetCellContents(string name, string text)
-        {
-            throw new NotImplementedException();
-        }
-
+        /// <summary>
+        /// Requires that all of the variables in formula are valid cell names.
+        /// 
+        /// If name is null or invalid, throws an InvalidNameException.
+        /// 
+        /// Otherwise, if changing the contents of the named cell to be the formula would cause a 
+        /// circular dependency, throws a CircularException.
+        /// 
+        /// Otherwise, the contents of the named cell becomes formula.  The method returns a
+        /// Set consisting of name plus the names of all other cells whose value depends,
+        /// directly or indirectly, on the named cell.
+        /// 
+        /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
+        /// set {A1, B1, C1} is returned.
+        /// </summary>
         protected override ISet<string> SetCellContents(string name, Formula formula)
         {
+            checkCellNameValidity(name);
             //Checks validity of each variable in formula
             foreach (var variable in formula.GetVariables())
             {
@@ -413,6 +419,48 @@ namespace SS
             }
 
             checkCircularDependency(name, formula);
+
+            return returnSet(name);
+        }
+
+        /// <summary>
+        /// If text is null, throws an ArgumentNullException.
+        /// 
+        /// Otherwise, if name is null or invalid, throws an InvalidNameException.
+        /// 
+        /// Otherwise, the contents of the named cell becomes text.  The method returns a
+        /// set consisting of name plus the names of all other cells whose value depends, 
+        /// directly or indirectly, on the named cell.
+        /// 
+        /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
+        /// set {A1, B1, C1} is returned.
+        /// </summary>
+        protected override ISet<string> SetCellContents(string name, string text)
+        {
+            if (text == null)
+                throw new ArgumentException();
+            checkCellNameValidity(name);
+
+            cells.setCell(name, text);
+
+            return returnSet(name);
+        }
+
+        /// <summary>
+        /// If name is null or invalid, throws an InvalidNameException.
+        /// 
+        /// Otherwise, the contents of the named cell becomes number.  The method returns a
+        /// set consisting of name plus the names of all other cells whose value depends, 
+        /// directly or indirectly, on the named cell.
+        /// 
+        /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
+        /// set {A1, B1, C1} is returned.
+        /// </summary>
+        protected override ISet<string> SetCellContents(string name, double number)
+        {
+            checkCellNameValidity(name);
+
+            cells.setCell(name, number);
 
             return returnSet(name);
         }
