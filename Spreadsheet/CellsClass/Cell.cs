@@ -12,28 +12,57 @@ namespace CellsClass
         object value;
         object content;
 
-        public Cell(string cont)
+        public Cell(string content)
         {
-            content = cont;
             value = content;
         }
 
-        public Cell(double cont)
+        public Cell(double content)
         {
-            content = cont;
             value = content;
         }
 
-        public Cell(Formula cont)
+        public Cell(Formula cont, Lookup lookUp)
         {
             content = cont;
-            //Placeholder
-            //value = cont.Evaluate();
+            try
+            {
+                value = cont.Evaluate(lookUp);
+            }
+            catch
+            {
+                value = new FormulaError();
+            }
         }
 
         public object getCellContent()
         {
             return content;
         }
+
+        public object getCellValue()
+        {
+            return value;
+        }
+    }
+
+    /// <summary>
+    /// A possible value of a cell.
+    /// </summary>
+    public struct FormulaError
+    {
+        /// <summary>
+        /// Constructs a FormulaError containing the explanatory reason.
+        /// </summary>
+        public FormulaError(String reason)
+            : this()
+        {
+            Reason = reason;
+        }
+
+        /// <summary>
+        ///  The reason why this FormulaError was created.
+        /// </summary>
+        public string Reason { get; private set; }
     }
 }

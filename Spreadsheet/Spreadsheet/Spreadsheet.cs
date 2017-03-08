@@ -264,6 +264,7 @@ namespace SS
         public override ISet<string> SetContentsOfCell(string name, string text)
         {
             changed = true;
+            name = name.ToUpper();
 
             if (text == null)
                 throw new ArgumentException();
@@ -277,7 +278,7 @@ namespace SS
 
             if(text.Substring(0, 1).Equals("="))
             {
-                return SetCellContents(name, new Formula(text, s => s.ToUpper()));
+                return SetCellContents(name, new Formula(text.Remove(0, 1)));
             } 
             else if(Double.TryParse(text, out output_num))
             {
@@ -410,8 +411,6 @@ namespace SS
                     }
                 }
 
-            cells.setCell(name, formula);
-
             //Adds new dependencies
             foreach (var variable in formula.GetVariables())
             {
@@ -419,6 +418,8 @@ namespace SS
             }
 
             checkCircularDependency(name, formula);
+
+            cells.setCell(name, formula);
 
             return returnSet(name);
         }
