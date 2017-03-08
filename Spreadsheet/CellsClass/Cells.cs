@@ -36,11 +36,11 @@ namespace CellsClass
         {
             if (cellDict.ContainsKey(cell))
             {
-                cellDict[cell] = new Cell(value);
+                cellDict[cell] = new Cell(value, lookUp);
             }
             else
             {
-                cellDict.Add(cell, new Cell(value));
+                cellDict.Add(cell, new Cell(value, lookUp));
             }
         }
 
@@ -62,6 +62,12 @@ namespace CellsClass
             {
                 yield return cell.Key;
             }
+        }
+
+        public double lookUp(string s)
+        {
+            s = s.ToUpper();
+            return (double)cellDict[s].getCellValue();
         }
     }
 }

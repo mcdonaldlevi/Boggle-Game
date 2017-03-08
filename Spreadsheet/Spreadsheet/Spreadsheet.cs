@@ -4,6 +4,9 @@ using Formulas;
 using Dependencies;
 using CellsClass;
 using System.Text.RegularExpressions;
+using System.IO;
+using System.Xml.Schema;
+using System.Xml;
 
 namespace SS
 {
@@ -54,15 +57,128 @@ namespace SS
         Cells cells = new Cells();
         DependencyGraph dg = new DependencyGraph();
         Regex validation;
+        Boolean changed = false;
+
+
+        public override bool Changed
+        {
+            get
+            {
+                return changed;
+            }
+
+            protected set
+            {
+                changed = value;
+            }
+        }
 
         public Spreadsheet()
         {
-            validation = new Regex("");
+            validation = new Regex(@"(.*)?");
         }
 
         public Spreadsheet(Regex isValid)
         {
             validation = isValid;
+        }
+
+        public Spreadsheet(StringReader source, Regex newIsValid)
+        {
+
+            {
+
+                XmlSchemaSet sc = new XmlSchemaSet();
+
+                sc.Add(null, "Spreadsheet.xsd");
+
+                XmlReaderSettings settings = new XmlReaderSettings();
+
+                settings.ValidationType = ValidationType.Schema;
+
+                settings.Schemas = sc;
+
+                settings.ValidationEventHandler += ValidationFail;
+
+                Regex oldIsValid = newIsValid;
+
+                this.validation = newIsValid;
+
+                using (XmlReader reader = XmlReader.Create(source, settings))
+
+                {
+
+                    while (reader.Read())
+
+                    {
+
+                        if (reader.IsStartElement())
+
+                        {
+
+                            switch (reader.Name)
+
+                            {
+
+                                case "spreadsheet":
+
+                                    try
+
+                                    {
+
+                                        oldIsValid = new Regex(reader.GetAttribute("IsValid"));
+
+                                    }
+
+                                    catch
+
+                                    {
+
+                                        throw new SpreadsheetReadException("IsValid Regex of source not valid");
+
+                                    }
+
+                                    break;
+
+                                case "cell":
+
+                                    if (cells.containsCell(reader.GetAttribute("name")))
+
+                                    {
+
+                                        throw new SpreadsheetReadException("Duplicate Cell names in source");
+
+                                    }
+
+                                    else if (!oldIsValid.IsMatch(reader.GetAttribute("name")))
+
+                                    {
+
+                                        throw new SpreadsheetReadException("cell name not valid by Old IsValid");
+
+                                    }
+
+                                    else if (!newIsValid.IsMatch(reader.GetAttribute("name")))
+
+                                    {
+
+                                        throw new SpreadsheetReadException("cell name not valid by New IsValid");
+
+                                    }
+
+                                    this.SetContentsOfCell(reader.GetAttribute("name"), reader.GetAttribute("contents"));
+
+                                    break;
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
         }
 
         /// <summary>
@@ -147,6 +263,9 @@ namespace SS
         /// </summary>
         public override ISet<string> SetContentsOfCell(string name, string text)
         {
+            changed = true;
+            name = name.ToUpper();
+
             if (text == null)
                 throw new ArgumentException();
             checkCellNameValidity(name);
@@ -157,17 +276,17 @@ namespace SS
             }
             double output_num;
 
-             if(Double.TryParse(text, out output_num))
+            if(text.Substring(0, 1).Equals("="))
             {
-                cells.setCell(name, output_num);
-            }
-            else if(text.Substring(0, 1).Equals("="))
+                return SetCellContents(name, new Formula(text.Remove(0, 1)));
+            } 
+            else if(Double.TryParse(text, out output_num))
             {
-                return SetCellFormula(name, new Formula(text, s => s.ToUpper()));
+                return SetCellContents(name, output_num);
             }
             else
             {
-                cells.setCell(name, text);
+                return SetCellContents(name, text);
             }
              
             return returnSet(name);
@@ -245,6 +364,111 @@ namespace SS
                 throw new InvalidNameException();
             if (!Regex.IsMatch(name, @"[A-Za-z]+[1-9]\d*"))
                 throw new InvalidNameException();
+        }
+
+        public override void Save(TextWriter dest)
+        {
+            changed = false;
+        }
+
+        public override object GetCellValue(string name)
+        {
+            return cells.getCell(name);
+        }
+
+        /// <summary>
+        /// Requires that all of the variables in formula are valid cell names.
+        /// 
+        /// If name is null or invalid, throws an InvalidNameException.
+        /// 
+        /// Otherwise, if changing the contents of the named cell to be the formula would cause a 
+        /// circular dependency, throws a CircularException.
+        /// 
+        /// Otherwise, the contents of the named cell becomes formula.  The method returns a
+        /// Set consisting of name plus the names of all other cells whose value depends,
+        /// directly or indirectly, on the named cell.
+        /// 
+        /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
+        /// set {A1, B1, C1} is returned.
+        /// </summary>
+        protected override ISet<string> SetCellContents(string name, Formula formula)
+        {
+            checkCellNameValidity(name);
+            //Checks validity of each variable in formula
+            foreach (var variable in formula.GetVariables())
+            {
+                checkCellNameValidity(variable);
+            }
+
+            //Removes old dependencies if last value was a formula
+            if (cells.containsCell(name))
+                if (cells.getCell(name).GetType() == typeof(Formula))
+                {
+                    Formula old_formula = (Formula)cells.getCell(name);
+                    foreach (var variable in old_formula.GetVariables())
+                    {
+                        dg.RemoveDependency(name, variable);
+                    }
+                }
+
+            //Adds new dependencies
+            foreach (var variable in formula.GetVariables())
+            {
+                dg.AddDependency(name, variable);
+            }
+
+            checkCircularDependency(name, formula);
+
+            cells.setCell(name, formula);
+
+            return returnSet(name);
+        }
+
+        /// <summary>
+        /// If text is null, throws an ArgumentNullException.
+        /// 
+        /// Otherwise, if name is null or invalid, throws an InvalidNameException.
+        /// 
+        /// Otherwise, the contents of the named cell becomes text.  The method returns a
+        /// set consisting of name plus the names of all other cells whose value depends, 
+        /// directly or indirectly, on the named cell.
+        /// 
+        /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
+        /// set {A1, B1, C1} is returned.
+        /// </summary>
+        protected override ISet<string> SetCellContents(string name, string text)
+        {
+            if (text == null)
+                throw new ArgumentException();
+            checkCellNameValidity(name);
+
+            cells.setCell(name, text);
+
+            return returnSet(name);
+        }
+
+        /// <summary>
+        /// If name is null or invalid, throws an InvalidNameException.
+        /// 
+        /// Otherwise, the contents of the named cell becomes number.  The method returns a
+        /// set consisting of name plus the names of all other cells whose value depends, 
+        /// directly or indirectly, on the named cell.
+        /// 
+        /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
+        /// set {A1, B1, C1} is returned.
+        /// </summary>
+        protected override ISet<string> SetCellContents(string name, double number)
+        {
+            checkCellNameValidity(name);
+
+            cells.setCell(name, number);
+
+            return returnSet(name);
+        }
+
+        private void ValidationFail(object sender, ValidationEventArgs e)
+        {
+            throw new SpreadsheetReadException("Spreadsheet did not match Schema");
         }
     }
 }
