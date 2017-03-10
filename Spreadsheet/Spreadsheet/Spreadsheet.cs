@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Formulas;
 using Dependencies;
-using CellsClass;
 using System.Text.RegularExpressions;
 using System.IO;
 using System.Xml.Schema;
@@ -54,8 +53,8 @@ namespace SS
     /// </summary>
     public class Spreadsheet : AbstractSpreadsheet
     { 
-        Cells cells = new Cells();
         DependencyGraph dg = new DependencyGraph();
+        Dictionary<string, Cell> cellDict = new Dictionary<string, Cell>();
         Regex validation;
         Boolean changed = false;
 
@@ -142,7 +141,7 @@ namespace SS
 
                                 case "cell":
 
-                                    if (cells.containsCell(reader.GetAttribute("name")))
+                                    if (cellDict.ContainsKey(reader.GetAttribute("name")))
 
                                     {
 
@@ -191,7 +190,9 @@ namespace SS
         {
             checkCellNameValidity(name);
 
-            return cells.getCell(name);
+            if (cellDict.ContainsKey(name))
+                return cellDict[name].getCellContent();
+            return "";
         }
 
         /// <summary>
@@ -199,7 +200,10 @@ namespace SS
         /// </summary>
         public override IEnumerable<string> GetNamesOfAllNonemptyCells()
         {
-            return cells.getUsedCells();
+            foreach (var cell in cellDict)
+            {
+                yield return cell.Key;
+            }
         }
 
         /// <summary>
@@ -226,17 +230,24 @@ namespace SS
             }
 
             //Removes old dependencies if last value was a formula
-            if(cells.containsCell(name))
-                if (cells.getCell(name).GetType() == typeof(Formula))
+            if(cellDict.ContainsKey(name))
+                if (GetCellContents(name).GetType() == typeof(Formula))
                 {
-                    Formula old_formula = (Formula)cells.getCell(name);
+                    Formula old_formula = (Formula)GetCellContents(name);
                     foreach (var variable in old_formula.GetVariables())
                     {
                         dg.RemoveDependency(name, variable);
                     }
                 }
 
-            cells.setCell(name, formula);
+            if (cellDict.ContainsKey(name))
+            {
+                cellDict[name] = new Cell(formula, lookUp);
+            }
+            else
+            {
+                cellDict.Add(name, new Cell(formula, lookUp));
+            }
 
             //Adds new dependencies
             foreach (var variable in formula.GetVariables())
@@ -270,25 +281,32 @@ namespace SS
                 throw new ArgumentException();
             checkCellNameValidity(name);
 
-             if(!validation.IsMatch(text.ToUpper()))
+            if (!validation.IsMatch(text.ToUpper()))
             {
                 throw new InvalidNameException();
             }
             double output_num;
 
-            if(text.Substring(0, 1).Equals("="))
+            if (text.Length > 0)
             {
-                return SetCellContents(name, new Formula(text.Remove(0, 1)));
-            } 
-            else if(Double.TryParse(text, out output_num))
-            {
-                return SetCellContents(name, output_num);
-            }
-            else
-            {
+                if (text.Substring(0, 1).Equals("="))
+                {
+                    return SetCellContents(name, new Formula(text.Remove(0, 1), s => s.ToUpper(), s => true));
+                }
+                else if (Double.TryParse(text, out output_num))
+                {
+                    return SetCellContents(name, output_num);
+                }
                 return SetCellContents(name, text);
             }
-             
+            if (GetCellContents(name).GetType() == typeof(Formula))
+            {
+                foreach (var dep in dg.GetDependents(name))
+                {
+                    dg.RemoveDependency(name, dep);
+                }
+            }
+            cellDict.Remove(name);
             return returnSet(name);
         }
 
@@ -357,6 +375,72 @@ namespace SS
             }
         }
 
+        /// <summary>
+        /// Checks for circular dependency when cell is added with a formula
+        /// </summary>
+        private void EvaluateRecurse(String name, List<string> visited)
+        {
+
+            List<string> revisit = new List<string> { };
+            List<string> new_revisit = new List<string> { };
+            foreach (var dependee in dg.GetDependees(name))
+            {
+                if (!visited.Contains(dependee))
+                {
+                    visited.Add(dependee);
+                    //recurseEval(dependent, visited);
+                    if (cellDict.ContainsKey(dependee))
+                    {
+                        cellDict[dependee].tryEvaluate(name, lookUp);
+                        if (cellDict[dependee].getCellValue().GetType() != typeof(FormulaError))
+                            foreach (var dep in dg.GetDependees(dependee))
+                            {
+                                revisit.Add(dep);
+                                new_revisit.Add(dep);
+                            }
+                    }
+                }
+            }
+
+            
+            foreach (var item in revisit)
+            {
+                cellDict[item].tryEvaluate(name, lookUp);
+                if (cellDict[item].getCellValue().GetType() != typeof(FormulaError))
+                {
+                    foreach (var dep in dg.GetDependees(item))
+                    {
+                        if (!visited.Contains(dep))
+                            new_revisit.Add(dep);
+                    }
+                    new_revisit.Remove(item);
+                }
+            }
+            
+            if (new_revisit.Count > 0)
+                foreach (var item in new_revisit)
+                {
+                    EvaluateRecurse(item, new List<string> { });
+                }
+        }
+
+        /// <summary>
+        /// Recurses until all dependents have been checked to see if they were used as a dependency earlier
+        /// </summary>
+        private void recurseEval(String name, List<string> visited)
+        {
+            foreach (var dependent in dg.GetDependents(name))
+            {
+                if (!visited.Contains(dependent))
+                {
+                    visited.Add(dependent);
+                    //recurseEval(dependent, visited);
+                    if(cellDict.ContainsKey(dependent))
+                        cellDict[dependent].tryEvaluate(name, lookUp);
+                }
+            }
+        }
+
         //Throws exception if input string is null or not a valid cell name
         private void checkCellNameValidity(String name)
         {
@@ -373,7 +457,10 @@ namespace SS
 
         public override object GetCellValue(string name)
         {
-            return cells.getCell(name);
+            name = name.ToUpper();
+            if (cellDict.ContainsKey(name))
+                return cellDict[name].getCellValue();
+            return "";
         }
 
         /// <summary>
@@ -401,15 +488,18 @@ namespace SS
             }
 
             //Removes old dependencies if last value was a formula
-            if (cells.containsCell(name))
-                if (cells.getCell(name).GetType() == typeof(Formula))
+            if (cellDict.ContainsKey(name))
+            {
+                dynamic old_cell = GetCellContents(name);
+                if (old_cell.GetType() == typeof(Formula))
                 {
-                    Formula old_formula = (Formula)cells.getCell(name);
+                    Formula old_formula = (Formula)GetCellContents(name);
                     foreach (var variable in old_formula.GetVariables())
                     {
                         dg.RemoveDependency(name, variable);
                     }
                 }
+            }
 
             //Adds new dependencies
             foreach (var variable in formula.GetVariables())
@@ -419,7 +509,14 @@ namespace SS
 
             checkCircularDependency(name, formula);
 
-            cells.setCell(name, formula);
+            if (cellDict.ContainsKey(name))
+            {
+                cellDict[name] = new Cell(formula, lookUp);
+            }
+            else
+            {
+                cellDict.Add(name, new Cell(formula, lookUp));
+            }
 
             return returnSet(name);
         }
@@ -442,7 +539,14 @@ namespace SS
                 throw new ArgumentException();
             checkCellNameValidity(name);
 
-            cells.setCell(name, text);
+            if (cellDict.ContainsKey(name))
+            {
+                cellDict[name] = new Cell(text);
+            }
+            else
+            {
+                cellDict.Add(name, new Cell(text));
+            }
 
             return returnSet(name);
         }
@@ -461,7 +565,16 @@ namespace SS
         {
             checkCellNameValidity(name);
 
-            cells.setCell(name, number);
+            if (cellDict.ContainsKey(name))
+            {
+                cellDict[name] = new Cell(number);
+            }
+            else
+            {
+                cellDict.Add(name, new Cell(number));
+            }
+            var visited = new List<string> { name };
+            EvaluateRecurse(name, visited);
 
             return returnSet(name);
         }
@@ -469,6 +582,66 @@ namespace SS
         private void ValidationFail(object sender, ValidationEventArgs e)
         {
             throw new SpreadsheetReadException("Spreadsheet did not match Schema");
+        }
+
+        public double lookUp(string s)
+        {
+            s = s.ToUpper();
+            return (double)cellDict[s].getCellValue();
+        }
+    }
+
+    class Cell
+    {
+        object value;
+        object content;
+
+        public Cell(string cont)
+        {
+            content = cont;
+            value = cont;
+        }
+
+        public Cell(double cont)
+        {
+            content = cont;
+            value = cont;
+        }
+
+        public Cell(Formula cont, Lookup lookUp)
+        {
+            content = cont;
+            try
+            {
+                value = cont.Evaluate(lookUp);
+            }
+            catch
+            {
+                value = new FormulaError();
+            }
+        }
+
+        public object getCellContent()
+        {
+            return content;
+        }
+
+        public object getCellValue()
+        {
+            return value;
+        }
+
+        public void tryEvaluate(string name, Lookup lookup)
+        {
+            var temp_cont = (Formula)content;
+            try
+            {
+                value = temp_cont.Evaluate(lookup);
+            }
+            catch
+            {
+                value = new FormulaError();
+            }
         }
     }
 }
