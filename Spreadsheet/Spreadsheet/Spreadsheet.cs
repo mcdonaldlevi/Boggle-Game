@@ -188,6 +188,7 @@ namespace SS
         /// </summary>
         public override object GetCellContents(string name)
         {
+            name = name.ToUpper();
             checkCellNameValidity(name);
 
             if (cellDict.ContainsKey(name))
@@ -277,6 +278,19 @@ namespace SS
             changed = true;
             name = name.ToUpper();
 
+            if (GetCellContents(name).GetType() == typeof(Formula))
+            {
+                List<string> dependents = new List<string> { };
+                foreach (var dep in dg.GetDependents(name))
+                {
+                    dependents.Add(dep);
+                }
+                foreach (var dep in dependents)
+                {
+                    dg.RemoveDependency(name, dep);
+                }
+            }
+
             if (text == null)
                 throw new ArgumentException();
             checkCellNameValidity(name);
@@ -299,13 +313,7 @@ namespace SS
                 }
                 return SetCellContents(name, text);
             }
-            if (GetCellContents(name).GetType() == typeof(Formula))
-            {
-                foreach (var dep in dg.GetDependents(name))
-                {
-                    dg.RemoveDependency(name, dep);
-                }
-            }
+            
             cellDict.Remove(name);
             return returnSet(name);
         }
@@ -342,9 +350,16 @@ namespace SS
             ISet<string> set = new HashSet<string>();
             set.Add(name);
             //Adds dependees to set
+            set = getIndirectDependees(name, set);
+            return set;
+        }
+
+        private ISet<string> getIndirectDependees(String name, ISet<string> set)
+        {
             foreach (var dependee in dg.GetDependees(name))
             {
                 set.Add(dependee);
+                set = getIndirectDependees(dependee, set);
             }
             return set;
         }
