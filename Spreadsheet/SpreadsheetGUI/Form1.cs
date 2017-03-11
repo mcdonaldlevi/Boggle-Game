@@ -19,6 +19,7 @@ namespace SpreadsheetGUI
         public Form1()
         {
             InitializeComponent();
+            
             spreadsheetPanel1.SelectionChanged += SpreadsheetPanel1_SelectionChanged;
             spreadsheetPanel1.SetSelection(2, 3);
             foreach(Control x in spreadsheetPanel1.Controls)
@@ -26,7 +27,8 @@ namespace SpreadsheetGUI
                 x.KeyDown += spreadsheetPanel1_KeyDown;
             }
             this.FormClosing += Form1_FormClosing;
-            
+            Invalidate();
+
         }
         public bool isSaved()
         {

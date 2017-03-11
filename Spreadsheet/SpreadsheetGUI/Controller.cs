@@ -77,7 +77,7 @@ namespace SpreadsheetGUI
             string col = valueToLetterMap[lastCellCoord[0]];
             string row = (1 + lastCellCoord[1]).ToString(); //added to make a valid cell name
             string lastCell = col + row;
-            ISet<string> cellsToUpdate = spreadsheet.SetContentsOfCell(lastCell, boxText);
+            ISet<string> cellsToUpdate = spreadsheet.SetContentsOfCell(lastCell, spreadsheet.GetCellValue(lastCell).ToString());
             window.setCellValue(lastCellCoord[0], lastCellCoord[1], boxText);
             lastCellCoord = window.GetCoord();
             col = valueToLetterMap[lastCellCoord[0]];
