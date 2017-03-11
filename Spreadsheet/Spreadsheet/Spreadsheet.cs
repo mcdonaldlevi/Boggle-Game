@@ -58,7 +58,9 @@ namespace SS
         Regex validation;
         Boolean changed = false;
 
-
+        /// <summary>
+        /// Returns boolean, whether or not if it has been changed from last save
+        /// </summary>
         public override bool Changed
         {
             get
@@ -72,17 +74,29 @@ namespace SS
             }
         }
 
+        /// <summary>
+        /// Constructor that takes no parameters
+        /// </summary>
         public Spreadsheet()
         {
             validation = new Regex(@"(.*)?");
         }
 
+        /// <summary>
+        /// Constructor that takes only a Regex file as a parameter
+        /// </summary>
+        /// <param name="isValid"></param>
         public Spreadsheet(Regex isValid)
         {
             validation = isValid;
         }
 
-        public Spreadsheet(StringReader source, Regex newIsValid)
+        /// <summary>
+        /// Constructor that takes a TextReader and Regex file as a constructor
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="newIsValid"></param>
+        public Spreadsheet(TextReader source, Regex newIsValid)
         {
 
             {
@@ -396,17 +410,20 @@ namespace SS
         private void EvaluateRecurse(String name, List<string> visited)
         {
 
+            //Duplicate lists so it doesn't break foreach loop later from contents being changed
             List<string> revisit = new List<string> { };
             List<string> new_revisit = new List<string> { };
+            //Iterates through dependees
             foreach (var dependee in dg.GetDependees(name))
             {
                 if (!visited.Contains(dependee))
                 {
                     visited.Add(dependee);
-                    //recurseEval(dependent, visited);
                     if (cellDict.ContainsKey(dependee))
                     {
+                        //Tries to evaluate cell's value
                         cellDict[dependee].tryEvaluate(name, lookUp);
+                        //If it didn't result in an error, it adds the dependee's dependees to the revisit list
                         if (cellDict[dependee].getCellValue().GetType() != typeof(FormulaError))
                             foreach (var dep in dg.GetDependees(dependee))
                             {
@@ -417,10 +434,12 @@ namespace SS
                 }
             }
 
-            
+            //Iterates through values that need to be revisited
             foreach (var item in revisit)
             {
+                //Attempts to evaluate
                 cellDict[item].tryEvaluate(name, lookUp);
+                //If it didn't result in an error, it adds its dependees to revisit list if not already visited
                 if (cellDict[item].getCellValue().GetType() != typeof(FormulaError))
                 {
                     foreach (var dep in dg.GetDependees(item))
@@ -428,10 +447,12 @@ namespace SS
                         if (!visited.Contains(dep))
                             new_revisit.Add(dep);
                     }
+                    //Removes value from revisit list
                     new_revisit.Remove(item);
                 }
             }
             
+            //Recurses if values still need to be revisited
             if (new_revisit.Count > 0)
                 foreach (var item in new_revisit)
                 {
@@ -465,11 +486,20 @@ namespace SS
                 throw new InvalidNameException();
         }
 
+        /// <summary>
+        /// Saves the current SpreadSheet file to a text document
+        /// </summary>
+        /// <param name="dest"></param>
         public override void Save(TextWriter dest)
         {
             changed = false;
         }
 
+        /// <summary>
+        /// Returns the value of the cell specified
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
         public override object GetCellValue(string name)
         {
             name = name.ToUpper();
@@ -599,6 +629,11 @@ namespace SS
             throw new SpreadsheetReadException("Spreadsheet did not match Schema");
         }
 
+        /// <summary>
+        /// returns the value of the cell that was specified
+        /// </summary>
+        /// <param name="s"></param>
+        /// <returns></returns>
         public double lookUp(string s)
         {
             s = s.ToUpper();
