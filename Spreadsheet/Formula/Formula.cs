@@ -1,5 +1,4 @@
 ﻿// Skeleton written by Joe Zachary for CS 3500, January 2017
-// Code filled in by Levi McDonald u1039824 Jan 2017
 
 using System;
 using System.Collections.Generic;
@@ -16,7 +15,8 @@ namespace Formulas
     /// </summary>
     public struct Formula
     {
-        List<string> baseList;
+        private IEnumerable<string> formula_tokens;
+        private string formula_string;
         /// <summary>
         /// Creates a Formula from a string that consists of a standard infix expression composed
         /// from non-negative floating-point numbers (using C#-like syntax for double/int literals), 
@@ -37,146 +37,79 @@ namespace Formulas
         /// If the formula is syntacticaly invalid, throws a FormulaFormatException with an 
         /// explanatory Message.
         /// </summary>
-        public Formula(String formula)
+        public Formula(string formula, Normalizer normalizer = null, Validator validator = null)
         {
-            if (formula == null)
-            {
-                baseList = new List<string> { "0" };
-            }
-            else
-            {
-                baseList = new List<string>();
-                baseList = syntaxCheck(formula);
-            }
-        }
-        public Formula(String formula, Normalizer norm, Validator valid)
-        {
-            if (formula == null)
-            {
-                baseList = new List<string> { "0" };
-                try
-                {
-                    baseList = syntaxCheck(norm("0"));
-                }
-                catch
-                {
-                    throw new FormulaFormatException("Incorrect syntax for normalized formula");
-                }
-                if (valid == null)
-                { }
-                else if (!valid(norm("0")))
-                {
-                    throw new FormulaFormatException("formula not valid for Validator input");
-                }
-            }
-            else
-            {
-                baseList = new List<string>();
-                try
-                {
-                    baseList = syntaxCheck(norm(formula));
-                }
-                catch
-                {
-                    throw new FormulaFormatException("Incorrect syntax for normalized formula");
-                }
-                if (valid == null)
-                { }
-                else if (!valid(norm(formula)))
-                {
-                    throw new FormulaFormatException("formula not valid for Validator input");
-                }
-            }
+            //Gets tokens
+            formula_tokens = GetTokens(formula);
+            formula_string = formula;
+
+            //Function that normalizer when not null, checks with validator, and changes formula_tokens
+            normalizeAndValidate(formula, normalizer, validator);
             
-        }
-        public ISet<string> GetVariables()
-        {
-            string allLetters = @"[a-z]|[A-Z]";
-            Regex letters = new Regex( allLetters);
-            HashSet<string> myVariables = new HashSet<string>();
-            foreach(string x in baseList)                
+
+            int paren = 0;
+            String last_val = "";
+            Boolean first_value = true;
+
+            if (formula != null)
             {
-                string firstElement = char.ToString(x[0]);
-                if(letters.IsMatch(firstElement))
+                foreach (var token in formula_tokens)
                 {
-                    myVariables.Add(x);
-                }
-            }
-            return myVariables;
-        }
-        public List<string> syntaxCheck(string formula)
-        {
-            IEnumerable<string> tokens = GetTokens(formula);
-            List<string> tokenList = new List<string>();
-            foreach (string x in tokens)//Turned the Ienumerable tokens into a more malleable List
-            {
-                tokenList.Add(x);
-            }
-            int leftParenthCounter = 0;//ints to keep track of the number of ()
-            int rightParenthCount = 0;
-            if (tokenList.Count == 0)//checks to make sure there was input
-                throw new FormulaFormatException("Incorrect Syntax for Formula");
-            bool lastTokenWasOperator = true;//A bool to keep track of the type of the last token
-            double value;
-            for (int i = 0; i < tokenList.Count; i++)//loop to go through all the tokens
-            {
-                if (double.TryParse(tokenList[i], out value))//checks to see if the token is a double
-                {
-                    if (lastTokenWasOperator)
-                        lastTokenWasOperator = false;
+                    if (first_value)
+                    {
+                        if (Regex.IsMatch(token, @"[-+/*)]"))
+                        {
+                            throw new FormulaFormatException("Cannot start formula with operand");
+                        }
+                        if (token != "(")
+                        {
+                            first_value = false;
+                        }
+                    }
+                    //throws exception if token is not a valid token or non-double number
+                    if (Regex.IsMatch(token, @"[^a-z A-Z\d/*+\-()]") && !Regex.IsMatch(token, @"\d+.\d+"))
+                    {
+                        throw new FormulaFormatException("Invalid token: " + token);
+                    }
+                    //throws exception if token and last value are both operands
+                    else if (Regex.IsMatch(token, @"[\da-zA-z]") && Regex.IsMatch(last_val, @"[\da-zA-z]"))
+                    {
+                        throw new FormulaFormatException("Too many operands: " + last_val + token);
+                    }
+                    //throws exception if token and last value are both operators
+                    else if ((token == "+" || token == "-" || token == "*" || token == "/") && (last_val == "+" || last_val == "-" || last_val == "*" || last_val == "/"))
+                    {
+                        throw new FormulaFormatException("Must have operand after operator or closing parenthesis");
+                    }
                     else
-                        throw new FormulaFormatException("Incorrect Syntax for Formula");
+                    {
+                        last_val = token;
+                    }
+                    if (token == "(")
+                    {
+                        paren++;
+                    }
+                    else if (token == ")")
+                    {
+                        paren--;
+                    }
                 }
-                else if (char.IsLetter(tokenList[i][0]))//checks to see if the first char in the token is a letter to denote a variable
+                //throws exception if no tokens were given
+                if (last_val.Equals(""))
                 {
-                    if (lastTokenWasOperator)
-                        lastTokenWasOperator = false;
-                    else
-                        throw new FormulaFormatException("Incorrect Syntax for Formula");
+                    throw new FormulaFormatException("There must be at least one token");
                 }
-                else if ((tokenList[i] == "/") || (tokenList[i] == "*") || (tokenList[i] == "+") || (tokenList[i] == "-"))
-                {//Checks for operators
-                    if (lastTokenWasOperator)
-                        throw new FormulaFormatException("Incorrect Syntax for Formula");
-                    else
-                        lastTokenWasOperator = true;
-                }
-                else if ((tokenList[i] == "("))//Checks for Parentheses and adds to the appropriate counter
+                //throws exception if amount of left parentheses is not same as right parentheses
+                if (paren != 0)
                 {
-                    if (!lastTokenWasOperator)
-                        throw new FormulaFormatException("Incorrect Syntax for Formula");
-                    leftParenthCounter++;
+                    throw new FormulaFormatException("Too many right parentheses");
                 }
-                else if (tokenList[i] == ")")
+                //throws exception if last token is operator
+                if (Regex.IsMatch(last_val, @"[-+/*]"))
                 {
-                    if (lastTokenWasOperator)
-                        throw new FormulaFormatException("Incorrect Syntax for Formula");
-                    rightParenthCount++;
-                    if (rightParenthCount > leftParenthCounter)
-                        throw new FormulaFormatException("Too many right Parentheses");
+                    throw new FormulaFormatException("Cannot end formula with operator");
                 }
-                else//if the token fell into none of these catagories it is not recognized
-                    throw new FormulaFormatException("Incorrect Syntax for Formula");
-                
             }
-            if (leftParenthCounter != rightParenthCount)//after the loop is done, it makes sure the parentheses match up
-            {
-                throw new FormulaFormatException("Incorrect Parentheses");
-            }
-            if (lastTokenWasOperator)
-            {
-                throw new FormulaFormatException("Cannot end formula with an operator");
-            }
-            return tokenList;
-        }
-        public override string ToString()
-        {
-            string returnString = "";
-            foreach(string x in baseList)
-            {
-                returnString = returnString + x;
-            }
-            return returnString;
         }
         /// <summary>
         /// Evaluates this Formula, using the Lookup delegate to determine the values of variables.  (The
@@ -189,188 +122,167 @@ namespace Formulas
         /// </summary>
         public double Evaluate(Lookup lookup)
         {
-            Stack<double> rands = new Stack<double>();
-            Stack<string> rators = new Stack<string>();
-            double value;
-            foreach (string x in this.baseList)//a loop to move through the baseList
+            Stack<string> operators = new Stack<string>();
+            Stack<double> values = new Stack<double>();
+
+            double num;
+            int paren = 0;
+            String temp_operator = "";
+
+            if (formula_string != null)
             {
-                if (double.TryParse(x, out value))//checks for doubles, if found, checks for higher order operators and 
-                    if(rators.Count > 0 && rands.Count > 0)//does the correct function
+                foreach (String token in formula_tokens)
+                {
+                    if (double.TryParse(token, out num))
                     {
-                        double value2 = rands.Pop();
-                        string oper = rators.Pop();
-                        if(oper == "*")
+                        values.Push(num);
+                    }
+                    else if (token == "+" || token == "-" || token == "*" || token == "/" || token == "(")
+                    {
+                        operators.Push(token);
+                        if (token == "(")
                         {
-                            double pushValue = value2 * value;
-                            rands.Push(pushValue);
+                            paren++;
                         }
-                        else if(oper == "/")
+                    }
+                    else if (token == ")")
+                    {
+                        temp_operator = operators.Pop();
+                        while (temp_operator != "(")
                         {
-                            double pushValue = value2 / value;
-                            if (double.IsInfinity(pushValue))
+                            values.Push(OperateOnStacks(values, temp_operator));
+                            temp_operator = operators.Pop();
+                        }
+                        paren--;
+                        if (operators.Count > 0 && values.Count > (operators.Count - paren % 2))
+                        {
+                            if (operators.Peek().Equals("*") || operators.Peek().Equals("/"))
                             {
-                                throw new FormulaEvaluationException("Can't divide by 0");
+                                values.Push(OperateOnStacks(values, operators.Pop()));
                             }
-                            rands.Push(pushValue);                          
-                        }
-                        else
-                        {
-                            rands.Push(value2);
-                            rators.Push(oper);
-                            rands.Push(value);
                         }
                     }
                     else
                     {
-                        rands.Push(value);
+                        try
+                        {
+                            values.Push(lookup(token));
+                        }
+                        catch (UndefinedVariableException)
+                        {
+                            throw new FormulaEvaluationException("Variable not found");
+                        }
                     }
-
-                else if (x == "+" || x == "-")
-                {
-                    
-                    if (rators.Count > 0)
+                    if (operators.Count > 0 && values.Count > (operators.Count - paren % 2))
                     {
-                        string oper = rators.Pop();
-                        if(oper == "+")
+                        if (operators.Peek().Equals("*") || operators.Peek().Equals("/"))
                         {
-                            double num1 = rands.Pop();
-                            double num2 = rands.Pop();
-                            double pushValue = num2 + num1;
-                            rands.Push(pushValue);
+                            values.Push(OperateOnStacks(values, operators.Pop()));
                         }
-                        else if (oper == "-")
-                        {
-                            double num1 = rands.Pop();
-                            double num2 = rands.Pop();
-                            double pushValue = num2 - num1;
-                            rands.Push(pushValue);
-                        }
-                        else
-                        {
-                            rators.Push(oper);
-                        }
-                        
                     }
-                    rators.Push(x);
                 }
-                else if (x == "*" || x == "/" || x == "(")
-                {
-                    rators.Push(x);
-                }
-                else if (x == ")")
-                {
-                    string oper = rators.Pop();
-                    if (oper == "+")
-                    {
-                        double num1 = rands.Pop();
-                        double num2 = rands.Pop();
-                        double pushValue = num2 + num1;
-                        rands.Push(pushValue);
-                        rators.Pop();                      
-                    }
-                    else if (oper == "-")
-                    {
-                        double num1 = rands.Pop();
-                        double num2 = rands.Pop();
-                        double pushValue = num2 - num1;
-                        rands.Push(pushValue);
-                        rators.Pop();
-                    }
-                    else if (oper == "(")
-                    {}
-                    if (rators.Count > 0)
-                    {
-                        oper = rators.Pop();
-                        if (oper == "*")
-                        {
-                            double num1 = rands.Pop();
-                            double num2 = rands.Pop();
-                            double pushValue = num2 * num1;
-                            rands.Push(pushValue);
-                        }
-                        else if (oper == "/")
-                        {
-                            double num1 = rands.Pop();
-                            double num2 = rands.Pop();
-                            double pushValue = num2 / num1;
-                            if (double.IsInfinity(pushValue))
-                            {
-                                throw new FormulaEvaluationException("Can't divide by 0");
-                            }
-                            rands.Push(pushValue);
-                        }
-                        else if(oper == "(")
-                        {
-                            rators.Push(oper);
-                        }
-                        else if (oper == "+")
-                        {
-                            rators.Push(oper);
-                        }
-                        else if (oper == "-")
-                        {
-                            rators.Push(oper);
-                        }
-                    }
+                return EndOperation(values, operators);
+            }
+            return 0;
+        }
 
-                }
-                else
+        public ISet<string> GetVariables()
+        {
+            var token_list = new HashSet<string>();
+            if (formula_string != null)
+            {
+                foreach (var token in formula_tokens)
                 {
-                    try {lookup(x); }//at this point in the code if it throws a varible exception it turns it into
-                    //an evaluation exeption
-                    catch
-                    {
-                        throw new FormulaEvaluationException(x);
-                    }
-                    double myValue = lookup(x);
-                    
-                    if (rators.Count > 0 && rands.Count > 0)
-                    {
-                        double value2 = rands.Pop();
-                        string oper = rators.Pop();
-                        if (oper == "*")
-                        {
-                            double pushValue = value2 * myValue;
-                            rands.Push(pushValue);
-                        }
-                        else if (oper == "/")
-                        {
-                            double pushValue = value2 / myValue;
-                            rands.Push(pushValue);
-                        }
-                        else
-                        {
-                            rands.Push(value2);
-                            rators.Push(oper);
-                            rands.Push(myValue);
-                        }
+                    if (Regex.IsMatch(token.Substring(0, 1), @"[a-zA-z]"))
+                        token_list.Add(token);
+                }
+            }
+            return token_list;
+        }
 
+        /// <summary>
+        /// takes the formula, normalizer, validator as parameters
+        /// If not null, it normalizes and validates
+        /// </summary>
+        private void normalizeAndValidate(String formula, Normalizer normalizer, Validator validator)
+        {
+            string new_formula = "";
+            if (normalizer != null)
+            {
+                foreach (var token in formula_tokens)
+                {
+                    if (Regex.IsMatch(token.Substring(0, 1), @"[a-zA-z]"))
+                    {
+                        new_formula += normalizer(token);
+                        if (!validator(normalizer(token)))
+                            throw new FormulaFormatException("Validation failed");
                     }
                     else
-                    {
-                        rands.Push(myValue);
-                    }
+                        new_formula += token;
                 }
+                formula_string = new_formula;
+                formula_tokens = GetTokens(new_formula);
             }
-            if (rators.Count == 0)//finishes by popping the last value or doing the last operation
-                return rands.Pop();
-            else
+        }
+
+        /// <summary>
+        /// returns the formula string when ToString function is called
+        /// </summary>
+        public override string ToString()
+        {
+            return formula_string;
+        }
+
+        /// <summary>
+        /// Private function takes in an operator string
+        /// The last value of the stack is saved to use after, to not affect results from - and /
+        /// Switch statements picks the right operation and returns the value
+        /// </summary>
+        private double OperateOnStacks(Stack<double> values, String operator_value)
+        {
+            double temp_val;
+            double last_val = values.Pop();
+            switch (operator_value)
             {
-                double returnValue = 0;
-                double num1 = rands.Pop();
-                double num2 = rands.Pop();
-                string oper = rators.Pop();
-                if (oper == "+")
-                {
-                    returnValue = num2 + num1;
-                }
-                else
-                {
-                    returnValue = num2 - num1;
-                }
-                return returnValue;
+                case "+":
+                    temp_val = values.Pop() + last_val;
+                    return temp_val;
+                case "-":
+                    return values.Pop() - last_val;
+                case "*":
+                    return values.Pop() * last_val;
+                case "/":
+                    temp_val = values.Pop() / last_val;
+                    if (Double.IsInfinity(temp_val))
+                    {
+                        throw new FormulaEvaluationException("Cannot divide by 0");
+                    }
+                    return temp_val;
             }
-                      
+            return 0;
+        }
+
+        /// <summary>
+        /// Private function takes in an operator string
+        /// The last value of the stack is saved to use after, to not affect results from - and /
+        /// Switch statements picks the right operation and returns the value
+        /// </summary>
+        private double EndOperation(Stack<double> values, Stack<string> operators)
+        {
+            double temp_val;
+            if (values.Count < 2)
+            {
+                return values.Pop();
+            }
+            temp_val = values.Pop();
+            switch (operators.Pop())
+            {
+                case "+":
+                    return EndOperation(values, operators) + temp_val;
+                case "-":
+                    return EndOperation(values, operators) - temp_val;
+            }
+            return 0;
         }
 
         /// <summary>
@@ -410,6 +322,8 @@ namespace Formulas
         }
     }
 
+    
+
     /// <summary>
     /// A Lookup method is one that maps some strings to double values.  Given a string,
     /// such a function can either return a double (meaning that the string maps to the
@@ -417,14 +331,13 @@ namespace Formulas
     /// to a value. Exactly how a Lookup method decides which strings map to doubles and which
     /// don't is up to the implementation of the method.
     /// </summary>
-    public delegate string Normalizer (string s);
-    public delegate bool Validator(string s);
     public delegate double Lookup(string var);
-
     /// <summary>
     /// Used to report that a Lookup delegate is unable to determine the value
     /// of a variable.
     /// </summary>
+    public delegate string Normalizer(string s);
+    public delegate bool Validator(string s);
     [Serializable]
     public class UndefinedVariableException : Exception
     {
@@ -465,5 +378,5 @@ namespace Formulas
         public FormulaEvaluationException(String message) : base(message)
         {
         }
-    }    
+    }
 }

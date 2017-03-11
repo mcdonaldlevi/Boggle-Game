@@ -1,5 +1,5 @@
 ﻿// Skeleton implementation written by Joe Zachary for CS 3500, January 2017.
-// Skeleton fleshed out by Levi McDonald January 2017
+
 using System;
 using System.Collections.Generic;
 
@@ -32,6 +32,8 @@ namespace Dependencies
     ///     
     /// All of the methods below require their string parameters to be non-null.  This means that 
     /// the behavior of the method is undefined when a string parameter is null.  
+    /// If the parameters are null, it will throw an ArgumentNullException.
+    /// If there are null strings in IEnumerable parameters, it will throw an ArgumentNullException
     ///
     /// IMPORTANT IMPLEMENTATION NOTE
     /// 
@@ -48,26 +50,31 @@ namespace Dependencies
     /// </summary>
     public class DependencyGraph
     {
-        private Dictionary<string, List<string>> dependees = new Dictionary<string, List<string>>();
-        private Dictionary<string, List<string>> dependents = new Dictionary<string, List<string>>();
-        private int size = 0;
-        //dependees is a dictionary where the keys are Dependees and they connect to a list of their dependents
-        //dependents is a dictionary where the keys are dependents and they connect to a list of their dependees
-        //every time a dependency is added or removed, size is altered accordingly.
+        private int size;
+        private Dictionary<string, List<string>> Dependents = new Dictionary<string, List<string>>();
+        private Dictionary<string, List<string>> Dependees = new Dictionary<string, List<string>>();
         /// <summary>
         /// Creates a DependencyGraph containing no dependencies.
         /// </summary>
-        public DependencyGraph()
+
+        public DependencyGraph(DependencyGraph dg)
         {
 
-        }
-        public DependencyGraph(DependencyGraph copyFromGraph)
-        {
-            foreach (string x in copyFromGraph.dependees.Keys)
+            //Makes deep copies of Dependees and Dependents
+            foreach (var dependent in dg.Dependents)
             {
-                this.AddDependency(x, "a");
-                this.ReplaceDependents(x, copyFromGraph.GetDependents(x));
+                foreach(var dependee in dependent.Value)
+                {
+                    AddDependency(dependent.Key, dependee);
+                }
             }
+            
+            size = dg.Size;
+        }
+
+        public DependencyGraph()
+        {
+            size = 0;
         }
 
         /// <summary>
@@ -75,15 +82,11 @@ namespace Dependencies
         /// </summary>
         public int Size
         {
-            get
-            {
-                return size;
-            }
-            
+            get { return size; }
         }
 
         /// <summary>
-        /// Reports whether dependents(s) is non-empty. if s == null throws an Argument Null Exception
+        /// Reports whether dependents(s) is non-empty.  Requires s != null.
         /// </summary>
         public bool HasDependents(string s)
         {
@@ -91,38 +94,29 @@ namespace Dependencies
             {
                 throw new ArgumentNullException();
             }
-            if (dependees.ContainsKey(s))//checks to see if s is a dependee
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            //Returns true if key is in Dependents and it is not empty
+            if (Dependents.ContainsKey(s))
+                return (Dependents[s].Count != 0);
+            return false;
         }
 
         /// <summary>
-        /// Reports whether dependees(s) is non-empty.  if s == null throws an Argument Null Exception
+        /// Reports whether dependees(s) is non-empty.  Requires s != null.
         /// </summary>
         public bool HasDependees(string s)
         {
-
             if (s == null)
             {
                 throw new ArgumentNullException();
             }
-            if (dependents.ContainsKey(s))//checks to see if s is a dependent
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            //Returns true if key is in Dependees and it is not empty
+            if (Dependees.ContainsKey(s))
+                return (Dependees[s].Count != 0);
+            return false;
         }
 
         /// <summary>
-        /// Enumerates dependents(s).  if s == null throws an Argument Null Exception
+        /// Enumerates dependents(s).  Requires s != null.
         /// </summary>
         public IEnumerable<string> GetDependents(string s)
         {
@@ -130,20 +124,15 @@ namespace Dependencies
             {
                 throw new ArgumentNullException();
             }
-            if (dependees.ContainsKey(s))//checks to see if s is a dependee and then returns s's list of dependents
-            {
-                return (dependees[s]);
-            }
-            else
-            {
-                List<string> nullList = new List<string>();
-                IEnumerable<string> nullEnumerable = nullList;
-                return nullEnumerable;
-            }
+            if (Dependents.ContainsKey(s))
+                foreach (string dependent in Dependents[s])
+                {
+                    yield return dependent;
+                }
         }
 
         /// <summary>
-        /// Enumerates dependees(s).  if s == null throws an Argument Null Exception
+        /// Enumerates dependees(s).  Requires s != null.
         /// </summary>
         public IEnumerable<string> GetDependees(string s)
         {
@@ -151,210 +140,139 @@ namespace Dependencies
             {
                 throw new ArgumentNullException();
             }
-            if (dependents.ContainsKey(s))//checks to see if s is a dependent and if so returns its list of dependees
-            {
-                return dependents[s];
-            }
-            else
-            {
-                List<string> nullList = new List<string>();
-                IEnumerable<string> nullEnumerable = nullList;
-                return nullEnumerable;
-            }
+            if (Dependees.ContainsKey(s))
+                foreach (string dependee in Dependees[s])
+                {
+                    yield return dependee;
+                }
         }
 
         /// <summary>
         /// Adds the dependency (s,t) to this DependencyGraph.
         /// This has no effect if (s,t) already belongs to this DependencyGraph.
-        /// if s or t == null throws an Argument Null Exception
+        /// Requires s != null and t != null.
         /// </summary>
         public void AddDependency(string s, string t)
         {
-            if ((s == null)|| (t==null))
+            if (s == null && t == null)
             {
                 throw new ArgumentNullException();
             }
-            if (dependees.ContainsKey(s))//checks to see if s already has a dependent
-            {
-                if (dependees[s].Contains(t))//if it does checks to see if it is the one already being asked for
-                {
+            if (Dependents.ContainsKey(s) && Dependees.ContainsKey(t))
+                if (Dependents[s].Contains(t) && Dependees[t].Contains(s))
                     return;
-                }
-                else
-                {
-                    dependees[s].Add(t);//adds to the the dependent list attached to s
-                    if (dependents.ContainsKey(t))//checks to see if t is already a dependent, if so adds s to its
-                    {//dependee list
-                        dependents[t].Add(s);
-                    }
-                    else//if not makes a new list composed of s and makes a new keyvalue pair for the dictionary
-                    {
-                        List<string> myDependeeList = new List<string> { s };
-                        dependents.Add(t, myDependeeList);
-                    }
-                    size += 1;//increases size
-                }
-            }
-            else//if s does not already exist, it creates a place in the dictionary for s
-            {
-                List<string> dependentList = new List<string>();
-                dependentList.Add(t);
-                dependees.Add(s, dependentList);
-                if (dependents.ContainsKey(t))//same checks as above
-                {
-                    dependents[t].Add(s);
-                }
-                else
-                {
-                    List<string> dependeeList = new List<string>();
-                    dependeeList.Add(s);
-                    dependents.Add(t, dependeeList);
-                }
-                size += 1;
-            }
+            //If first parameter is not added before, it creates a dependents and dependees list
+            if (!Dependents.ContainsKey(s))
+                Dependents.Add(s, new List<string>());
+            if(!Dependees.ContainsKey(s))
+                Dependees.Add(s, new List<string>());
+
+            //If second parameter is not added before, it creates a dependents and dependees list
+            if (!Dependents.ContainsKey(t))
+                Dependents.Add(t, new List<string>());
+            if(!Dependees.ContainsKey(t))
+                Dependees.Add(t, new List<string>());
+
+            //If it has not been added to the Dependents list yet, it is added
+            if (!Dependents[s].Contains(t))
+                Dependents[s].Add(t);
+            //If it has not been added to the Dependees list yet, it is added
+            if (!Dependees[t].Contains(s))
+                Dependees[t].Add(s);
+                
+            size++;
         }
 
         /// <summary>
         /// Removes the dependency (s,t) from this DependencyGraph.
         /// Does nothing if (s,t) doesn't belong to this DependencyGraph.
-        ///if s or t == null throws an Argument Null Exception
+        /// Requires s != null and t != null.
         /// </summary>
         public void RemoveDependency(string s, string t)
         {
-            if ((s == null) || (t == null))
+            if (s == null && t == null)
             {
                 throw new ArgumentNullException();
             }
-            if (dependees.ContainsKey(s))//checks to make sure s exists otherwise does nothing
+            //Remove from both lists if exists 
+            if (Dependents.ContainsKey(s) && Dependents.ContainsKey(t))
             {
-                if (dependees[s].Contains(t))//checks to make sure t exists in s
+                if(Dependents.ContainsKey(s))
                 {
-                    dependees[s].Remove(t);//removes both from their realitive lists in the dictionaries
-                    dependents[t].Remove(s);
-                    if (dependees[s].Count == 0)//if the list is empty, this entirely removes the key value pair
-                    {
-                        dependees.Remove(s);
-                    }
-                    if (dependents[t].Count == 0)
-                    {
-                        dependents.Remove(t);
-                    }
-                    size -= 1;
+                    Dependents[s].Remove(t);
                 }
+                if(Dependees.ContainsKey(t))
+                {
+                    Dependees[t].Remove(s);
+                }
+
+                size--;
             }
         }
 
         /// <summary>
         /// Removes all existing dependencies of the form (s,r).  Then, for each
         /// t in newDependents, adds the dependency (s,t).
-        /// if s or t == null throws an Argument Null Exception
+        /// Requires s != null and t != null.
         /// </summary>
-        public void ReplaceDependents(string s, IEnumerable<string> newDependents)
-        {/// to remove all the dependents from s, first we need to take those dependents and remove their 
-         /// connection to s in the dependent dictionary then remove them from s in the dependee dictionary
-         ///  Afterwards, s gets connected
-         /// to a new set of dependents, and then those dependents are all added to the dependent dictionary
-            if ((s == null) || (newDependents == null))
+        public void ReplaceDependees(string s, IEnumerable<string> newDependents)
+        {
+            if (s == null)
             {
                 throw new ArgumentNullException();
             }
-            foreach(string x in newDependents)
+            if (Dependees.ContainsKey(s))
+                //Removes all dependees and decrements size
+                foreach(string dependee in Dependees[s])
+                {
+                    Dependents[dependee].Remove(s);
+                    size--;
+                }
+
+            //Clears list
+            Dependees[s] = new List<string>();
+
+            //Iterates ands every value from newDependents
+            foreach(string dependent in newDependents)
             {
-                if(x== null)
+                if (dependent == null)
                 {
                     throw new ArgumentNullException();
                 }
-            }
-            if (dependees.ContainsKey(s))
-            {
-                
-                foreach (string x in dependees[s])//going through s's dependents and finding them in the dependent 
-                {//dictionary and removes s from their list
-                    if(dependents.ContainsKey(x))
-                    {
-                        dependents[x].Remove(s);
-                        size -= 1;
-                        if (dependents[x].Count == 0)//if they were only dependent on s, it removes them from the 
-                        {                              //dictionary entirely
-                            dependents.Remove(x);
-                        }
-                    }
-                }
-                List<string> dependentsList = new List<string>();
-                foreach (string x in newDependents)//takes the enumerable and makes it a list as required for the 
-                    dependentsList.Add(x);          //keyvalue pair in the dictionary
-                dependees[s] = dependentsList;       //the list that s is a key of it overwritten with the new Dependents
-
-                foreach (string x in newDependents)//goes through the newDependents and adds them to the Dependent dictionary
-                {
-                    if (dependents.ContainsKey(x))
-                    {
-                        dependents[x].Add(s);
-                    }
-                    else
-                    {
-                        List<string> addList = new List<string> { s };
-                        dependents.Add(x, addList);
-                    }
-                    size += 1;
-                }
+                AddDependency(dependent, s);
             }
         }
 
         /// <summary>
         /// Removes all existing dependencies of the form (r,t).  Then, for each 
         /// s in newDependees, adds the dependency (s,t).
-        /// if s or t == null throws an Argument Null Exception
+        /// Requires s != null and t != null.
         /// </summary>
-        public void ReplaceDependees(string t, IEnumerable<string> newDependees)
-        {// this does the same exact thing as above, just in reverse
-            if ((t == null) || (newDependees == null))
+        public void ReplaceDependents(string t, IEnumerable<string> newDependees)
+        {
+            if (t == null)
             {
                 throw new ArgumentNullException();
             }
-            foreach (string x in newDependees)
+            if (Dependents.ContainsKey(t))
+                //Removes all dependents and decrements size
+                foreach (string dependent in Dependents[t])
+                {
+                    Dependees[dependent].Remove(t);
+                    size--;
+                }
+
+            //Clears list
+            Dependents[t] = new List<string>();
+
+            //Iterates ands every value from newDependees
+            foreach (string dependee in newDependees)
             {
-                if (x == null)
+                if (dependee == null)
                 {
                     throw new ArgumentNullException();
                 }
-            }
-            if (dependents.ContainsKey(t))
-            {
-                foreach (string x in dependents[t])
-                {
-                    if (dependees.ContainsKey(x))
-                    {
-                        dependees[x].Remove(t);
-                        size -= 1;
-                        if (dependees[x].Count == 0)
-                        {
-                            dependees.Remove(x);
-                        }
-                    }
-                }
-                List<string> dependeesList = new List<string>();
-                foreach (string x in newDependees)
-                {
-                    dependeesList.Add(x);
-                }
-
-                dependents[t] = dependeesList;
-
-                foreach (string x in newDependees)
-                {
-                    if (dependees.ContainsKey(x))
-                    {
-                        dependees[x].Add(t);
-                        size += 1;
-                    }
-                    else
-                    {
-                        List<string> newList = new List<string> { t };
-                        dependees.Add(x, newList);
-                        size += 1;
-                    }
-                }
+                AddDependency(t, dependee);
             }
         }
     }
