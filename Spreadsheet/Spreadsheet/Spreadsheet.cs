@@ -222,6 +222,7 @@ namespace SS
         /// </summary>
         public override void Save(TextWriter dest)
         {
+            Changed = false;
             using (XmlWriter writer = XmlWriter.Create(dest))
             {
                 writer.WriteStartDocument();
@@ -251,13 +252,19 @@ namespace SS
         /// </summary>
         public override object GetCellValue(String name)
         {
+            string pattern = @"[a-zA-Z]{1,2}[1-9][0-9]*";
+            if (!Regex.IsMatch(name, pattern))
+            {
+                throw new InvalidNameException();
+            }
             if (cells.ContainsKey(name))
             {
                 return cells[name].myValue;
             }
+
             else
             {
-                throw new InvalidNameException();
+                return "";
             }
         }
         /// <summary>
@@ -331,6 +338,7 @@ namespace SS
             if(content == "")
             {
                 HashSet<string> nullSet = new HashSet<string>();
+                cells.Remove(name);
                 return nullSet;
             }
             Changed = true;

@@ -6,10 +6,11 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace SpreadsheetGUI
 {
-    class Controller
+    public class Controller
     {
         // The window being controlled
         private ISpreadsheet window;
@@ -44,20 +45,23 @@ namespace SpreadsheetGUI
                 Regex allValid = new Regex(@"(.*)?");
                 this.spreadsheet = new Spreadsheet(source, allValid);
             }
+          
             window.NewEvent += HandleNew;
             window.TypeText += Window_TypeText;
             window.TextFinished += Window_TextFinished;
-            //window.saveSpreadsheet += Window_saveSpreadsheet;
-
+            window.saveSpreadsheet += Window_saveSpreadsheet;
+            window.spreadSheetClose += Window_spreadSheetClose;
         }
 
+        private void Window_spreadSheetClose()
+        {
+            window.setSaved(!spreadsheet.Changed);              
+        }
 
-
-       /* private void Window_saveSpreadsheet(Stream dest)
+        private void Window_saveSpreadsheet(StreamWriter dest)
         {
             spreadsheet.Save(dest);
-     
-        }*/
+        }
 
         private int[] deComposeName(string cellName)
         {
@@ -74,36 +78,19 @@ namespace SpreadsheetGUI
             string row = (1 + lastCellCoord[1]).ToString(); //added to make a valid cell name
             string lastCell = col + row;
             ISet<string> cellsToUpdate = spreadsheet.SetContentsOfCell(lastCell, boxText);
-            if (boxText == "")
+            window.setCellValue(lastCellCoord[0], lastCellCoord[1], boxText);
+            lastCellCoord = window.GetCoord();
+            col = valueToLetterMap[lastCellCoord[0]];
+            row = (1 + lastCellCoord[1]).ToString(); //added to make a valid cell name
+            lastCell = col + row;
+            string equation = spreadsheet.GetCellContents(lastCell).ToString();
+            window.setTextBoxValue(equation);
+            window.setCellNameValue(lastCell, equation);
+            foreach (string x in cellsToUpdate)
             {
-                lastCellCoord = window.GetCoord();
-                col = valueToLetterMap[lastCellCoord[0]];
-                row = (1 + lastCellCoord[1]).ToString(); //added to make a valid cell name
-                lastCell = col + row;
-                string equation = spreadsheet.GetCellContents(lastCell).ToString();
-                window.setTextBoxValue(equation);
-                window.setCellNameValue(lastCell, equation);
-                foreach (string x in cellsToUpdate)
-                {
-                    window.setCellValue(deComposeName(x)[0], deComposeName(x)[1], spreadsheet.GetCellValue(x).ToString());
-                }
+                window.setCellValue(deComposeName(x)[0], deComposeName(x)[1], spreadsheet.GetCellValue(x).ToString());
             }
-            else
-            {                
-                window.setCellValue(lastCellCoord[0], lastCellCoord[1], spreadsheet.GetCellValue(lastCell).ToString());
-                lastCellCoord = window.GetCoord();
-                col = valueToLetterMap[lastCellCoord[0]];
-                row = (1 + lastCellCoord[1]).ToString(); //added to make a valid cell name
-                lastCell = col + row;
-                string equation = spreadsheet.GetCellContents(lastCell).ToString();
-                window.setTextBoxValue(equation);
-                window.setCellNameValue(lastCell, equation);
-                foreach (string x in cellsToUpdate)
-                {
-                    window.setCellValue(deComposeName(x)[0], deComposeName(x)[1], spreadsheet.GetCellValue(x).ToString());
-                }
-            }
-            }
+        }
 
         private void Window_TypeText(string boxText)
         {

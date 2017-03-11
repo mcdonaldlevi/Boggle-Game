@@ -7,13 +7,15 @@ using System.Threading.Tasks;
 
 namespace SpreadsheetGUI
 {
-    interface ISpreadsheet
+    public interface ISpreadsheet
     {
         event Action<string> TextFinished;
         event Action<string> TypeText;
         event Action NewEvent;
-        event Action<Stream> saveSpreadsheet;
-
+        event Action<StreamWriter> saveSpreadsheet;
+        event Action spreadSheetClose;
+        bool isSaved();
+        void setSaved(bool value);
         void OpenNew();
         int[] GetCoord();
         void setCellValue(int col, int row, string value);
