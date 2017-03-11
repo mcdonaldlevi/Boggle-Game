@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{96987ED5-DD7F-4F19-BCEC-447903672994}</ProjectGuid>
+    <ProjectGuid>{0B877255-967A-4840-ACCF-71B0B38A6538}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>DependencyGraphTestCases</RootNamespace>
@@ -50,12 +50,12 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="UnitTest1.cs" />
+    <Compile Include="DependencyGraphTestCases.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DependencyGraph\DependencyGraph.csproj">
-      <Project>{862ead85-346f-4d2b-a53c-98074ff813ba}</Project>
+      <Project>{862EAD85-346F-4D2B-A53C-98074FF813BA}</Project>
       <Name>DependencyGraph</Name>
     </ProjectReference>
   </ItemGroup>

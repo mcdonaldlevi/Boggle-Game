@@ -1,18 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Formulas;
 using Dependencies;
 using System.Text.RegularExpressions;
 using System.IO;
-using System.Xml;
 using System.Xml.Schema;
+using System.Xml;
 
 namespace SS
 {
-
     /// <summary>
     /// An AbstractSpreadsheet object represents the state of a simple spreadsheet.  A 
     /// spreadsheet consists of an infinite number of named cells.
@@ -56,217 +52,132 @@ namespace SS
     /// dependency.
     /// </summary>
     public class Spreadsheet : AbstractSpreadsheet
-    {        
-        Dictionary<string, Cell> cells = new Dictionary<string, Cell>();
-        DependencyGraph dependency = new DependencyGraph();
-        Regex IsValid;
-        /// <summary>
-        /// Constructs a Spreadsheet with a Validity checker.
-        /// </summary>
-        /// <param name="IsValid"></param>
-        public Spreadsheet(Regex IsValid)
+    { 
+        DependencyGraph dg = new DependencyGraph();
+        Dictionary<string, Cell> cellDict = new Dictionary<string, Cell>();
+        Regex validation;
+        Boolean changed = false;
+
+
+        public override bool Changed
         {
-            this.IsValid = IsValid;
+            get
+            {
+                return changed;
+            }
+
+            protected set
+            {
+                changed = value;
+            }
         }
-        /// <summary>
-        /// Creates a spreadsheet where anything is valid.
-        /// </summary>
+
         public Spreadsheet()
         {
-            Regex valid = new Regex(@"(.*)?");
-            IsValid = valid;
+            validation = new Regex(@"(.*)?");
         }
-        /// <summary>
-        /// Makes a spreadsheet by reading from a source file.
-        /// </summary>
-        /// <param name="source"></param>
-        /// <param name="newIsValid"></param>
-        public Spreadsheet(TextReader source, Regex newIsValid)
+
+        public Spreadsheet(Regex isValid)
         {
-            XmlSchemaSet sc = new XmlSchemaSet();
-            sc.Add(null, "Spreadsheet.xsd");
-            XmlReaderSettings settings = new XmlReaderSettings();
-            settings.ValidationType = ValidationType.Schema;
-            settings.Schemas = sc;
-            settings.ValidationEventHandler += ValidationFail;
-            Regex oldIsValid = newIsValid;
-            this.IsValid = newIsValid;
-            using (XmlReader reader = XmlReader.Create(source, settings))
+            validation = isValid;
+        }
+
+        public Spreadsheet(StringReader source, Regex newIsValid)
+        {
+
             {
-                while (reader.Read())
+
+                XmlSchemaSet sc = new XmlSchemaSet();
+
+                sc.Add(null, "Spreadsheet.xsd");
+
+                XmlReaderSettings settings = new XmlReaderSettings();
+
+                settings.ValidationType = ValidationType.Schema;
+
+                settings.Schemas = sc;
+
+                settings.ValidationEventHandler += ValidationFail;
+
+                Regex oldIsValid = newIsValid;
+
+                this.validation = newIsValid;
+
+                using (XmlReader reader = XmlReader.Create(source, settings))
+
                 {
-                    if (reader.IsStartElement())
+
+                    while (reader.Read())
+
                     {
-                        switch (reader.Name)
+
+                        if (reader.IsStartElement())
+
                         {
-                            case "spreadsheet":
-                                try
-                                {
-                                    oldIsValid = new Regex(reader.GetAttribute("IsValid"));
-                                }
-                                catch
-                                {
-                                    throw new SpreadsheetReadException("IsValid Regex of source not valid");
-                                }
-                                break;
-                            case "cell":
-                                if (cells.ContainsKey(reader.GetAttribute("name")))
-                                {
-                                    throw new SpreadsheetReadException("Duplicate Cell names in source");
-                                }
-                                else if (!oldIsValid.IsMatch(reader.GetAttribute("name")))
-                                {
-                                    throw new SpreadsheetReadException("cell name not valid by Old IsValid");
-                                }
-                                else if (!newIsValid.IsMatch(reader.GetAttribute("name")))
-                                {
-                                    throw new SpreadsheetReadException("cell name not valid by New IsValid");
-                                }
-                                this.SetContentsOfCell(reader.GetAttribute("name"), reader.GetAttribute("contents"));
-                                break;
+
+                            switch (reader.Name)
+
+                            {
+
+                                case "spreadsheet":
+
+                                    try
+
+                                    {
+
+                                        oldIsValid = new Regex(reader.GetAttribute("IsValid"));
+
+                                    }
+
+                                    catch
+
+                                    {
+
+                                        throw new SpreadsheetReadException("IsValid Regex of source not valid");
+
+                                    }
+
+                                    break;
+
+                                case "cell":
+
+                                    if (cellDict.ContainsKey(reader.GetAttribute("name")))
+
+                                    {
+
+                                        throw new SpreadsheetReadException("Duplicate Cell names in source");
+
+                                    }
+
+                                    else if (!oldIsValid.IsMatch(reader.GetAttribute("name")))
+
+                                    {
+
+                                        throw new SpreadsheetReadException("cell name not valid by Old IsValid");
+
+                                    }
+
+                                    else if (!newIsValid.IsMatch(reader.GetAttribute("name")))
+
+                                    {
+
+                                        throw new SpreadsheetReadException("cell name not valid by New IsValid");
+
+                                    }
+
+                                    this.SetContentsOfCell(reader.GetAttribute("name"), reader.GetAttribute("contents"));
+
+                                    break;
+
+                            }
+
                         }
+
                     }
-                }
-            }
-        }
-        struct Cell
-        {            
-            public object myValue;
-            public object myContents;
-            public Cell(object value, Lookup lookUp)
-            {
-                if (value.GetType() == typeof(string))
-                {
-                    myValue = value;
-                    myContents = value;
-                }
-                else if (value.GetType() == typeof(double))
-                {
-                    myValue = value;
-                    myContents = value;
-                }
-                else
-                {
-                    Formula f = (Formula)value;
-                    try
-                    {
-                        myValue = f.Evaluate(lookUp);
-                        string contentsWithEqual = value.ToString();
-                        if(contentsWithEqual[0] != '=')
-                            contentsWithEqual = contentsWithEqual.Insert(0, "=");
-                        myContents = contentsWithEqual;
-                         
-                    }
-                    catch
-                    {
-                        myValue = new FormulaError("Cells have no valid value");
-                        string contentsWithEqual = value.ToString();
-                        if(contentsWithEqual[0] != '=')
-                            contentsWithEqual = contentsWithEqual.Insert(0, "=");
-                        myContents = contentsWithEqual;
-                    }                    
-                }
-            }
-        }
-        /// <summary>
-        /// makes a lookup function to check the spreadsheet and retreive values of cells.
-        /// </summary>
-        /// <param name="s"></param>
-        /// <returns></returns>
-        public double lookUp(string s)
-        {
 
-            if (cells[s].myValue.GetType() == typeof(string))
-            {
-                throw new FormulaEvaluationException("Cell refrenced was a string");
-            }
-            else
-            {
-                return (double)cells[s].myValue;
-            }
-        }
-        /// <summary>
-        /// turns the Regex input into a valid bool to pass to a Formula
-        /// </summary>
-        /// <param name="s"></param>
-        /// <returns></returns>      
-        public bool valid(string s)
-        {
-            return IsValid.IsMatch(s);
-        }
-        /// <summary>
-        /// True if this spreadsheet has been modified since it was created or saved
-        /// (whichever happened most recently); false otherwise.
-        /// </summary>
-        public override bool Changed { get; protected set; }
-
-        // ADDED FOR PS6
-        /// <summary>
-        /// Writes the contents of this spreadsheet to dest using an XML format.
-        /// The XML elements should be structured as follows:
-        ///
-        /// <spreadsheet IsValid="IsValid regex goes here">
-        ///   <cell name="cell name goes here" contents="cell contents go here"></cell>
-        ///   <cell name="cell name goes here" contents="cell contents go here"></cell>
-        ///   <cell name="cell name goes here" contents="cell contents go here"></cell>
-        /// </spreadsheet>
-        ///
-        /// The value of the IsValid attribute should be IsValid.ToString()
-        /// 
-        /// There should be one cell element for each non-empty cell in the spreadsheet.
-        /// If the cell contains a string, the string (without surrounding double quotes) should be written as the contents.
-        /// If the cell contains a double d, d.ToString() should be written as the contents.
-        /// If the cell contains a Formula f, f.ToString() with "=" prepended should be written as the contents.
-        ///
-        /// If there are any problems writing to dest, the method should throw an IOException.
-        /// </summary>
-        public override void Save(TextWriter dest)
-        {
-            using (XmlWriter writer = XmlWriter.Create(dest))
-            {
-                writer.WriteStartDocument();
-                writer.WriteStartElement("spreadsheet");
-                writer.WriteAttributeString("IsValid", IsValid.ToString());
-                IEnumerable<string> myCells = GetNamesOfAllNonemptyCells();
-
-                foreach (string x in myCells)
-                {
-                    writer.WriteStartElement("cell");
-                    writer.WriteAttributeString("name", x);
-                    writer.WriteAttributeString("contents", cells[x].myContents.ToString());
-                    writer.WriteEndElement();
                 }
 
-                writer.WriteEndElement();
-                writer.WriteEndDocument();
             }
-
-        }
-        // ADDED FOR PS6
-        /// <summary>
-        /// If name is null or invalid, throws an InvalidNameException.
-        ///
-        /// Otherwise, returns the value (as opposed to the contents) of the named cell.  The return
-        /// value should be either a string, a double, or a FormulaError.
-        /// </summary>
-        public override object GetCellValue(String name)
-        {
-            if (cells.ContainsKey(name))
-            {
-                return cells[name].myValue;
-            }
-            else
-            {
-                throw new InvalidNameException();
-            }
-        }
-        /// <summary>
-        /// Enumerates the names of all the non-empty cells in the spreadsheet.
-        /// </summary>
-        public override IEnumerable<String> GetNamesOfAllNonemptyCells()
-        {
-            IEnumerable<String> names = cells.Keys;
-            return names;
         }
 
         /// <summary>
@@ -275,239 +186,25 @@ namespace SS
         /// Otherwise, returns the contents (as opposed to the value) of the named cell.  The return
         /// value should be either a string, a double, or a Formula.
         /// </summary>
-        public override object GetCellContents(String name)
+        public override object GetCellContents(string name)
         {
-            if (!IsValid.IsMatch(name))
-            {
-                throw new InvalidNameException();
-            }
-            if (cells.ContainsKey(name))
-            {
-                return cells[name].myContents;
-            }
-            else
-            {
-                return "";
-            }
-        }
-        // ADDED FOR PS6
-        /// <summary>
-        /// If content is null, throws an ArgumentNullException.
-        ///
-        /// Otherwise, if name is null or invalid, throws an InvalidNameException.
-        ///
-        /// Otherwise, if content parses as a double, the contents of the named
-        /// cell becomes that double.
-        ///
-        /// Otherwise, if content begins with the character '=', an attempt is made
-        /// to parse the remainder of content into a Formula f using the Formula
-        /// constructor with s => s.ToUpper() as the normalizer and a validator that
-        /// checks that s is a valid cell name as defined in the AbstractSpreadsheet
-        /// class comment.  There are then three possibilities:
-        ///
-        ///   (1) If the remainder of content cannot be parsed into a Formula, a
-        ///       Formulas.FormulaFormatException is thrown.
-        ///
-        ///   (2) Otherwise, if changing the contents of the named cell to be f
-        ///       would cause a circular dependency, a CircularException is thrown.
-        ///
-        ///   (3) Otherwise, the contents of the named cell becomes f.
-        ///
-        /// Otherwise, the contents of the named cell becomes content.
-        ///
-        /// If an exception is not thrown, the method returns a set consisting of
-        /// name plus the names of all other cells whose value depends, directly
-        /// or indirectly, on the named cell.
-        ///
-        /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
-        /// set {A1, B1, C1} is returned.
-        /// </summary>
-        public override ISet<String> SetContentsOfCell(String name, String content)
-        {
-            if(!IsValid.IsMatch(name))
-            {
-                throw new InvalidNameException();
-            }
-            if(content == "")
-            {
-                HashSet<string> nullSet = new HashSet<string>();
-                return nullSet;
-            }
-            Changed = true;
             name = name.ToUpper();
-            double myDouble;
-            if (double.TryParse(content, out myDouble))
-            {
-                ISet<string> returnSet = SetCellContents(name, myDouble);
-                IEnumerable<string> cellsToRecalculate = GetCellsToRecalculate(name);
+            checkCellNameValidity(name);
 
-                foreach (string x in cellsToRecalculate.Skip(1))
-                {
-                    string form1 = cells[x].myContents.ToString();//modified
-                    form1 = form1.Remove(0, 1);
-                    Formula f = new Formula(form1);
-                    cells[x] = new Cell(f, lookUp);
-                }
-                
-                return returnSet;
-            }
-            
-            else if (content[0] == '=')
-            {
-                content = content.Remove(0,1);
-                Formula form;
-                try
-                {
-                    form = new Formula(content, s => s.ToUpper(), valid);
-                }
-                catch
-                {
-                    throw new FormulaFormatException("formula was not valid for Spreadsheet Validitor");
-                }
-                ISet<string> returnSet = SetCellContents(name, form);
-                IEnumerable<string> cellsToRecalculate = GetCellsToRecalculate(name);
-                if (cellsToRecalculate.Count() > 1)
-                {
-                    foreach (string x in cellsToRecalculate)
-                    {
-                        string form1 = cells[x].myContents.ToString(); //modified
-                        form1 = form1.Remove(0, 1);
-                        Formula f = new Formula(form1);
-                        cells[x] = new Cell(f, lookUp);
-                    }
-                }
-
-                return returnSet;
-            }
-            else
-            {
-                ISet<string> returnSet = SetCellContents(name, content);
-                IEnumerable<string> cellsToRecalculate = GetCellsToRecalculate(name);
-                if (cellsToRecalculate.Count() > 1)
-                {
-                    foreach (string x in cellsToRecalculate)
-                    {
-                        string form1 = cells[x].myContents.ToString();// modifided
-                        form1 = form1.Remove(0, 1);
-                        Formula f = new Formula(form1);
-                        cells[x] = new Cell(f, lookUp);
-                    }
-                }
-
-                return returnSet;
-            }
+            if (cellDict.ContainsKey(name))
+                return cellDict[name].getCellContent();
+            return "";
         }
 
-
         /// <summary>
-        /// If name is null or invalid, throws an InvalidNameException.
-        /// 
-        /// Otherwise, the contents of the named cell becomes number.  The method returns a
-        /// set consisting of name plus the names of all other cells whose value depends, 
-        /// directly or indirectly, on the named cell.
-        /// 
-        /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
-        /// set {A1, B1, C1} is returned.
+        /// Enumerates the names of all the non-empty cells in the spreadsheet.
         /// </summary>
-        protected override ISet<String> SetCellContents(String name, double number)
+        public override IEnumerable<string> GetNamesOfAllNonemptyCells()
         {
-            string pattern = @"[a-zA-Z]{1,2}[1-9][0-9]*";
-            if (!Regex.IsMatch(name, pattern))
+            foreach (var cell in cellDict)
             {
-                throw new InvalidNameException();
+                yield return cell.Key;
             }
-            if (cells.ContainsKey(name))
-            {
-                cells[name] = new Cell(number, lookUp);
-                IEnumerable<string> dependents = dependency.GetDependees(name);
-                foreach (string x in dependents)
-                {
-                    dependency.RemoveDependency(name, x);
-                }
-                IEnumerable<string> dependentEnumerable = GetCellsToRecalculate(name);
-                ISet<string> dependentSet = new HashSet<string>();
-                foreach (string x in dependentEnumerable)
-                {
-                    dependentSet.Add(x);
-                }
-                return dependentSet;
-            }
-            else
-            {
-                Cell myCell = new Cell(number, lookUp);
-                cells.Add(name, myCell);
-                IEnumerable<string> dependents = dependency.GetDependees(name);
-                foreach (string x in dependents)
-                {
-                    dependency.RemoveDependency(name, x);
-                }
-                IEnumerable<string> dependentEnumerable = GetCellsToRecalculate(name);
-                ISet<string> dependentSet = new HashSet<string>();
-                foreach(string x in dependentEnumerable)
-                {
-                    dependentSet.Add(x);
-                }
-                return dependentSet;
-            }
-
-        }
-
-
-
-        /// <summary>
-        /// If text is null, throws an ArgumentNullException.
-        /// 
-        /// Otherwise, if name is null or invalid, throws an InvalidNameException.
-        /// 
-        /// Otherwise, the contents of the named cell becomes text.  The method returns a
-        /// set consisting of name plus the names of all other cells whose value depends, 
-        /// directly or indirectly, on the named cell.
-        /// 
-        /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
-        /// set {A1, B1, C1} is returned.
-        /// </summary>
-        protected override ISet<String> SetCellContents(String name, String text)
-        {
-            string pattern = @"[a-zA-Z]{1,2}[1-9][0-9]*";
-            if (!Regex.IsMatch(name, pattern))
-            {
-                throw new InvalidNameException();
-            }
-            if (cells.ContainsKey(name))
-            {
-                cells[name] = new Cell(text, lookUp);
-                IEnumerable<string> dependents = dependency.GetDependees(name);
-                foreach (string x in dependents)
-                {
-                    dependency.RemoveDependency(name, x);
-                }
-                IEnumerable<string> dependentEnumerable = GetCellsToRecalculate(name);
-                ISet<string> dependentSet = new HashSet<string>();
-                foreach (string x in dependentEnumerable)
-                {
-                    dependentSet.Add(x);
-                }
-                return dependentSet;
-
-            }
-            else
-            {
-                Cell myCell = new Cell(text, lookUp);
-                cells.Add(name, myCell);
-                IEnumerable<string> dependents = dependency.GetDependees(name);
-                foreach (string x in dependents)
-                {
-                    dependency.RemoveDependency(name, x);
-                }
-                IEnumerable<string> dependentEnumerable = GetCellsToRecalculate(name);
-                ISet<string> dependentSet = new HashSet<string>();
-                foreach (string x in dependentEnumerable)
-                {
-                    dependentSet.Add(x);
-                }
-                return dependentSet;
-            }
-
         }
 
         /// <summary>
@@ -525,68 +222,100 @@ namespace SS
         /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
         /// set {A1, B1, C1} is returned.
         /// </summary>
-        protected override ISet<String> SetCellContents(String name, Formula formula)
+        public ISet<string> SetCellFormula(string name, Formula formula)
         {
-            string pattern = @"[a-zA-Z]{1,2}[1-9][0-9]*";
-            if (!Regex.IsMatch(name, pattern))
+            //Checks validity of each variable in formula
+            foreach(var variable in formula.GetVariables())
             {
-                throw new InvalidNameException();
+                checkCellNameValidity(variable);
             }
-            if (cells.ContainsKey(name))
-            {
-                cells[name] = new Cell(formula, lookUp);
-                IEnumerable<string> dependents = dependency.GetDependees(name);
-                IEnumerable<string> varibles = formula.GetVariables();
-                foreach (string x in varibles)
+
+            //Removes old dependencies if last value was a formula
+            if(cellDict.ContainsKey(name))
+                if (GetCellContents(name).GetType() == typeof(Formula))
                 {
-                    foreach(string z in dependency.GetDependees(x))
+                    Formula old_formula = (Formula)GetCellContents(name);
+                    foreach (var variable in old_formula.GetVariables())
                     {
-                        if (z == name)
-                            throw new CircularException();
+                        dg.RemoveDependency(name, variable);
                     }
-                    dependency.AddDependency(x, name);                    
-                }
-                foreach (string y in dependents)
-                {
-                    dependency.RemoveDependency(name, y);
                 }
 
-                ISet<string> dependentSet = new HashSet<string>();
-                foreach (string x in dependents)
-                {
-                    dependentSet.Add(x);
-                }
-                return dependentSet;
+            if (cellDict.ContainsKey(name))
+            {
+                cellDict[name] = new Cell(formula, lookUp);
             }
             else
             {
-                Cell myCell = new Cell(formula, lookUp);
-                cells.Add(name, myCell);
-                IEnumerable<string> dependents = GetCellsToRecalculate(name);
-                IEnumerable<string> varibles = formula.GetVariables();
-                foreach (string x in varibles)
-                {
-                    dependency.AddDependency(x, name);
-                }
-                foreach (string y in dependents)
-                {
-                    dependency.RemoveDependency(name, y);
-                }
-                foreach (string z in varibles)
-                {
-                    if (dependents.Contains(z))
-                    {
-                        throw new CircularException();
-                    }
-                }
-                ISet<string> dependentSet = new HashSet<string>();
-                foreach (string x in dependents)
-                {
-                    dependentSet.Add(x);
-                }
-                return dependentSet;
+                cellDict.Add(name, new Cell(formula, lookUp));
             }
 
+            //Adds new dependencies
+            foreach (var variable in formula.GetVariables())
+            {
+                dg.AddDependency(name, variable);
+            }
+            
+            checkCircularDependency(name, formula);
+
+            return returnSet(name);
+        }
+
+        /// <summary>
+        /// If text is null, throws an ArgumentNullException.
+        /// 
+        /// Otherwise, if name is null or invalid, throws an InvalidNameException.
+        /// 
+        /// Otherwise, the contents of the named cell becomes text.  The method returns a
+        /// set consisting of name plus the names of all other cells whose value depends, 
+        /// directly or indirectly, on the named cell.
+        /// 
+        /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
+        /// set {A1, B1, C1} is returned.
+        /// </summary>
+        public override ISet<string> SetContentsOfCell(string name, string text)
+        {
+            changed = true;
+            name = name.ToUpper();
+
+            if (GetCellContents(name).GetType() == typeof(Formula))
+            {
+                List<string> dependents = new List<string> { };
+                foreach (var dep in dg.GetDependents(name))
+                {
+                    dependents.Add(dep);
+                }
+                foreach (var dep in dependents)
+                {
+                    dg.RemoveDependency(name, dep);
+                }
+            }
+
+            if (text == null)
+                throw new ArgumentException();
+            checkCellNameValidity(name);
+
+            if (!validation.IsMatch(text.ToUpper()))
+            {
+                throw new InvalidNameException();
+            }
+            double output_num;
+
+            if (text.Length > 0)
+            {
+                if (text.Substring(0, 1).Equals("="))
+                {
+                    return SetCellContents(name, new Formula(text.Remove(0, 1), s => s.ToUpper(), s => true));
+                }
+                else if (Double.TryParse(text, out output_num))
+                {
+                    return SetCellContents(name, output_num);
+                }
+                return SetCellContents(name, text);
+            }
+            
+            cellDict.Remove(name);
+            return returnSet(name);
         }
 
         /// <summary>
@@ -606,88 +335,331 @@ namespace SS
         /// D1 contains the formula B1 - C1
         /// The direct dependents of A1 are B1 and C1
         /// </summary>
-        protected override IEnumerable<String> GetDirectDependents(String name)
+        protected override IEnumerable<string> GetDirectDependents(string name)
         {
-            return dependency.GetDependents(name);
+            checkCellNameValidity(name);
+
+            return dg.GetDependees(name);
         }
 
         /// <summary>
-        /// Requires that names be non-null.  Also requires that if names contains s,
-        /// then s must be a valid non-null cell name.
-        /// 
-        /// If any of the named cells are involved in a circular dependency,
-        /// throws a CircularException.
-        /// 
-        /// Otherwise, returns an enumeration of the names of all cells whose values must
-        /// be recalculated, assuming that the contents of each cell named in names has changed.
-        /// The names are enumerated in the order in which the calculations should be done.  
-        /// 
-        /// For example, suppose that 
-        /// A1 contains 5
-        /// B1 contains 7
-        /// C1 contains the formula A1 + B1
-        /// D1 contains the formula A1 * C1
-        /// E1 contains 15
-        /// 
-        /// If A1 and B1 have changed, then A1, B1, and C1, and D1 must be recalculated,
-        /// and they must be recalculated in either the order A1,B1,C1,D1 or B1,A1,C1,D1.
-        /// The method will produce one of those enumerations.
-        /// 
-        /// PLEASE NOTE THAT THIS METHOD DEPENDS ON THE ABSTRACT GetDirectDependents.
-        /// IT WON'T WORK UNTIL GetDirectDependents IS IMPLEMENTED CORRECTLY.  YOU WILL
-        /// NOT NEED TO MODIFY THIS METHOD.
+        /// Returns a Set of dependees, used after setting cell contents
         /// </summary>
-        protected IEnumerable<String> GetCellsToRecalculate(ISet<String> names)
+        private ISet<string> returnSet(String name)
         {
-            LinkedList<String> changed = new LinkedList<String>();
-            HashSet<String> visited = new HashSet<String>();
-            foreach (String name in names)
+            ISet<string> set = new HashSet<string>();
+            set.Add(name);
+            //Adds dependees to set
+            set = getIndirectDependees(name, set);
+            return set;
+        }
+
+        private ISet<string> getIndirectDependees(String name, ISet<string> set)
+        {
+            foreach (var dependee in dg.GetDependees(name))
             {
-                if (!visited.Contains(name))
-                {
-                    Visit(name, name, visited, changed);
-                }
+                set.Add(dependee);
+                set = getIndirectDependees(dependee, set);
             }
-            return changed;
+            return set;
         }
 
         /// <summary>
-        /// A convenience method for invoking the other version of GetCellsToRecalculate
-        /// with a singleton set of names.  See the other version for details.
+        /// Checks for circular dependency when cell is added with a formula
         /// </summary>
-        protected IEnumerable<String> GetCellsToRecalculate(String name)
+        private void checkCircularDependency(String name, Formula formula)
         {
-            return GetCellsToRecalculate(new HashSet<String>() { name });
-        }
-
-        /// <summary>
-        /// A helper for the GetCellsToRecalculate method.
-        /// </summary>
-        private void Visit(String start, String name, ISet<String> visited, LinkedList<String> changed)
-        {
-            visited.Add(name);
-            foreach (String n in GetDirectDependents(name))
+            foreach(var variable in formula.GetVariables())
             {
-                if (n.Equals(start))
-                {
+                recurseThroughDependencies(variable, new List<string> { name });
+            }
+            
+        }
+
+        /// <summary>
+        /// Recurses until all dependents have been checked to see if they were used as a dependency earlier
+        /// </summary>
+        private void recurseThroughDependencies(String name, List<string> visited)
+        {
+            foreach (var dependent in dg.GetDependents(name))
+            {
+                if (visited.Contains(dependent))
                     throw new CircularException();
-                }
-                else if (!visited.Contains(n))
+                visited.Add(dependent);
+                recurseThroughDependencies(dependent, visited);
+            }
+        }
+
+        /// <summary>
+        /// Checks for circular dependency when cell is added with a formula
+        /// </summary>
+        private void EvaluateRecurse(String name, List<string> visited)
+        {
+
+            List<string> revisit = new List<string> { };
+            List<string> new_revisit = new List<string> { };
+            foreach (var dependee in dg.GetDependees(name))
+            {
+                if (!visited.Contains(dependee))
                 {
-                    Visit(start, n, visited, changed);
+                    visited.Add(dependee);
+                    //recurseEval(dependent, visited);
+                    if (cellDict.ContainsKey(dependee))
+                    {
+                        cellDict[dependee].tryEvaluate(name, lookUp);
+                        if (cellDict[dependee].getCellValue().GetType() != typeof(FormulaError))
+                            foreach (var dep in dg.GetDependees(dependee))
+                            {
+                                revisit.Add(dep);
+                                new_revisit.Add(dep);
+                            }
+                    }
                 }
             }
-            changed.AddFirst(name);
+
+            
+            foreach (var item in revisit)
+            {
+                cellDict[item].tryEvaluate(name, lookUp);
+                if (cellDict[item].getCellValue().GetType() != typeof(FormulaError))
+                {
+                    foreach (var dep in dg.GetDependees(item))
+                    {
+                        if (!visited.Contains(dep))
+                            new_revisit.Add(dep);
+                    }
+                    new_revisit.Remove(item);
+                }
+            }
+            
+            if (new_revisit.Count > 0)
+                foreach (var item in new_revisit)
+                {
+                    EvaluateRecurse(item, new List<string> { });
+                }
         }
-        private string upper(string s)
+
+        /// <summary>
+        /// Recurses until all dependents have been checked to see if they were used as a dependency earlier
+        /// </summary>
+        private void recurseEval(String name, List<string> visited)
         {
-            return s.ToUpper();
+            foreach (var dependent in dg.GetDependents(name))
+            {
+                if (!visited.Contains(dependent))
+                {
+                    visited.Add(dependent);
+                    //recurseEval(dependent, visited);
+                    if(cellDict.ContainsKey(dependent))
+                        cellDict[dependent].tryEvaluate(name, lookUp);
+                }
+            }
         }
+
+        //Throws exception if input string is null or not a valid cell name
+        private void checkCellNameValidity(String name)
+        {
+            if (name == null)
+                throw new InvalidNameException();
+            if (!Regex.IsMatch(name, @"[A-Za-z]+[1-9]\d*"))
+                throw new InvalidNameException();
+        }
+
+        public override void Save(TextWriter dest)
+        {
+            changed = false;
+        }
+
+        public override object GetCellValue(string name)
+        {
+            name = name.ToUpper();
+            if (cellDict.ContainsKey(name))
+                return cellDict[name].getCellValue();
+            return "";
+        }
+
+        /// <summary>
+        /// Requires that all of the variables in formula are valid cell names.
+        /// 
+        /// If name is null or invalid, throws an InvalidNameException.
+        /// 
+        /// Otherwise, if changing the contents of the named cell to be the formula would cause a 
+        /// circular dependency, throws a CircularException.
+        /// 
+        /// Otherwise, the contents of the named cell becomes formula.  The method returns a
+        /// Set consisting of name plus the names of all other cells whose value depends,
+        /// directly or indirectly, on the named cell.
+        /// 
+        /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
+        /// set {A1, B1, C1} is returned.
+        /// </summary>
+        protected override ISet<string> SetCellContents(string name, Formula formula)
+        {
+            checkCellNameValidity(name);
+            //Checks validity of each variable in formula
+            foreach (var variable in formula.GetVariables())
+            {
+                checkCellNameValidity(variable);
+            }
+
+            //Removes old dependencies if last value was a formula
+            if (cellDict.ContainsKey(name))
+            {
+                dynamic old_cell = GetCellContents(name);
+                if (old_cell.GetType() == typeof(Formula))
+                {
+                    Formula old_formula = (Formula)GetCellContents(name);
+                    foreach (var variable in old_formula.GetVariables())
+                    {
+                        dg.RemoveDependency(name, variable);
+                    }
+                }
+            }
+
+            //Adds new dependencies
+            foreach (var variable in formula.GetVariables())
+            {
+                dg.AddDependency(name, variable);
+            }
+
+            checkCircularDependency(name, formula);
+
+            if (cellDict.ContainsKey(name))
+            {
+                cellDict[name] = new Cell(formula, lookUp);
+            }
+            else
+            {
+                cellDict.Add(name, new Cell(formula, lookUp));
+            }
+
+            return returnSet(name);
+        }
+
+        /// <summary>
+        /// If text is null, throws an ArgumentNullException.
+        /// 
+        /// Otherwise, if name is null or invalid, throws an InvalidNameException.
+        /// 
+        /// Otherwise, the contents of the named cell becomes text.  The method returns a
+        /// set consisting of name plus the names of all other cells whose value depends, 
+        /// directly or indirectly, on the named cell.
+        /// 
+        /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
+        /// set {A1, B1, C1} is returned.
+        /// </summary>
+        protected override ISet<string> SetCellContents(string name, string text)
+        {
+            if (text == null)
+                throw new ArgumentException();
+            checkCellNameValidity(name);
+
+            if (cellDict.ContainsKey(name))
+            {
+                cellDict[name] = new Cell(text);
+            }
+            else
+            {
+                cellDict.Add(name, new Cell(text));
+            }
+
+            return returnSet(name);
+        }
+
+        /// <summary>
+        /// If name is null or invalid, throws an InvalidNameException.
+        /// 
+        /// Otherwise, the contents of the named cell becomes number.  The method returns a
+        /// set consisting of name plus the names of all other cells whose value depends, 
+        /// directly or indirectly, on the named cell.
+        /// 
+        /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
+        /// set {A1, B1, C1} is returned.
+        /// </summary>
+        protected override ISet<string> SetCellContents(string name, double number)
+        {
+            checkCellNameValidity(name);
+
+            if (cellDict.ContainsKey(name))
+            {
+                cellDict[name] = new Cell(number);
+            }
+            else
+            {
+                cellDict.Add(name, new Cell(number));
+            }
+            var visited = new List<string> { name };
+            EvaluateRecurse(name, visited);
+
+            return returnSet(name);
+        }
+
         private void ValidationFail(object sender, ValidationEventArgs e)
         {
             throw new SpreadsheetReadException("Spreadsheet did not match Schema");
         }
+
+        public double lookUp(string s)
+        {
+            s = s.ToUpper();
+            return (double)cellDict[s].getCellValue();
+        }
+    }
+
+    class Cell
+    {
+        object value;
+        object content;
+
+        public Cell(string cont)
+        {
+            content = cont;
+            value = cont;
+        }
+
+        public Cell(double cont)
+        {
+            content = cont;
+            value = cont;
+        }
+
+        public Cell(Formula cont, Lookup lookUp)
+        {
+            content = cont;
+            try
+            {
+                value = cont.Evaluate(lookUp);
+            }
+            catch
+            {
+                value = new FormulaError();
+            }
+        }
+
+        public object getCellContent()
+        {
+            return content;
+        }
+
+        public object getCellValue()
+        {
+            return value;
+        }
+
+        public void tryEvaluate(string name, Lookup lookup)
+        {
+            var temp_cont = (Formula)content;
+            try
+            {
+                value = temp_cont.Evaluate(lookup);
+            }
+            catch
+            {
+                value = new FormulaError();
+            }
+        }
     }
 }
+
 
 
