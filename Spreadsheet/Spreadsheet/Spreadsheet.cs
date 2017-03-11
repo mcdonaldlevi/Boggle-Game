@@ -55,7 +55,7 @@ namespace SS
     /// A1 depends on B1, which depends on C1, which depends on A1.  That's a circular
     /// dependency.
     /// </summary>
-    public class Spreadsheet
+    public class Spreadsheet : AbstractSpreadsheet
     {        
         Dictionary<string, Cell> cells = new Dictionary<string, Cell>();
         DependencyGraph dependency = new DependencyGraph();
@@ -151,12 +151,19 @@ namespace SS
                     try
                     {
                         myValue = f.Evaluate(lookUp);
-                        myContents = value.ToString();
+                        string contentsWithEqual = value.ToString();
+                        if(contentsWithEqual[0] != '=')
+                            contentsWithEqual = contentsWithEqual.Insert(0, "=");
+                        myContents = contentsWithEqual;
+                         
                     }
                     catch
                     {
                         myValue = new FormulaError("Cells have no valid value");
-                        myContents = value.ToString();
+                        string contentsWithEqual = value.ToString();
+                        if(contentsWithEqual[0] != '=')
+                            contentsWithEqual = contentsWithEqual.Insert(0, "=");
+                        myContents = contentsWithEqual;
                     }                    
                 }
             }
@@ -191,7 +198,7 @@ namespace SS
         /// True if this spreadsheet has been modified since it was created or saved
         /// (whichever happened most recently); false otherwise.
         /// </summary>
-        public bool Changed { get; protected set; }
+        public override bool Changed { get; protected set; }
 
         // ADDED FOR PS6
         /// <summary>
@@ -213,7 +220,7 @@ namespace SS
         ///
         /// If there are any problems writing to dest, the method should throw an IOException.
         /// </summary>
-        public void Save(TextWriter dest)
+        public override void Save(TextWriter dest)
         {
             using (XmlWriter writer = XmlWriter.Create(dest))
             {
@@ -242,7 +249,7 @@ namespace SS
         /// Otherwise, returns the value (as opposed to the contents) of the named cell.  The return
         /// value should be either a string, a double, or a FormulaError.
         /// </summary>
-        public object GetCellValue(String name)
+        public override object GetCellValue(String name)
         {
             if (cells.ContainsKey(name))
             {
@@ -256,7 +263,7 @@ namespace SS
         /// <summary>
         /// Enumerates the names of all the non-empty cells in the spreadsheet.
         /// </summary>
-        public IEnumerable<String> GetNamesOfAllNonemptyCells()
+        public override IEnumerable<String> GetNamesOfAllNonemptyCells()
         {
             IEnumerable<String> names = cells.Keys;
             return names;
@@ -268,15 +275,19 @@ namespace SS
         /// Otherwise, returns the contents (as opposed to the value) of the named cell.  The return
         /// value should be either a string, a double, or a Formula.
         /// </summary>
-        public object GetCellContents(String name)
+        public override object GetCellContents(String name)
         {
+            if (!IsValid.IsMatch(name))
+            {
+                throw new InvalidNameException();
+            }
             if (cells.ContainsKey(name))
             {
                 return cells[name].myContents;
             }
             else
             {
-                throw new InvalidNameException();
+                return "";
             }
         }
         // ADDED FOR PS6
@@ -311,11 +322,16 @@ namespace SS
         /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
         /// set {A1, B1, C1} is returned.
         /// </summary>
-        public ISet<String> SetContentsOfCell(String name, String content)
+        public override ISet<String> SetContentsOfCell(String name, String content)
         {
             if(!IsValid.IsMatch(name))
             {
                 throw new InvalidNameException();
+            }
+            if(content == "")
+            {
+                HashSet<string> nullSet = new HashSet<string>();
+                return nullSet;
             }
             Changed = true;
             name = name.ToUpper();
@@ -324,17 +340,18 @@ namespace SS
             {
                 ISet<string> returnSet = SetCellContents(name, myDouble);
                 IEnumerable<string> cellsToRecalculate = GetCellsToRecalculate(name);
-                if(cellsToRecalculate.Count() > 1)
+
+                foreach (string x in cellsToRecalculate.Skip(1))
                 {
-                    foreach (string x in cellsToRecalculate)
-                    {
-                        Formula f = new Formula(cells[x].myContents.ToString());
-                        cells[x] = new Cell(f, lookUp);
-                    }
+                    string form1 = cells[x].myContents.ToString();//modified
+                    form1 = form1.Remove(0, 1);
+                    Formula f = new Formula(form1);
+                    cells[x] = new Cell(f, lookUp);
                 }
                 
                 return returnSet;
             }
+            
             else if (content[0] == '=')
             {
                 content = content.Remove(0,1);
@@ -353,7 +370,9 @@ namespace SS
                 {
                     foreach (string x in cellsToRecalculate)
                     {
-                        Formula f = new Formula(cells[x].myContents.ToString());
+                        string form1 = cells[x].myContents.ToString(); //modified
+                        form1 = form1.Remove(0, 1);
+                        Formula f = new Formula(form1);
                         cells[x] = new Cell(f, lookUp);
                     }
                 }
@@ -368,7 +387,9 @@ namespace SS
                 {
                     foreach (string x in cellsToRecalculate)
                     {
-                        Formula f = new Formula(cells[x].myContents.ToString());
+                        string form1 = cells[x].myContents.ToString();// modifided
+                        form1 = form1.Remove(0, 1);
+                        Formula f = new Formula(form1);
                         cells[x] = new Cell(f, lookUp);
                     }
                 }
@@ -388,7 +409,7 @@ namespace SS
         /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
         /// set {A1, B1, C1} is returned.
         /// </summary>
-        protected ISet<String> SetCellContents(String name, double number)
+        protected override ISet<String> SetCellContents(String name, double number)
         {
             string pattern = @"[a-zA-Z]{1,2}[1-9][0-9]*";
             if (!Regex.IsMatch(name, pattern))
@@ -445,7 +466,7 @@ namespace SS
         /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
         /// set {A1, B1, C1} is returned.
         /// </summary>
-        protected ISet<String> SetCellContents(String name, String text)
+        protected override ISet<String> SetCellContents(String name, String text)
         {
             string pattern = @"[a-zA-Z]{1,2}[1-9][0-9]*";
             if (!Regex.IsMatch(name, pattern))
@@ -504,7 +525,7 @@ namespace SS
         /// For example, if name is A1, B1 contains A1*2, and C1 contains B1+A1, the
         /// set {A1, B1, C1} is returned.
         /// </summary>
-        protected ISet<String> SetCellContents(String name, Formula formula)
+        protected override ISet<String> SetCellContents(String name, Formula formula)
         {
             string pattern = @"[a-zA-Z]{1,2}[1-9][0-9]*";
             if (!Regex.IsMatch(name, pattern))
@@ -585,7 +606,7 @@ namespace SS
         /// D1 contains the formula B1 - C1
         /// The direct dependents of A1 are B1 and C1
         /// </summary>
-        protected IEnumerable<String> GetDirectDependents(String name)
+        protected override IEnumerable<String> GetDirectDependents(String name)
         {
             return dependency.GetDependents(name);
         }
