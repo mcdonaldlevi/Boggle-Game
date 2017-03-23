@@ -28,11 +28,11 @@ namespace BoggleClient
             this.view = view;
 
             view.RegisterPressed += View_RegisterPressed;
-            view.GameOver += View_GameOver;
             view.WordEntered += View_WordEntered;
             view.JoinGamePressed += View_JoinGamePressed;
             view.CancelButtonPressed += View_CancelButtonPressed;
             view.GameStatusRequest += View_GameStatusRequest;
+            
         }
 
         private async void View_GameStatusRequest(string address)
@@ -48,11 +48,22 @@ namespace BoggleClient
                     {
                         String result = gameStatsResponse.Content.ReadAsStringAsync().Result;
                         string gameStatusResult = gameStatsResponse.Content.ReadAsStringAsync().Result;
-                        string timeLeft = JToken.Parse(gameStatusResult)["TimeLeft"].ToString();
-                        string playerOneScore = JToken.Parse(gameStatusResult)["Player1"]["Score"].ToString();
-                        string playerTwoScore = JToken.Parse(gameStatusResult)["Player2"]["Score"].ToString();
-                        string letters = JToken.Parse(gameStatusResult)["Board"].ToString();
-                        view.displayLetters(letters);
+                        string gameState = JToken.Parse(gameStatusResult)["GameState"].ToString();
+                        if (gameState == "pending")
+                        { }
+                        else
+                        {
+                            string timeLeft = JToken.Parse(gameStatusResult)["TimeLeft"].ToString();
+                            string playerOneScore = JToken.Parse(gameStatusResult)["Player1"]["Score"].ToString();
+                            string playerTwoScore = JToken.Parse(gameStatusResult)["Player2"]["Score"].ToString();
+                            string letters = JToken.Parse(gameStatusResult)["Board"].ToString();
+                            view.displayLetters(letters);
+                            view.updateView(playerOneScore, playerTwoScore, timeLeft);
+                            if(timeLeft == "0")
+                            {
+                                View_GameOver(address);
+                            }
+                        }
                     }
 
 
@@ -110,31 +121,9 @@ namespace BoggleClient
                 // Deal with the response
                 if (response.IsSuccessStatusCode)
                 {
-                    if ((int)response.StatusCode == 202 )
-                    {
-                        String result = response.Content.ReadAsStringAsync().Result;
-                        GameID = JToken.Parse(result)["GameID"].ToString();
-                    }
-                    else if ((int)response.StatusCode == 201)
-                    {
-
                         String result = response.Content.ReadAsStringAsync().Result;
                         GameID = JToken.Parse(result)["GameID"].ToString();
                         view.startTime();
-                        //HttpResponseMessage gameStatsResponse = await client.GetAsync("games/" + GameID);
-                        //if(gameStatsResponse.IsSuccessStatusCode)
-                        //{
-                        //    string gameStatusResult = gameStatsResponse.Content.ReadAsStringAsync().Result;
-                        //    string letters = JToken.Parse(gameStatusResult)["Board"].ToString();
-                        //    view.displayLetters(letters);
-                        //    view.startTime();
-                        //}
-                        //else
-                        //{
-                            
-                        //}
-                    }
-
                 }
                 else
                 {
@@ -164,7 +153,7 @@ namespace BoggleClient
                 {
                     String result = response.Content.ReadAsStringAsync().Result;
                     string wordScore = JToken.Parse(result)["Score"].ToString();
-
+                    view.updateWordBox(wordScore);
                 }
                 else
                 {
@@ -174,10 +163,31 @@ namespace BoggleClient
             }
         }
 
-        private void View_GameOver()
+        private async void View_GameOver(string address)
         {
-            throw new NotImplementedException();
+            using (HttpClient client = CreateClient(address))
+            {
+                // Compose and send the request.
+                HttpResponseMessage gameStatsResponse = await client.GetAsync("games/" + GameID);
+
+                // Deal with the response
+                if (gameStatsResponse.IsSuccessStatusCode)
+                {
+                    String result = gameStatsResponse.Content.ReadAsStringAsync().Result;
+                    string gameStatusResult = gameStatsResponse.Content.ReadAsStringAsync().Result;
+                    string gameState = JToken.Parse(gameStatusResult)["GameState"].ToString();
+
+                    string timeLeft = JToken.Parse(gameStatusResult)["TimeLeft"].ToString();
+                    string playerOneScore = JToken.Parse(gameStatusResult)["Player1"]["Score"].ToString();
+                    string playerTwoScore = JToken.Parse(gameStatusResult)["Player2"]["Score"].ToString();
+                    JToken playerOneWords = JToken.Parse(gameStatusResult)["Player1"]["WordsPlayed"];
+                    JToken playerTwoWords = JToken.Parse(gameStatusResult)["Player2"]["WordsPlayed"];
+                    view.updateView(playerOneScore, playerTwoScore, timeLeft);
+                    view.GameEndScreen(playerOneWords, playerTwoWords);
+                }
+            }
         }
+            
 
         private async void View_RegisterPressed(string name, string address)
         {
