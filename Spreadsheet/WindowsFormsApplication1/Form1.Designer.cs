@@ -57,6 +57,7 @@
             this.JoinGameButton = new System.Windows.Forms.Button();
             this.TimeBox = new System.Windows.Forms.TextBox();
             this.TimeLabel = new System.Windows.Forms.Label();
+            this.CancelButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // RegisterButton
@@ -314,11 +315,22 @@
             this.TimeLabel.TabIndex = 29;
             this.TimeLabel.Text = "Time";
             // 
+            // CancelButton
+            // 
+            this.CancelButton.Location = new System.Drawing.Point(543, 98);
+            this.CancelButton.Name = "CancelButton";
+            this.CancelButton.Size = new System.Drawing.Size(75, 23);
+            this.CancelButton.TabIndex = 30;
+            this.CancelButton.Text = "Cancel";
+            this.CancelButton.UseVisualStyleBackColor = true;
+            this.CancelButton.Click += new System.EventHandler(this.CancelButton_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(664, 481);
+            this.Controls.Add(this.CancelButton);
             this.Controls.Add(this.TimeLabel);
             this.Controls.Add(this.TimeBox);
             this.Controls.Add(this.JoinGameButton);
@@ -386,6 +398,7 @@
         private System.Windows.Forms.Button JoinGameButton;
         private System.Windows.Forms.TextBox TimeBox;
         private System.Windows.Forms.Label TimeLabel;
+        private System.Windows.Forms.Button CancelButton;
     }
 }
 

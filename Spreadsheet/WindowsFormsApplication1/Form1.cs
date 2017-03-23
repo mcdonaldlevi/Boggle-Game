@@ -12,18 +12,45 @@ namespace BoggleClient
 {
     public partial class Form1 : Form
     {
+        private Timer myTime = new Timer();
+        private List<TextBox> displayBoxes; 
         public Form1()
         {
+            
             InitializeComponent();
+            makeTextBoxDisplay();
+            myTime.Interval = 1000;
+            myTime.Start();
+            myTime.Enabled = false;
+            myTime.Tick += MyTime_Tick;
         }
 
         public event Action<string, string> RegisterPressed;
 
-        public event Action WordEntered;
+        public event Action<string, string> WordEntered;
 
         public event Action GameOver;
         public event Action<int, string> JoinGamePressed;
+        public event Action<string> CancelButtonPressed;
+        public event Action<string> GameStatusRequest;
+        
+        public void startTime()
+        {            
+            myTime.Enabled = true;                 
+        }
 
+        private void MyTime_Tick(object sender, EventArgs e)
+        {
+            myTime.Enabled = false;
+            GameStatusRequest(ServerAddressBox.Text);
+            myTime.Enabled = true;
+        }
+        private void makeTextBoxDisplay()
+        {
+            List<TextBox> textBoxes = new List<TextBox> { textBox2, textBox3, textBox4, textBox5, textBox6, textBox7, textBox8, textBox9, textBox10,
+                textBox11,textBox12,textBox13,textBox14,textBox15,textBox16,textBox17 };
+            displayBoxes = textBoxes;
+        }
         private void RegisterButton_Click(object sender, EventArgs e)
         {
             RegisterPressed(NameBox.Text, ServerAddressBox.Text);
@@ -38,8 +65,24 @@ namespace BoggleClient
         {
             if(e.KeyCode == Keys.Enter)
             {
-                WordEntered
+                WordEntered(ServerAddressBox.Text, WordInputBox.Text);
             }
         }
+        private void CancelButton_Click(object sender, EventArgs e)
+        {
+            CancelButtonPressed(ServerAddressBox.Text);
+        }
+
+        public void displayLetters(string board)
+        {
+            int count = 0;
+            foreach(TextBox y in displayBoxes)
+            {
+                y.Text = board[count].ToString();
+                count += 1;
+            }
+        }
+
+
     }
 }
