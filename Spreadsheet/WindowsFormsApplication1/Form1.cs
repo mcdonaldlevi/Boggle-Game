@@ -41,6 +41,7 @@ namespace BoggleClient
                 Player2Words.AppendText(x["Score"].ToString());
                 Player2Words.AppendText("\n");
             }
+            myTime.Enabled = false;
         }
         public void updateWordBox(string wordScore)
         {
