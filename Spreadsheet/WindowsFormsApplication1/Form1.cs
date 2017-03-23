@@ -83,6 +83,15 @@ namespace BoggleClient
             }
         }
 
-
+        public void clearLetters()
+        {
+            int count = 0;
+            foreach (TextBox y in displayBoxes)
+            {
+                y.Text = "";
+                count += 1;
+            }
+            myTime.Enabled = false;
+        }
     }
 }

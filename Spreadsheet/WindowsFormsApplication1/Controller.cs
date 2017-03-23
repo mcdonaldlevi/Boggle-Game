@@ -67,29 +67,62 @@ namespace BoggleClient
 
         private async void View_CancelButtonPressed(string address)
         {
-            using (HttpClient client = CreateClient(address))
+            if (userToken == null)
             {
-
-                // Create the parameter
-                dynamic user = new ExpandoObject();
-                user.UserToken = userToken;
-
-
-                // Compose and send the request.
-
-                StringContent content = new StringContent(JsonConvert.SerializeObject(user), Encoding.UTF8, "application/json");
-                HttpResponseMessage response = await client.PutAsync("games", content);
-
-                // Deal with the response
-                if (response.IsSuccessStatusCode)
-                {}
-                else
+                //User not registered
+            }
+            else if(GameID == null)
+            {
+                using (HttpClient client = CreateClient(address))
                 {
-                    Console.WriteLine("Error Canceling: " + response.StatusCode);
-                    Console.WriteLine(response.ReasonPhrase);
+
+                    // Create the parameter
+                    dynamic user = new ExpandoObject();
+                    user.UserToken = userToken;
+
+
+                    // Compose and send the request.
+
+                    StringContent content = new StringContent(JsonConvert.SerializeObject(user), Encoding.UTF8, "application/json");
+                    HttpResponseMessage response = await client.PutAsync("games", content);
+
+                    // Deal with the response
+                    if (response.IsSuccessStatusCode)
+                    { }
+                    else
+                    {
+                        Console.WriteLine("Error Canceling: " + response.StatusCode);
+                        Console.WriteLine(response.ReasonPhrase);
+                    }
                 }
             }
-        
+            else
+            {
+                using (HttpClient client = CreateClient(address))
+                {
+
+                    // Create the parameter
+                    dynamic user = new ExpandoObject();
+                    user.UserToken = userToken;
+
+
+                    // Compose and send the request.
+
+                    StringContent content = new StringContent(JsonConvert.SerializeObject(user), Encoding.UTF8, "application/json");
+                    HttpResponseMessage response = await client.PutAsync("games", content);
+
+                    // Deal with the response
+                    if (response.IsSuccessStatusCode)
+                    { }
+                    else
+                    {
+                        Console.WriteLine("Error Canceling: " + response.StatusCode);
+                        Console.WriteLine(response.ReasonPhrase);
+                    }
+
+                    view.clearLetters();
+                }
+            }
         }
 
         private async void View_JoinGamePressed(int timeLimit, string address)
