@@ -102,5 +102,15 @@ namespace BoggleClient
                 count += 1;
             }
         }
+
+        private void helpToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            string line1 = "Enter your name and server address and click register to get started\n";
+            string line2 = "Click Join game and waint until the server finds someone to pair you against\n";
+            string line3 = "Type words in the bottom text box and hit enter to add them\n";
+            string line4 = "At the end of the game, click cancel with you are finished looking at the scores\n";
+            string line5 = "Then just click to join a new game to start again!";
+            MessageBox.Show(line1 + line2 + line3 + line4 + line5);
+        }
     }
 }

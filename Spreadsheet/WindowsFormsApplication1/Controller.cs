@@ -176,7 +176,6 @@ namespace BoggleClient
                     String result = gameStatsResponse.Content.ReadAsStringAsync().Result;
                     string gameStatusResult = gameStatsResponse.Content.ReadAsStringAsync().Result;
                     string gameState = JToken.Parse(gameStatusResult)["GameState"].ToString();
-
                     string timeLeft = JToken.Parse(gameStatusResult)["TimeLeft"].ToString();
                     string playerOneScore = JToken.Parse(gameStatusResult)["Player1"]["Score"].ToString();
                     string playerTwoScore = JToken.Parse(gameStatusResult)["Player2"]["Score"].ToString();
