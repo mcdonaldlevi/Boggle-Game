@@ -67,15 +67,19 @@
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.Player1Nick = new System.Windows.Forms.TextBox();
             this.Player2Nick = new System.Windows.Forms.TextBox();
+            this.menuStrip3 = new System.Windows.Forms.MenuStrip();
+            this.helpToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.PlayerOneNick = new System.Windows.Forms.TextBox();
+            this.PlayerTwoNick = new System.Windows.Forms.TextBox();
             this.menuStrip2.SuspendLayout();
+            this.menuStrip3.SuspendLayout();
             this.SuspendLayout();
             // 
             // RegisterButton
             // 
-            this.RegisterButton.Location = new System.Drawing.Point(304, 51);
-            this.RegisterButton.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.RegisterButton.Location = new System.Drawing.Point(270, 41);
             this.RegisterButton.Name = "RegisterButton";
-            this.RegisterButton.Size = new System.Drawing.Size(84, 29);
+            this.RegisterButton.Size = new System.Drawing.Size(75, 23);
             this.RegisterButton.TabIndex = 0;
             this.RegisterButton.Text = "Register";
             this.RegisterButton.UseVisualStyleBackColor = true;
@@ -83,255 +87,232 @@
             // 
             // NameBox
             // 
-            this.NameBox.Location = new System.Drawing.Point(249, 16);
-            this.NameBox.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.NameBox.Location = new System.Drawing.Point(221, 13);
             this.NameBox.Name = "NameBox";
-            this.NameBox.Size = new System.Drawing.Size(198, 26);
+            this.NameBox.Size = new System.Drawing.Size(176, 22);
             this.NameBox.TabIndex = 1;
             this.NameBox.TextChanged += new System.EventHandler(this.NameBox_TextChanged);
             // 
             // textBox2
             // 
             this.textBox2.Font = new System.Drawing.Font("Microsoft Sans Serif", 25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBox2.Location = new System.Drawing.Point(212, 169);
-            this.textBox2.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.textBox2.Location = new System.Drawing.Point(188, 135);
             this.textBox2.Name = "textBox2";
             this.textBox2.ReadOnly = true;
-            this.textBox2.Size = new System.Drawing.Size(62, 64);
+            this.textBox2.Size = new System.Drawing.Size(56, 55);
             this.textBox2.TabIndex = 2;
             // 
             // textBox3
             // 
             this.textBox3.Font = new System.Drawing.Font("Microsoft Sans Serif", 25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBox3.Location = new System.Drawing.Point(281, 169);
-            this.textBox3.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.textBox3.Location = new System.Drawing.Point(250, 135);
             this.textBox3.Name = "textBox3";
             this.textBox3.ReadOnly = true;
-            this.textBox3.Size = new System.Drawing.Size(62, 64);
+            this.textBox3.Size = new System.Drawing.Size(56, 55);
             this.textBox3.TabIndex = 3;
             // 
             // textBox4
             // 
             this.textBox4.Font = new System.Drawing.Font("Microsoft Sans Serif", 25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBox4.Location = new System.Drawing.Point(351, 169);
-            this.textBox4.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.textBox4.Location = new System.Drawing.Point(312, 135);
             this.textBox4.Name = "textBox4";
             this.textBox4.ReadOnly = true;
-            this.textBox4.Size = new System.Drawing.Size(62, 64);
+            this.textBox4.Size = new System.Drawing.Size(56, 55);
             this.textBox4.TabIndex = 4;
             // 
             // textBox5
             // 
             this.textBox5.Font = new System.Drawing.Font("Microsoft Sans Serif", 25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBox5.Location = new System.Drawing.Point(421, 169);
-            this.textBox5.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.textBox5.Location = new System.Drawing.Point(374, 135);
             this.textBox5.Name = "textBox5";
             this.textBox5.ReadOnly = true;
-            this.textBox5.Size = new System.Drawing.Size(62, 64);
+            this.textBox5.Size = new System.Drawing.Size(56, 55);
             this.textBox5.TabIndex = 5;
             // 
             // textBox6
             // 
             this.textBox6.Font = new System.Drawing.Font("Microsoft Sans Serif", 25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBox6.Location = new System.Drawing.Point(212, 245);
-            this.textBox6.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.textBox6.Location = new System.Drawing.Point(188, 196);
             this.textBox6.Name = "textBox6";
             this.textBox6.ReadOnly = true;
-            this.textBox6.Size = new System.Drawing.Size(62, 64);
+            this.textBox6.Size = new System.Drawing.Size(56, 55);
             this.textBox6.TabIndex = 6;
             // 
             // textBox7
             // 
             this.textBox7.Font = new System.Drawing.Font("Microsoft Sans Serif", 25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBox7.Location = new System.Drawing.Point(280, 245);
-            this.textBox7.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.textBox7.Location = new System.Drawing.Point(249, 196);
             this.textBox7.Name = "textBox7";
             this.textBox7.ReadOnly = true;
-            this.textBox7.Size = new System.Drawing.Size(62, 64);
+            this.textBox7.Size = new System.Drawing.Size(56, 55);
             this.textBox7.TabIndex = 7;
             // 
             // textBox8
             // 
             this.textBox8.Font = new System.Drawing.Font("Microsoft Sans Serif", 25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBox8.Location = new System.Drawing.Point(351, 245);
-            this.textBox8.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.textBox8.Location = new System.Drawing.Point(312, 196);
             this.textBox8.Name = "textBox8";
             this.textBox8.ReadOnly = true;
-            this.textBox8.Size = new System.Drawing.Size(62, 64);
+            this.textBox8.Size = new System.Drawing.Size(56, 55);
             this.textBox8.TabIndex = 8;
             // 
             // textBox9
             // 
             this.textBox9.Font = new System.Drawing.Font("Microsoft Sans Serif", 25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBox9.Location = new System.Drawing.Point(421, 246);
-            this.textBox9.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.textBox9.Location = new System.Drawing.Point(374, 197);
             this.textBox9.Name = "textBox9";
             this.textBox9.ReadOnly = true;
-            this.textBox9.Size = new System.Drawing.Size(62, 64);
+            this.textBox9.Size = new System.Drawing.Size(56, 55);
             this.textBox9.TabIndex = 9;
             // 
             // textBox10
             // 
             this.textBox10.Font = new System.Drawing.Font("Microsoft Sans Serif", 25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBox10.Location = new System.Drawing.Point(212, 321);
-            this.textBox10.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.textBox10.Location = new System.Drawing.Point(188, 257);
             this.textBox10.Name = "textBox10";
             this.textBox10.ReadOnly = true;
-            this.textBox10.Size = new System.Drawing.Size(62, 64);
+            this.textBox10.Size = new System.Drawing.Size(56, 55);
             this.textBox10.TabIndex = 10;
             // 
             // textBox11
             // 
             this.textBox11.Font = new System.Drawing.Font("Microsoft Sans Serif", 25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBox11.Location = new System.Drawing.Point(281, 321);
-            this.textBox11.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.textBox11.Location = new System.Drawing.Point(250, 257);
             this.textBox11.Name = "textBox11";
             this.textBox11.ReadOnly = true;
-            this.textBox11.Size = new System.Drawing.Size(62, 64);
+            this.textBox11.Size = new System.Drawing.Size(56, 55);
             this.textBox11.TabIndex = 11;
             // 
             // textBox12
             // 
             this.textBox12.Font = new System.Drawing.Font("Microsoft Sans Serif", 25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBox12.Location = new System.Drawing.Point(352, 321);
-            this.textBox12.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.textBox12.Location = new System.Drawing.Point(313, 257);
             this.textBox12.Name = "textBox12";
             this.textBox12.ReadOnly = true;
-            this.textBox12.Size = new System.Drawing.Size(62, 64);
+            this.textBox12.Size = new System.Drawing.Size(56, 55);
             this.textBox12.TabIndex = 12;
             // 
             // textBox13
             // 
             this.textBox13.Font = new System.Drawing.Font("Microsoft Sans Serif", 25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBox13.Location = new System.Drawing.Point(422, 322);
-            this.textBox13.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.textBox13.Location = new System.Drawing.Point(375, 258);
             this.textBox13.Name = "textBox13";
             this.textBox13.ReadOnly = true;
-            this.textBox13.Size = new System.Drawing.Size(62, 64);
+            this.textBox13.Size = new System.Drawing.Size(56, 55);
             this.textBox13.TabIndex = 13;
             // 
             // textBox14
             // 
             this.textBox14.Font = new System.Drawing.Font("Microsoft Sans Serif", 25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBox14.Location = new System.Drawing.Point(212, 399);
-            this.textBox14.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.textBox14.Location = new System.Drawing.Point(188, 319);
             this.textBox14.Name = "textBox14";
             this.textBox14.ReadOnly = true;
-            this.textBox14.Size = new System.Drawing.Size(62, 64);
+            this.textBox14.Size = new System.Drawing.Size(56, 55);
             this.textBox14.TabIndex = 15;
             // 
             // textBox15
             // 
             this.textBox15.Font = new System.Drawing.Font("Microsoft Sans Serif", 25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBox15.Location = new System.Drawing.Point(282, 399);
-            this.textBox15.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.textBox15.Location = new System.Drawing.Point(251, 319);
             this.textBox15.Name = "textBox15";
             this.textBox15.ReadOnly = true;
-            this.textBox15.Size = new System.Drawing.Size(62, 64);
+            this.textBox15.Size = new System.Drawing.Size(56, 55);
             this.textBox15.TabIndex = 16;
             // 
             // textBox16
             // 
             this.textBox16.Font = new System.Drawing.Font("Microsoft Sans Serif", 25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBox16.Location = new System.Drawing.Point(352, 399);
-            this.textBox16.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.textBox16.Location = new System.Drawing.Point(313, 319);
             this.textBox16.Name = "textBox16";
             this.textBox16.ReadOnly = true;
-            this.textBox16.Size = new System.Drawing.Size(62, 64);
+            this.textBox16.Size = new System.Drawing.Size(56, 55);
             this.textBox16.TabIndex = 17;
             // 
             // textBox17
             // 
             this.textBox17.Font = new System.Drawing.Font("Microsoft Sans Serif", 25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBox17.Location = new System.Drawing.Point(422, 399);
-            this.textBox17.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.textBox17.Location = new System.Drawing.Point(375, 319);
             this.textBox17.Name = "textBox17";
             this.textBox17.ReadOnly = true;
-            this.textBox17.Size = new System.Drawing.Size(62, 64);
+            this.textBox17.Size = new System.Drawing.Size(56, 55);
             this.textBox17.TabIndex = 18;
             // 
             // WordInputBox
             // 
-            this.WordInputBox.Location = new System.Drawing.Point(282, 505);
-            this.WordInputBox.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.WordInputBox.Location = new System.Drawing.Point(251, 404);
             this.WordInputBox.Name = "WordInputBox";
-            this.WordInputBox.Size = new System.Drawing.Size(112, 26);
+            this.WordInputBox.Size = new System.Drawing.Size(100, 22);
             this.WordInputBox.TabIndex = 19;
             this.WordInputBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.WordInputBox_KeyDown);
             // 
             // ServerAddressBox
             // 
-            this.ServerAddressBox.Location = new System.Drawing.Point(249, 88);
-            this.ServerAddressBox.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.ServerAddressBox.Location = new System.Drawing.Point(221, 70);
             this.ServerAddressBox.Name = "ServerAddressBox";
-            this.ServerAddressBox.Size = new System.Drawing.Size(198, 26);
+            this.ServerAddressBox.Size = new System.Drawing.Size(176, 22);
             this.ServerAddressBox.TabIndex = 20;
             this.ServerAddressBox.TextChanged += new System.EventHandler(this.ServerAddressBox_TextChanged);
             // 
             // Player1Words
             // 
-            this.Player1Words.Location = new System.Drawing.Point(73, 169);
-            this.Player1Words.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.Player1Words.Location = new System.Drawing.Point(65, 135);
             this.Player1Words.Multiline = true;
             this.Player1Words.Name = "Player1Words";
             this.Player1Words.ReadOnly = true;
-            this.Player1Words.Size = new System.Drawing.Size(112, 298);
+            this.Player1Words.Size = new System.Drawing.Size(100, 239);
             this.Player1Words.TabIndex = 21;
             this.Player1Words.TextChanged += new System.EventHandler(this.Player1Words_TextChanged);
             // 
             // Player2Words
             // 
-            this.Player2Words.Location = new System.Drawing.Point(519, 169);
-            this.Player2Words.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.Player2Words.Location = new System.Drawing.Point(461, 135);
             this.Player2Words.Multiline = true;
             this.Player2Words.Name = "Player2Words";
             this.Player2Words.ReadOnly = true;
-            this.Player2Words.Size = new System.Drawing.Size(112, 298);
+            this.Player2Words.Size = new System.Drawing.Size(100, 239);
             this.Player2Words.TabIndex = 22;
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(126, 21);
+            this.label1.Location = new System.Drawing.Point(112, 17);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(89, 20);
+            this.label1.Size = new System.Drawing.Size(79, 17);
             this.label1.TabIndex = 23;
             this.label1.Text = "User Name";
             // 
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(96, 91);
+            this.label2.Location = new System.Drawing.Point(85, 73);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(118, 20);
+            this.label2.Size = new System.Drawing.Size(106, 17);
             this.label2.TabIndex = 24;
             this.label2.Text = "Server Address";
             // 
             // TimerBox
             // 
-            this.TimerBox.Location = new System.Drawing.Point(600, 71);
-            this.TimerBox.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.TimerBox.Location = new System.Drawing.Point(529, 33);
             this.TimerBox.Name = "TimerBox";
             this.TimerBox.ReadOnly = true;
-            this.TimerBox.Size = new System.Drawing.Size(112, 26);
+            this.TimerBox.Size = new System.Drawing.Size(100, 22);
             this.TimerBox.TabIndex = 25;
             this.TimerBox.TextChanged += new System.EventHandler(this.TimerBox_TextChanged);
             // 
             // Timer
             // 
             this.Timer.AutoSize = true;
-            this.Timer.Location = new System.Drawing.Point(630, 46);
+            this.Timer.Location = new System.Drawing.Point(561, 13);
             this.Timer.Name = "Timer";
-            this.Timer.Size = new System.Drawing.Size(48, 20);
+            this.Timer.Size = new System.Drawing.Size(44, 17);
             this.Timer.TabIndex = 26;
             this.Timer.Text = "Timer";
             // 
             // JoinGameButton
             // 
-            this.JoinGameButton.Location = new System.Drawing.Point(287, 122);
-            this.JoinGameButton.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.JoinGameButton.Location = new System.Drawing.Point(255, 98);
             this.JoinGameButton.Name = "JoinGameButton";
-            this.JoinGameButton.Size = new System.Drawing.Size(128, 29);
+            this.JoinGameButton.Size = new System.Drawing.Size(114, 23);
             this.JoinGameButton.TabIndex = 27;
             this.JoinGameButton.Text = "Join Game";
             this.JoinGameButton.UseVisualStyleBackColor = true;
@@ -339,28 +320,26 @@
             // 
             // TimeBox
             // 
-            this.TimeBox.Location = new System.Drawing.Point(453, 88);
-            this.TimeBox.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.TimeBox.Location = new System.Drawing.Point(403, 70);
             this.TimeBox.Name = "TimeBox";
-            this.TimeBox.Size = new System.Drawing.Size(112, 26);
+            this.TimeBox.Size = new System.Drawing.Size(100, 22);
             this.TimeBox.TabIndex = 28;
             this.TimeBox.TextChanged += new System.EventHandler(this.TimeBox_TextChanged);
             // 
             // TimeLabel
             // 
             this.TimeLabel.AutoSize = true;
-            this.TimeLabel.Location = new System.Drawing.Point(490, 62);
+            this.TimeLabel.Location = new System.Drawing.Point(436, 50);
             this.TimeLabel.Name = "TimeLabel";
-            this.TimeLabel.Size = new System.Drawing.Size(43, 20);
+            this.TimeLabel.Size = new System.Drawing.Size(39, 17);
             this.TimeLabel.TabIndex = 29;
             this.TimeLabel.Text = "Time";
             // 
             // CancelButton
             // 
-            this.CancelButton.Location = new System.Drawing.Point(611, 122);
-            this.CancelButton.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.CancelButton.Location = new System.Drawing.Point(544, 73);
             this.CancelButton.Name = "CancelButton";
-            this.CancelButton.Size = new System.Drawing.Size(84, 29);
+            this.CancelButton.Size = new System.Drawing.Size(75, 23);
             this.CancelButton.TabIndex = 30;
             this.CancelButton.Text = "Cancel";
             this.CancelButton.UseVisualStyleBackColor = true;
@@ -368,43 +347,45 @@
             // 
             // Player1ScoreBox
             // 
-            this.Player1ScoreBox.Location = new System.Drawing.Point(100, 522);
+            this.Player1ScoreBox.Location = new System.Drawing.Point(89, 418);
+            this.Player1ScoreBox.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Player1ScoreBox.Name = "Player1ScoreBox";
             this.Player1ScoreBox.ReadOnly = true;
-            this.Player1ScoreBox.Size = new System.Drawing.Size(47, 26);
+            this.Player1ScoreBox.Size = new System.Drawing.Size(42, 22);
             this.Player1ScoreBox.TabIndex = 31;
             this.Player1ScoreBox.TextChanged += new System.EventHandler(this.Player1ScoreBox_TextChanged);
             // 
             // Player2ScoreBox
             // 
-            this.Player2ScoreBox.Location = new System.Drawing.Point(548, 522);
+            this.Player2ScoreBox.Location = new System.Drawing.Point(487, 418);
+            this.Player2ScoreBox.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.Player2ScoreBox.Name = "Player2ScoreBox";
             this.Player2ScoreBox.ReadOnly = true;
-            this.Player2ScoreBox.Size = new System.Drawing.Size(48, 26);
+            this.Player2ScoreBox.Size = new System.Drawing.Size(43, 22);
             this.Player2ScoreBox.TabIndex = 32;
             // 
             // Player1label
             // 
             this.Player1label.AutoSize = true;
-            this.Player1label.Location = new System.Drawing.Point(74, 486);
+            this.Player1label.Location = new System.Drawing.Point(66, 389);
             this.Player1label.Name = "Player1label";
-            this.Player1label.Size = new System.Drawing.Size(111, 20);
+            this.Player1label.Size = new System.Drawing.Size(101, 17);
             this.Player1label.TabIndex = 33;
             this.Player1label.Text = "Player 1 Score";
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(520, 486);
+            this.label3.Location = new System.Drawing.Point(462, 389);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(111, 20);
+            this.label3.Size = new System.Drawing.Size(101, 17);
             this.label3.TabIndex = 34;
             this.label3.Text = "Player 2 Score";
             // 
             // menuStrip1
             // 
             this.menuStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
-            this.menuStrip1.Location = new System.Drawing.Point(0, 28);
+            this.menuStrip1.Location = new System.Drawing.Point(50, 50);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(662, 24);
             this.menuStrip1.TabIndex = 35;
@@ -415,7 +396,7 @@
             this.menuStrip2.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.menuStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.helpToolStripMenuItem});
-            this.menuStrip2.Location = new System.Drawing.Point(0, 0);
+            this.menuStrip2.Location = new System.Drawing.Point(50, 50);
             this.menuStrip2.Name = "menuStrip2";
             this.menuStrip2.Size = new System.Drawing.Size(662, 28);
             this.menuStrip2.TabIndex = 36;
@@ -426,11 +407,11 @@
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
             this.helpToolStripMenuItem.Size = new System.Drawing.Size(53, 24);
             this.helpToolStripMenuItem.Text = "Help";
-            this.helpToolStripMenuItem.Click += new System.EventHandler(this.helpToolStripMenuItem_Click);
             // 
             // Player1Nick
             // 
             this.Player1Nick.Location = new System.Drawing.Point(65, 107);
+            this.Player1Nick.MaximumSize = new System.Drawing.Size(100, 22);
             this.Player1Nick.Name = "Player1Nick";
             this.Player1Nick.ReadOnly = true;
             this.Player1Nick.Size = new System.Drawing.Size(100, 22);
@@ -444,11 +425,47 @@
             this.Player2Nick.Size = new System.Drawing.Size(98, 22);
             this.Player2Nick.TabIndex = 38;
             // 
+            // menuStrip3
+            // 
+            this.menuStrip3.ImageScalingSize = new System.Drawing.Size(20, 20);
+            this.menuStrip3.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.helpToolStripMenuItem1});
+            this.menuStrip3.Location = new System.Drawing.Point(0, 0);
+            this.menuStrip3.Name = "menuStrip3";
+            this.menuStrip3.Size = new System.Drawing.Size(683, 28);
+            this.menuStrip3.TabIndex = 35;
+            this.menuStrip3.Text = "menuStrip3";
+            // 
+            // helpToolStripMenuItem1
+            // 
+            this.helpToolStripMenuItem1.Name = "helpToolStripMenuItem1";
+            this.helpToolStripMenuItem1.Size = new System.Drawing.Size(53, 24);
+            this.helpToolStripMenuItem1.Text = "Help";
+            this.helpToolStripMenuItem1.Click += new System.EventHandler(this.helpToolStripMenuItem1_Click);
+            // 
+            // PlayerOneNick
+            // 
+            this.PlayerOneNick.Location = new System.Drawing.Point(65, 107);
+            this.PlayerOneNick.Name = "PlayerOneNick";
+            this.PlayerOneNick.ReadOnly = true;
+            this.PlayerOneNick.Size = new System.Drawing.Size(100, 22);
+            this.PlayerOneNick.TabIndex = 36;
+            // 
+            // PlayerTwoNick
+            // 
+            this.PlayerTwoNick.Location = new System.Drawing.Point(461, 107);
+            this.PlayerTwoNick.Name = "PlayerTwoNick";
+            this.PlayerTwoNick.ReadOnly = true;
+            this.PlayerTwoNick.Size = new System.Drawing.Size(100, 22);
+            this.PlayerTwoNick.TabIndex = 37;
+            // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(738, 560);
+            this.ClientSize = new System.Drawing.Size(683, 494);
+            this.Controls.Add(this.PlayerTwoNick);
+            this.Controls.Add(this.PlayerOneNick);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.Player1label);
             this.Controls.Add(this.Player2ScoreBox);
@@ -483,10 +500,15 @@
             this.Controls.Add(this.textBox2);
             this.Controls.Add(this.NameBox);
             this.Controls.Add(this.RegisterButton);
-            this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.Controls.Add(this.menuStrip3);
+            this.MainMenuStrip = this.menuStrip3;
             this.Name = "Form1";
             this.Text = "Form1";
             this.Click += new System.EventHandler(this.CancelButton_Click);
+            this.menuStrip2.ResumeLayout(false);
+            this.menuStrip2.PerformLayout();
+            this.menuStrip3.ResumeLayout(false);
+            this.menuStrip3.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -533,6 +555,10 @@
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
         private System.Windows.Forms.TextBox Player1Nick;
         private System.Windows.Forms.TextBox Player2Nick;
+        private System.Windows.Forms.MenuStrip menuStrip3;
+        private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem1;
+        private System.Windows.Forms.TextBox PlayerOneNick;
+        private System.Windows.Forms.TextBox PlayerTwoNick;
     }
 }
 

@@ -66,8 +66,8 @@ namespace BoggleClient
         public void updateView(string p1Score, string p2Score, string timeLeft, string p1Name, string p2Name)
         {
             Timer.Text = timeLeft;
-            Player1Nick.Text = p1Name;
-            Player2Nick.Text = p2Name;
+            PlayerOneNick.Text = p1Name;
+            PlayerTwoNick.Text = p2Name;
             Player1ScoreBox.Text = p1Score;
             Player2ScoreBox.Text = p2Score;
         }
@@ -115,6 +115,7 @@ namespace BoggleClient
                 myTime.Enabled = false;
                 CancelButtonPressed(ServerAddressBox.Text);
                 JoinGameButton.Enabled = true;
+                CancelButton.Enabled = false;
                 Player1ScoreBox.Text = null;
                 Player1Words.Text = null;
                 Player2ScoreBox.Text = null;
@@ -176,7 +177,7 @@ namespace BoggleClient
 
         }
 
-        private void helpToolStripMenuItem_Click(object sender, EventArgs e)
+        private void helpToolStripMenuItem1_Click(object sender, EventArgs e)
         {
             string line1 = "Enter your name and server address and click register to get started\n";
             string line2 = "Click Join game and waint until the server finds someone to pair you against\n";
@@ -185,7 +186,7 @@ namespace BoggleClient
             string line5 = "Then just click to join a new game to start again!\n";
             string line6 = "Your words may show up in the other players box as you enter them but at the end of the screen\n";
             string line7 = "They will be placed correctly. These are just a refrence so you know how well you are doing";
-            MessageBox.Show(line1 + line2 + line3 + line4 + line5+line6+line7);
+            MessageBox.Show(line1 + line2 + line3 + line4 + line5 + line6 + line7);
         }
     }
 }
