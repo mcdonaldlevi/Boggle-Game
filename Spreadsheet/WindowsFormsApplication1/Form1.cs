@@ -24,6 +24,9 @@ namespace BoggleClient
             myTime.Start();
             myTime.Enabled = false;
             myTime.Tick += MyTime_Tick;
+            JoinGameButton.Enabled = false;
+            CancelButton.Enabled = false;
+            RegisterButton.Enabled = false;
         }
 
         public event Action<string, string> RegisterPressed;
@@ -74,11 +77,14 @@ namespace BoggleClient
         private void RegisterButton_Click(object sender, EventArgs e)
         {
             RegisterPressed(NameBox.Text, ServerAddressBox.Text);
+            RegisterButton.Enabled = false;
         }
 
         private void JoinGameButton_Click(object sender, EventArgs e)
         {
             JoinGamePressed(int.Parse(TimeBox.Text), ServerAddressBox.Text);
+            JoinGameButton.Enabled = false;
+            CancelButton.Enabled = true;
         }
 
         private void WordInputBox_KeyDown(object sender, KeyEventArgs e)
@@ -90,7 +96,18 @@ namespace BoggleClient
         }
         private void CancelButton_Click(object sender, EventArgs e)
         {
-            CancelButtonPressed(ServerAddressBox.Text);
+            if (CancelButton.Enabled)
+            {
+                myTime.Enabled = false;
+                CancelButtonPressed(ServerAddressBox.Text);
+                JoinGameButton.Enabled = true;
+                Player1ScoreBox.Text = null;
+                Player1Words.Text = null;
+                Player2ScoreBox.Text = null;
+                Player2Words.Text = null;
+                WordInputBox.Text = null;
+                Timer.Text = "";
+            }
         }
 
         public void displayLetters(string board)
@@ -112,6 +129,37 @@ namespace BoggleClient
                 count += 1;
             }
             myTime.Enabled = false;
+        }
+
+        private void NameBox_TextChanged(object sender, EventArgs e)
+        {
+            RegisterButton.Enabled = (NameBox.Text != "" && NameBox.Text != null && ServerAddressBox.Text != null && ServerAddressBox.Text != "");
+        }
+
+        private void ServerAddressBox_TextChanged(object sender, EventArgs e)
+        {
+            RegisterButton.Enabled = (NameBox.Text != "" && NameBox.Text != null && ServerAddressBox.Text != null && ServerAddressBox.Text != "");
+            JoinGameButton.Enabled = (ServerAddressBox.Text != null && ServerAddressBox.Text != "" && TimeBox.Text != null && TimeBox.Text != "");
+        }
+
+        private void TimeBox_TextChanged(object sender, EventArgs e)
+        {
+            JoinGameButton.Enabled = (ServerAddressBox.Text != null && ServerAddressBox.Text != "" && TimeBox.Text != null && TimeBox.Text != "");
+        }
+
+        private void Player1Words_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void Player1ScoreBox_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void TimerBox_TextChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }

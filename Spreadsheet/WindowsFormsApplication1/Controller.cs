@@ -130,7 +130,6 @@ namespace BoggleClient
                         Console.WriteLine("Error Canceling: " + response.StatusCode);
                         Console.WriteLine(response.ReasonPhrase);
                     }
-
                     view.clearLetters();
                 }
             }

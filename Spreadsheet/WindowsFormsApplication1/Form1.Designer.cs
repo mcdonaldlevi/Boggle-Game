@@ -82,6 +82,7 @@
             this.NameBox.Name = "NameBox";
             this.NameBox.Size = new System.Drawing.Size(198, 26);
             this.NameBox.TabIndex = 1;
+            this.NameBox.TextChanged += new System.EventHandler(this.NameBox_TextChanged);
             // 
             // textBox2
             // 
@@ -259,6 +260,7 @@
             this.ServerAddressBox.Name = "ServerAddressBox";
             this.ServerAddressBox.Size = new System.Drawing.Size(198, 26);
             this.ServerAddressBox.TabIndex = 20;
+            this.ServerAddressBox.TextChanged += new System.EventHandler(this.ServerAddressBox_TextChanged);
             // 
             // Player1Words
             // 
@@ -269,6 +271,7 @@
             this.Player1Words.ReadOnly = true;
             this.Player1Words.Size = new System.Drawing.Size(112, 298);
             this.Player1Words.TabIndex = 21;
+            this.Player1Words.TextChanged += new System.EventHandler(this.Player1Words_TextChanged);
             // 
             // Player2Words
             // 
@@ -306,6 +309,7 @@
             this.TimerBox.ReadOnly = true;
             this.TimerBox.Size = new System.Drawing.Size(112, 26);
             this.TimerBox.TabIndex = 25;
+            this.TimerBox.TextChanged += new System.EventHandler(this.TimerBox_TextChanged);
             // 
             // Timer
             // 
@@ -334,6 +338,7 @@
             this.TimeBox.Name = "TimeBox";
             this.TimeBox.Size = new System.Drawing.Size(112, 26);
             this.TimeBox.TabIndex = 28;
+            this.TimeBox.TextChanged += new System.EventHandler(this.TimeBox_TextChanged);
             // 
             // TimeLabel
             // 
@@ -357,35 +362,36 @@
             // 
             // Player1ScoreBox
             // 
-            this.Player1ScoreBox.Location = new System.Drawing.Point(88, 404);
+            this.Player1ScoreBox.Location = new System.Drawing.Point(100, 522);
             this.Player1ScoreBox.Name = "Player1ScoreBox";
             this.Player1ScoreBox.ReadOnly = true;
-            this.Player1ScoreBox.Size = new System.Drawing.Size(47, 22);
+            this.Player1ScoreBox.Size = new System.Drawing.Size(47, 26);
             this.Player1ScoreBox.TabIndex = 31;
+            this.Player1ScoreBox.TextChanged += new System.EventHandler(this.Player1ScoreBox_TextChanged);
             // 
             // Player2ScoreBox
             // 
-            this.Player2ScoreBox.Location = new System.Drawing.Point(484, 404);
+            this.Player2ScoreBox.Location = new System.Drawing.Point(548, 522);
             this.Player2ScoreBox.Name = "Player2ScoreBox";
             this.Player2ScoreBox.ReadOnly = true;
-            this.Player2ScoreBox.Size = new System.Drawing.Size(48, 22);
+            this.Player2ScoreBox.Size = new System.Drawing.Size(48, 26);
             this.Player2ScoreBox.TabIndex = 32;
             // 
             // Player1label
             // 
             this.Player1label.AutoSize = true;
-            this.Player1label.Location = new System.Drawing.Point(62, 384);
+            this.Player1label.Location = new System.Drawing.Point(74, 486);
             this.Player1label.Name = "Player1label";
-            this.Player1label.Size = new System.Drawing.Size(101, 17);
+            this.Player1label.Size = new System.Drawing.Size(111, 20);
             this.Player1label.TabIndex = 33;
             this.Player1label.Text = "Player 1 Score";
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(458, 384);
+            this.label3.Location = new System.Drawing.Point(520, 486);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(101, 17);
+            this.label3.Size = new System.Drawing.Size(111, 20);
             this.label3.TabIndex = 34;
             this.label3.Text = "Player 2 Score";
             // 
@@ -393,7 +399,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(664, 481);
+            this.ClientSize = new System.Drawing.Size(738, 560);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.Player1label);
             this.Controls.Add(this.Player2ScoreBox);
