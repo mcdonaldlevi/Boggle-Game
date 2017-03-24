@@ -56,9 +56,11 @@ namespace BoggleClient
                             string timeLeft = JToken.Parse(gameStatusResult)["TimeLeft"].ToString();
                             string playerOneScore = JToken.Parse(gameStatusResult)["Player1"]["Score"].ToString();
                             string playerTwoScore = JToken.Parse(gameStatusResult)["Player2"]["Score"].ToString();
+                            string playerOneName = JToken.Parse(gameStatusResult)["Player1"]["Nickname"].ToString();
+                            string playerTwoName = JToken.Parse(gameStatusResult)["Player2"]["Nickname"].ToString();
                             string letters = JToken.Parse(gameStatusResult)["Board"].ToString();
                             view.displayLetters(letters);
-                            view.updateView(playerOneScore, playerTwoScore, timeLeft);
+                            view.updateView(playerOneScore, playerTwoScore, timeLeft, playerOneName, playerTwoName);
                             if(timeLeft == "0")
                             {
                                 View_GameOver(address);
@@ -208,13 +210,14 @@ namespace BoggleClient
                     String result = gameStatsResponse.Content.ReadAsStringAsync().Result;
                     string gameStatusResult = gameStatsResponse.Content.ReadAsStringAsync().Result;
                     string gameState = JToken.Parse(gameStatusResult)["GameState"].ToString();
-
                     string timeLeft = JToken.Parse(gameStatusResult)["TimeLeft"].ToString();
                     string playerOneScore = JToken.Parse(gameStatusResult)["Player1"]["Score"].ToString();
                     string playerTwoScore = JToken.Parse(gameStatusResult)["Player2"]["Score"].ToString();
+                    string playerOneName = JToken.Parse(gameStatusResult)["Player1"]["Nickname"].ToString();
+                    string playerTwoName = JToken.Parse(gameStatusResult)["Player2"]["Nickname"].ToString();
                     JToken playerOneWords = JToken.Parse(gameStatusResult)["Player1"]["WordsPlayed"];
                     JToken playerTwoWords = JToken.Parse(gameStatusResult)["Player2"]["WordsPlayed"];
-                    view.updateView(playerOneScore, playerTwoScore, timeLeft);
+                    view.updateView(playerOneScore, playerTwoScore, timeLeft, playerOneName, playerTwoName);
                     view.GameEndScreen(playerOneWords, playerTwoWords);
                 }
             }
