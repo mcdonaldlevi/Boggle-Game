@@ -34,8 +34,20 @@ namespace BoggleClient
         
         public void GameEndScreen(JToken playerOneWords, JToken playerTwoWords)
         {
+            Player1Words.Text = "";
+            Player2Words.Text = "";
+            foreach (JToken y in playerOneWords)
+            {
+                
+                Player1Words.AppendText(y["Word"].ToString());
+                Player1Words.AppendText("    ");
+                Player1Words.AppendText(y["Score"].ToString());
+                Player1Words.AppendText("\n");
+
+            }  
           foreach(JToken x in playerTwoWords)
             {
+                
                 Player2Words.AppendText(x["Word"].ToString());
                 Player2Words.AppendText("    ");
                 Player2Words.AppendText(x["Score"].ToString());
@@ -48,9 +60,11 @@ namespace BoggleClient
             Player1Words.AppendText(WordInputBox.Text + "     " + wordScore + "\n");
             WordInputBox.Text = "";
         }
-        public void updateView(string p1Score, string p2Score, string timeLeft)
+        public void updateView(string p1Score, string p2Score, string timeLeft, string p1Name, string p2Name)
         {
             Timer.Text = timeLeft;
+            Player1Nick.Text = p1Name;
+            Player2Nick.Text = p2Name;
             Player1ScoreBox.Text = p1Score;
             Player2ScoreBox.Text = p2Score;
         }
@@ -109,8 +123,10 @@ namespace BoggleClient
             string line2 = "Click Join game and waint until the server finds someone to pair you against\n";
             string line3 = "Type words in the bottom text box and hit enter to add them\n";
             string line4 = "At the end of the game, click cancel with you are finished looking at the scores\n";
-            string line5 = "Then just click to join a new game to start again!";
-            MessageBox.Show(line1 + line2 + line3 + line4 + line5);
+            string line5 = "Then just click to join a new game to start again!\n";
+            string line6 = "Your words may show up in the other players box as you enter them but at the end of the screen\n";
+            string line7 = "They will be placed correctly. These are just a refrence so you know how well you are doing";
+            MessageBox.Show(line1 + line2 + line3 + line4 + line5+line6+line7);
         }
     }
 }

@@ -65,6 +65,8 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.menuStrip2 = new System.Windows.Forms.MenuStrip();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.Player1Nick = new System.Windows.Forms.TextBox();
+            this.Player2Nick = new System.Windows.Forms.TextBox();
             this.menuStrip2.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -282,7 +284,7 @@
             // 
             // TimerBox
             // 
-            this.TimerBox.Location = new System.Drawing.Point(533, 57);
+            this.TimerBox.Location = new System.Drawing.Point(533, 31);
             this.TimerBox.Name = "TimerBox";
             this.TimerBox.ReadOnly = true;
             this.TimerBox.Size = new System.Drawing.Size(100, 22);
@@ -291,7 +293,7 @@
             // Timer
             // 
             this.Timer.AutoSize = true;
-            this.Timer.Location = new System.Drawing.Point(560, 37);
+            this.Timer.Location = new System.Drawing.Point(564, 11);
             this.Timer.Name = "Timer";
             this.Timer.Size = new System.Drawing.Size(44, 17);
             this.Timer.TabIndex = 26;
@@ -325,7 +327,7 @@
             // 
             // CancelButton
             // 
-            this.CancelButton.Location = new System.Drawing.Point(543, 98);
+            this.CancelButton.Location = new System.Drawing.Point(545, 59);
             this.CancelButton.Name = "CancelButton";
             this.CancelButton.Size = new System.Drawing.Size(75, 23);
             this.CancelButton.TabIndex = 30;
@@ -372,7 +374,7 @@
             this.menuStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
             this.menuStrip1.Location = new System.Drawing.Point(0, 28);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(664, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(662, 24);
             this.menuStrip1.TabIndex = 35;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -383,7 +385,7 @@
             this.helpToolStripMenuItem});
             this.menuStrip2.Location = new System.Drawing.Point(0, 0);
             this.menuStrip2.Name = "menuStrip2";
-            this.menuStrip2.Size = new System.Drawing.Size(664, 28);
+            this.menuStrip2.Size = new System.Drawing.Size(662, 28);
             this.menuStrip2.TabIndex = 36;
             this.menuStrip2.Text = "menuStrip2";
             // 
@@ -394,11 +396,29 @@
             this.helpToolStripMenuItem.Text = "Help";
             this.helpToolStripMenuItem.Click += new System.EventHandler(this.helpToolStripMenuItem_Click);
             // 
+            // Player1Nick
+            // 
+            this.Player1Nick.Location = new System.Drawing.Point(65, 107);
+            this.Player1Nick.Name = "Player1Nick";
+            this.Player1Nick.ReadOnly = true;
+            this.Player1Nick.Size = new System.Drawing.Size(100, 22);
+            this.Player1Nick.TabIndex = 37;
+            // 
+            // Player2Nick
+            // 
+            this.Player2Nick.Location = new System.Drawing.Point(461, 107);
+            this.Player2Nick.Name = "Player2Nick";
+            this.Player2Nick.ReadOnly = true;
+            this.Player2Nick.Size = new System.Drawing.Size(98, 22);
+            this.Player2Nick.TabIndex = 38;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(664, 481);
+            this.ClientSize = new System.Drawing.Size(662, 483);
+            this.Controls.Add(this.Player2Nick);
+            this.Controls.Add(this.Player1Nick);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.Player1label);
             this.Controls.Add(this.Player2ScoreBox);
@@ -484,6 +504,8 @@
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.MenuStrip menuStrip2;
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
+        private System.Windows.Forms.TextBox Player1Nick;
+        private System.Windows.Forms.TextBox Player2Nick;
     }
 }
 
