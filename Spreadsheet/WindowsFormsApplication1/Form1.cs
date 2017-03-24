@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -26,14 +27,33 @@ namespace BoggleClient
         }
 
         public event Action<string, string> RegisterPressed;
-
         public event Action<string, string> WordEntered;
-
-        public event Action GameOver;
         public event Action<int, string> JoinGamePressed;
         public event Action<string> CancelButtonPressed;
         public event Action<string> GameStatusRequest;
         
+        public void GameEndScreen(JToken playerOneWords, JToken playerTwoWords)
+        {
+          foreach(JToken x in playerTwoWords)
+            {
+                Player2Words.AppendText(x["Word"].ToString());
+                Player2Words.AppendText("    ");
+                Player2Words.AppendText(x["Score"].ToString());
+                Player2Words.AppendText("\n");
+            }
+            myTime.Enabled = false;
+        }
+        public void updateWordBox(string wordScore)
+        {
+            Player1Words.AppendText(WordInputBox.Text + "     " + wordScore + "\n");
+            WordInputBox.Text = "";
+        }
+        public void updateView(string p1Score, string p2Score, string timeLeft)
+        {
+            Timer.Text = timeLeft;
+            Player1ScoreBox.Text = p1Score;
+            Player2ScoreBox.Text = p2Score;
+        }
         public void startTime()
         {            
             myTime.Enabled = true;                 

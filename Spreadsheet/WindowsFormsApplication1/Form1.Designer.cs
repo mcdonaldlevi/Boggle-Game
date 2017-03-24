@@ -58,6 +58,10 @@
             this.TimeBox = new System.Windows.Forms.TextBox();
             this.TimeLabel = new System.Windows.Forms.Label();
             this.CancelButton = new System.Windows.Forms.Button();
+            this.Player1ScoreBox = new System.Windows.Forms.TextBox();
+            this.Player2ScoreBox = new System.Windows.Forms.TextBox();
+            this.Player1label = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // RegisterButton
@@ -351,11 +355,49 @@
             this.CancelButton.UseVisualStyleBackColor = true;
             this.CancelButton.Click += new System.EventHandler(this.CancelButton_Click);
             // 
+            // Player1ScoreBox
+            // 
+            this.Player1ScoreBox.Location = new System.Drawing.Point(88, 404);
+            this.Player1ScoreBox.Name = "Player1ScoreBox";
+            this.Player1ScoreBox.ReadOnly = true;
+            this.Player1ScoreBox.Size = new System.Drawing.Size(47, 22);
+            this.Player1ScoreBox.TabIndex = 31;
+            // 
+            // Player2ScoreBox
+            // 
+            this.Player2ScoreBox.Location = new System.Drawing.Point(484, 404);
+            this.Player2ScoreBox.Name = "Player2ScoreBox";
+            this.Player2ScoreBox.ReadOnly = true;
+            this.Player2ScoreBox.Size = new System.Drawing.Size(48, 22);
+            this.Player2ScoreBox.TabIndex = 32;
+            // 
+            // Player1label
+            // 
+            this.Player1label.AutoSize = true;
+            this.Player1label.Location = new System.Drawing.Point(62, 384);
+            this.Player1label.Name = "Player1label";
+            this.Player1label.Size = new System.Drawing.Size(101, 17);
+            this.Player1label.TabIndex = 33;
+            this.Player1label.Text = "Player 1 Score";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(458, 384);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(101, 17);
+            this.label3.TabIndex = 34;
+            this.label3.Text = "Player 2 Score";
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(747, 601);
+            this.ClientSize = new System.Drawing.Size(664, 481);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.Player1label);
+            this.Controls.Add(this.Player2ScoreBox);
+            this.Controls.Add(this.Player1ScoreBox);
             this.Controls.Add(this.CancelButton);
             this.Controls.Add(this.TimeLabel);
             this.Controls.Add(this.TimeBox);
@@ -427,6 +469,10 @@
         private System.Windows.Forms.TextBox TimeBox;
         private System.Windows.Forms.Label TimeLabel;
         private System.Windows.Forms.Button CancelButton;
+        private System.Windows.Forms.TextBox Player1ScoreBox;
+        private System.Windows.Forms.TextBox Player2ScoreBox;
+        private System.Windows.Forms.Label Player1label;
+        private System.Windows.Forms.Label label3;
     }
 }
 
