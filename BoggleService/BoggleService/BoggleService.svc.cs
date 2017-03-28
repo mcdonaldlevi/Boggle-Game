@@ -10,7 +10,7 @@ namespace Boggle
 {
     public class UserInfo
     {
-        public string Name { get; set; }
+        public string NickName { get; set; }
     }
     public class JoinGameInfo
     {
@@ -19,6 +19,7 @@ namespace Boggle
     }
     public class GameInfo
     {
+        public string GameId { get; set; }
         public string GameState { get; set; }
         public string Board { get; set; }
         public int TimeLimit { get; set; }
@@ -101,11 +102,11 @@ namespace Boggle
         {
             lock (sync)
             {
-                if (user.Name == "stall")
+                if (user.NickName == "stall")
                 {
                     Thread.Sleep(5000);
                 }
-                if (user.Name == null || user.Name.Trim().Length == 0)
+                if (user.NickName == null || user.NickName.Trim().Length == 0)
                 {
                     SetStatus(Forbidden);
                     return null;
@@ -135,21 +136,41 @@ namespace Boggle
                     pendingGame.TimeLimit = user.TimeLimit;
                     pendingGame.GameState = "pending";
                     BoggleBoard board = new BoggleBoard();
-                    pendingGame.Board = board.
+                    pendingGame.Board = board.ToString();
+                    pendingGame.Player1.Nickname = users[user.UserToken].NickName;
+                    string gameID = Guid.NewGuid().ToString();
+                    SetStatus(Created);
+                    return gameID;
                 }
-                if (pendingGame != null && pendingGame.Player1.UserToken == user.UserToken)
+                if (pendingGame.Player1.UserToken == user.UserToken)
                 {
                     SetStatus(Conflict);
                     return null;
                 }
                 else
                 {
-                    string userID = Guid.NewGuid().ToString();
-                    users.Add(userID, user);
-                    SetStatus(Created);
-                    return userID;
+                    pendingGame.Player2.UserToken = user.UserToken;
+                    pendingGame.GameState = "active";
+                    pendingGame.Player2.Nickname = users[user.UserToken].NickName;                    
+                    games.Add(pendingGame.GameId, pendingGame);
+                    SetStatus(Accepted);
+                    string gameID = pendingGame.GameId;
+                    pendingGame = null;
+                    return gameID;
                 }
             }
+
         }
+        //public void CancelJoinGame(UserInfo user)
+        //{
+        //    lock (sync)
+        //    {
+        //        if (user. == null || user.UserToken.Trim().Length == 0)
+        //        {
+        //            SetStatus(Forbidden);
+        //            return null;
+        //        }
+        //        else if()
+        //    }
     }
 }
