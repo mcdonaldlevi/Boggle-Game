@@ -21,5 +21,20 @@ namespace Boggle
         /// </summary>
         [WebGet(UriTemplate = "/word?index={n}")]
         string WordAtIndex(int n);
+
+        [WebInvoke(Method = "POST", UriTemplate = "/users")]
+        string CreateUser(UserInfo user);
+
+        [WebInvoke(Method = "POST", UriTemplate = "/games")]
+        string JoinGame(UserInfo user);
+
+        [WebInvoke(Method = "PUT", UriTemplate = "/games")]
+        string CancelJoinRequest(UserInfo user);
+
+        [WebInvoke(Method = "PUT", UriTemplate = "/games/{GameID}")]
+        string PlayWord(UserInfo user);
+
+        [WebInvoke(Method = "GET", UriTemplate = "/games/{GameID}")]
+        string GameStatus(UserInfo user);
     }
 }
