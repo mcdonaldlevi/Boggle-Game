@@ -8,6 +8,15 @@ using static System.Net.HttpStatusCode;
 
 namespace Boggle
 {
+    public class UserIDandPlayWord
+    {
+        public string UserToken { get; set; }
+        public string Word { get; set; }
+    }
+    public class UserID
+    {
+        public string UserToken { get; set; }
+    }
     public class UserInfo
     {
         public string NickName { get; set; }
@@ -32,7 +41,7 @@ namespace Boggle
         public string UserToken { get; set; }
         public string Nickname { get;set; }
         public int Score { get; set; }
-        public WordPlayed WordsPlayed { get; set; }
+        public List<WordPlayed> WordsPlayed { get; set; }
     }
     public class WordPlayed
     {
@@ -42,7 +51,7 @@ namespace Boggle
     public class BoggleService : IBoggleService
     {
         private static Dictionary<String, GameInfo> games = new Dictionary<string, GameInfo>();
-        private  static Dictionary<String, UserInfo> users = new Dictionary<String, UserInfo>();
+        private static Dictionary<String, UserInfo> users = new Dictionary<String, UserInfo>();
         private static readonly object sync = new object();
         private GameInfo pendingGame = null;
         /// <summary>
@@ -129,8 +138,8 @@ namespace Boggle
                     SetStatus(Forbidden);
                     return null;
                 }
-                
-                if(pendingGame == null)
+
+                if (pendingGame == null)
                 {
                     pendingGame.Player1.UserToken = user.UserToken;
                     pendingGame.TimeLimit = user.TimeLimit;
@@ -151,7 +160,7 @@ namespace Boggle
                 {
                     pendingGame.Player2.UserToken = user.UserToken;
                     pendingGame.GameState = "active";
-                    pendingGame.Player2.Nickname = users[user.UserToken].NickName;                    
+                    pendingGame.Player2.Nickname = users[user.UserToken].NickName;
                     games.Add(pendingGame.GameId, pendingGame);
                     SetStatus(Accepted);
                     string gameID = pendingGame.GameId;
@@ -161,16 +170,87 @@ namespace Boggle
             }
 
         }
-        //public void CancelJoinGame(UserInfo user)
-        //{
-        //    lock (sync)
-        //    {
-        //        if (user. == null || user.UserToken.Trim().Length == 0)
-        //        {
-        //            SetStatus(Forbidden);
-        //            return null;
-        //        }
-        //        else if()
-        //    }
+        public void CancelJoinGame(UserID user)
+        {
+            lock (sync)
+            {
+                if (user.UserToken == null || user.UserToken.Trim().Length == 0 || pendingGame.Player1.UserToken != user.UserToken)
+                {
+                    SetStatus(Forbidden);
+                }
+                else
+                {
+                    pendingGame = null;
+                    SetStatus(OK);
+                }
+            }
+        }
+        public int PlayWord(UserIDandPlayWord user, string gameID)
+        {
+            lock (sync)
+            {
+                if (user.UserToken == null || user.UserToken.Trim().Length == 0 || user.Word == null || user.Word.Trim().Length == 0)
+                {
+                    SetStatus(Forbidden);
+                    return 0;
+                }
+                else
+                {
+                    BoggleBoard board = new BoggleBoard(games[gameID].Board);
+                    if (board.CanBeFormed(user.Word))
+                    {
+                        if (games[gameID].Player1.UserToken == user.UserToken)
+                        {
+                            WordPlayed wordScore = new WordPlayed { Word = user.Word, Score = getScore(user.Word) };
+                            games[gameID].Player1.WordsPlayed.Add(wordScore);
+                            return getScore(user.Word);
+                        }
+                        else if(games[gameID].Player2.UserToken == user.UserToken)
+                        {
+                            WordPlayed wordScore = new WordPlayed { Word = user.Word, Score = getScore(user.Word) };
+                            games[gameID].Player2.WordsPlayed.Add(wordScore);
+                            return getScore(user.Word);
+                        }
+                        else
+                        {
+                            SetStatus(Forbidden);
+                            return 0;
+                        }
+                    }
+                    else
+                    {
+                        if (games[gameID].Player1.UserToken == user.UserToken)
+                        {
+                            WordPlayed wordScore = new WordPlayed { Word = user.Word, Score = -1 };
+                            games[gameID].Player1.WordsPlayed.Add(wordScore);
+                            return -1;
+                        }
+                        else if (games[gameID].Player2.UserToken == user.UserToken)
+                        {
+                            WordPlayed wordScore = new WordPlayed { Word = user.Word, Score = -1 };
+                            games[gameID].Player2.WordsPlayed.Add(wordScore);
+                            return -1;
+                        }
+                        else
+                        {
+                            SetStatus(Forbidden);
+                            return 0;
+                        }
+                    }
+                }
+            }
+        }
+        private int getScore(string word)
+        {
+            if (word.Length < 3)
+                return 0;
+            else if (word.Length == 3)
+                return 1;
+            else
+            {
+                return word.Length - 3;
+            }
+
+        }
     }
 }
