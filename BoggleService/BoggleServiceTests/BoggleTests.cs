@@ -3,6 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using static System.Net.HttpStatusCode;
 using System.Diagnostics;
 using Newtonsoft.Json;
+using System.Dynamic;
 
 namespace Boggle
 {
@@ -42,6 +43,7 @@ namespace Boggle
             }
         }
     }
+
     [TestClass]
     public class BoggleTests
     {
@@ -81,6 +83,85 @@ namespace Boggle
 
             string word = (string) r.Data;
             Assert.AreEqual("AAL", word);
+        }
+
+        /// <summary>
+        /// Creates a test user and asserts that length is equal to 36
+        /// </summary>
+        [TestMethod]
+        public void CreateUserTest1()
+        {
+            dynamic file = new ExpandoObject();
+            file.NickName = "Sally";
+            Response r = client.DoPostAsync("users", file).Result;
+            Assert.AreEqual(Created, r.Status);
+            Assert.AreEqual(r.Data.Length, 36);
+        }
+
+        /// <summary>
+        /// Creates 2 test users with the same name and asserts they have unique game ids
+        /// </summary>
+        [TestMethod]
+        public void CreateUserTest2()
+        {
+            dynamic file = new ExpandoObject();
+            file.NickName = "Sebastian";
+            Response r1 = client.DoPostAsync("users", file).Result;
+            Response r2 = client.DoPostAsync("users", file).Result;
+            Assert.AreEqual(Created, r1.Status);
+            Assert.AreEqual(Created, r2.Status);
+            Assert.AreNotEqual(r1.Data, r2.Data);
+        }
+
+        /// <summary>
+        /// Creates a user with a blank name
+        /// </summary>
+        [TestMethod]
+        public void CreateUserTest3()
+        {
+            dynamic file = new ExpandoObject();
+            file.NickName = "";
+            Response r = client.DoPostAsync("users", file).Result;
+            Assert.AreEqual(Forbidden, r.Status);
+
+            
+        }
+
+        /// <summary>
+        /// Creates a user with a null name
+        /// </summary>
+        [TestMethod]
+        public void CreateUserTest4()
+        {
+            dynamic file = new ExpandoObject();
+            file.NickName = null;
+            Response r = client.DoPostAsync("users", file).Result;
+            Assert.AreEqual(Forbidden, r.Status);
+        }
+
+        /// <summary>
+        /// Creates user with whitespace only for name
+        /// </summary>
+        [TestMethod]
+        public void CreateUserTest5()
+        {
+            dynamic file = new ExpandoObject();
+            file.NickName = "     ";
+            Response r = client.DoPostAsync("users", file).Result;
+            Assert.AreEqual(Forbidden, r.Status);
+        }
+
+        [TestMethod]
+        public void JoinGameTest1()
+        {
+            dynamic file1 = new ExpandoObject();
+            file1.NickName = "Kanye";
+            Response r = client.DoPostAsync("users", file1).Result;
+            dynamic file2 = new ExpandoObject();
+            file2.UserToken = r.Data;
+            file2.TimeLimit = 30;
+            r = client.DoPostAsync("games", file2).Result;
+            Assert.AreEqual(Accepted, r.Status);
         }
     }
 }
