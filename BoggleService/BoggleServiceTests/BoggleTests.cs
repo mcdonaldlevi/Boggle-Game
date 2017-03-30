@@ -95,7 +95,8 @@ namespace Boggle
             file.Nickname = "Sally";
             Response r = client.DoPostAsync("users", file).Result;
             Assert.AreEqual(Created, r.Status);
-            Assert.AreEqual(r.Data.Length, 36);
+            string usertoken = r.Data["UserToken"];
+            Assert.AreEqual(usertoken.Length, 36);
         }
 
         /// <summary>
