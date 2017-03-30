@@ -23,10 +23,10 @@ namespace Boggle
         string WordAtIndex(int n);
 
         [WebInvoke(Method = "POST", UriTemplate = "/users")]
-        string CreateUser(UserInfo user);
+        UserID CreateUser(UserInfo user);
 
         [WebInvoke(Method = "POST", UriTemplate = "/games")]
-        string JoinGame(JoinGameInfo user);
+        GameIDInfo JoinGame(JoinGameInfo user);
 
         //[WebInvoke(Method = "PUT", UriTemplate = "/games")]
         //string CancelJoinRequest(UserInfo user);

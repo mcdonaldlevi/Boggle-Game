@@ -8,50 +8,7 @@ using static System.Net.HttpStatusCode;
 
 namespace Boggle
 {
-    public class GameStatusInfo
-    {
-        public string moreInfo { get; set; }
-    }
-    public class UserIDandPlayWord
-    {
-        public string UserToken { get; set; }
-        public string Word { get; set; }
-    }
-    public class UserID
-    {
-        public string UserToken { get; set; }
-    }
-    public class UserInfo
-    {
-        public string Nickname { get; set; }
-    }
-    public class JoinGameInfo
-    {
-        public string UserToken { get; set; }
-        public int TimeLimit { get; set; }
-    }
-    public class GameInfo
-    {
-        public string GameId { get; set; }
-        public string GameState { get; set; }
-        public string Board { get; set; }
-        public int TimeLimit { get; set; }
-        public int TimeLeft { get; set; }
-        public Player Player1 { get; set; }
-        public Player Player2 { get; set; }
-    }
-    public class Player
-    {
-        public string UserToken { get; set; }
-        public string Nickname { get;set; }
-        public int Score { get; set; }
-        public List<WordPlayed> WordsPlayed { get; set; }
-    }
-    public class WordPlayed
-    {
-        public string Word { get; set; }
-        public int Score { get; set; }
-    }
+    
     public class BoggleService : IBoggleService
     {
         private static Dictionary<String, GameInfo> games = new Dictionary<string, GameInfo>();
@@ -111,7 +68,7 @@ namespace Boggle
                 return null;
             }
         }
-        public string CreateUser(UserInfo user)
+        public UserID CreateUser(UserInfo user)
         {
             lock (sync)
             {
@@ -129,11 +86,12 @@ namespace Boggle
                     string userID = Guid.NewGuid().ToString();
                     users.Add(userID, user);
                     SetStatus(Created);
-                    return userID;
+                    UserID returnUser = new UserID { UserToken = userID };
+                    return returnUser;
                 }
             }
         }
-        public string JoinGame(JoinGameInfo user)
+        public GameIDInfo JoinGame(JoinGameInfo user)
         {
             lock (sync)
             {
@@ -153,7 +111,8 @@ namespace Boggle
                     pendingGame.Player1.Nickname = users[user.UserToken].Nickname;
                     string gameID = Guid.NewGuid().ToString();
                     SetStatus(Created);
-                    return gameID;
+                    GameIDInfo returnGame = new GameIDInfo { GameID = int.Parse(gameID) };
+                    return returnGame;
                 }
                 if (pendingGame.Player1.UserToken == user.UserToken)
                 {
@@ -169,7 +128,8 @@ namespace Boggle
                     SetStatus(Accepted);
                     string gameID = pendingGame.GameId;
                     pendingGame = null;
-                    return gameID;
+                    GameIDInfo returnGame = new GameIDInfo { GameID = int.Parse(gameID) };
+                    return returnGame;
                 }
             }
 
@@ -189,14 +149,14 @@ namespace Boggle
                 }
             }
         }
-        public int PlayWord(UserIDandPlayWord user, string gameID)
+        public ScoreInfo PlayWord(UserIDandPlayWord user, string gameID)
         {
             lock (sync)
             {
                 if (user.UserToken == null || user.UserToken.Trim().Length == 0 || user.Word == null || user.Word.Trim().Length == 0)
                 {
                     SetStatus(Forbidden);
-                    return 0;
+                    return null;
                 }
                 else
                 {
@@ -207,18 +167,20 @@ namespace Boggle
                         {
                             WordPlayed wordScore = new WordPlayed { Word = user.Word, Score = getScore(user.Word) };
                             games[gameID].Player1.WordsPlayed.Add(wordScore);
-                            return getScore(user.Word);
+                            ScoreInfo returnscore = new ScoreInfo { Score = getScore(user.Word) };
+                            return returnscore;
                         }
                         else if(games[gameID].Player2.UserToken == user.UserToken)
                         {
                             WordPlayed wordScore = new WordPlayed { Word = user.Word, Score = getScore(user.Word) };
                             games[gameID].Player2.WordsPlayed.Add(wordScore);
-                            return getScore(user.Word);
+                            ScoreInfo returnscore = new ScoreInfo { Score = getScore(user.Word) };
+                            return returnscore;
                         }
                         else
                         {
                             SetStatus(Forbidden);
-                            return 0;
+                            return null;
                         }
                     }
                     else
@@ -227,18 +189,20 @@ namespace Boggle
                         {
                             WordPlayed wordScore = new WordPlayed { Word = user.Word, Score = -1 };
                             games[gameID].Player1.WordsPlayed.Add(wordScore);
-                            return -1;
+                            ScoreInfo returnscore = new ScoreInfo { Score = -1 };
+                            return returnscore;
                         }
                         else if (games[gameID].Player2.UserToken == user.UserToken)
                         {
                             WordPlayed wordScore = new WordPlayed { Word = user.Word, Score = -1 };
                             games[gameID].Player2.WordsPlayed.Add(wordScore);
-                            return -1;
+                            ScoreInfo returnscore = new ScoreInfo { Score = -1 };
+                            return returnscore;
                         }
                         else
                         {
                             SetStatus(Forbidden);
-                            return 0;
+                            return null;
                         }
                     }
                 }
