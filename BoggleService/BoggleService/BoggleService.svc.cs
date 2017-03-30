@@ -8,6 +8,10 @@ using static System.Net.HttpStatusCode;
 
 namespace Boggle
 {
+    public class GameStatusInfo
+    {
+        public string moreInfo { get; set; }
+    }
     public class UserIDandPlayWord
     {
         public string UserToken { get; set; }
@@ -238,6 +242,24 @@ namespace Boggle
                         }
                     }
                 }
+            }
+        }
+        private GameInfo GameStatus(GameStatusInfo moreInfo, string gameID)
+        {
+            if(pendingGame.GameId == gameID)
+            {
+                SetStatus(OK);
+                return pendingGame;
+            }
+            else if(games.ContainsKey(gameID))
+            {
+                SetStatus(OK);
+                return games[gameID];
+            }
+            else
+            {
+                SetStatus(Forbidden);
+                return null;
             }
         }
         private int getScore(string word)
