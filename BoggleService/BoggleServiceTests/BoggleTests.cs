@@ -241,14 +241,14 @@ namespace Boggle
 
             //Joins game
             dynamic file1 = new ExpandoObject();
-            file1.UserToken = r1.Data;
+            file1.UserToken = r1.Data["UserToken"].ToString();
             file1.TimeLimit = 60;
             Response r2 = client.DoPostAsync("games", file1).Result;
 
             //Sends cancel request
             dynamic file2 = new ExpandoObject();
-            file2.UserToken = r1.Data;
-            Response r3 = client.DoPutAsync("games", file2).Result;
+            file2.UserToken = r1.Data["UserToken"];
+            Response r3 = client.DoPutAsync(file2, "games").Result;
             Assert.AreEqual(OK, r3.Status);
         }
 

@@ -23,7 +23,7 @@ namespace Boggle
         public string Nickname { get; set; }
     }
     public class JoinGameInfo
-    {
+    {        
         public string UserToken { get; set; }
         public int TimeLimit { get; set; }
     }
