@@ -111,7 +111,7 @@ namespace Boggle
             Response r2 = client.DoPostAsync("users", file).Result;
             Assert.AreEqual(Created, r1.Status);
             Assert.AreEqual(Created, r2.Status);
-            Assert.AreNotEqual(r1.Data, r2.Data);
+            Assert.AreNotEqual(r1.Data["UserToken"], r2.Data["UserToken"]);
         }
 
         /// <summary>
@@ -124,8 +124,6 @@ namespace Boggle
             file.Nickname = "";
             Response r = client.DoPostAsync("users", file).Result;
             Assert.AreEqual(Forbidden, r.Status);
-
-
         }
 
         /// <summary>
@@ -163,29 +161,29 @@ namespace Boggle
             //Creates first user
             dynamic user1 = new ExpandoObject();
             user1.Nickname = "Kanye";
-            Response p1_token = client.DoPostAsync("users", user1).Result;
+            String p1_token = client.DoPostAsync("users", user1).Result.Data["UserToken"];
 
             //Creates second user
             dynamic user2 = new ExpandoObject();
             user2.Nickname = "Ajay";
-            Response p2_token = client.DoPostAsync("users", user2).Result;
+            String p2_token = client.DoPostAsync("users", user2).Result.Data["UserToken"];
 
             //Player 1 joins game
             dynamic file1 = new ExpandoObject();
-            file1.UserToken = p1_token.Data;
+            file1.UserToken = p1_token;
             file1.TimeLimit = 30;
             Response r1 = client.DoPostAsync("games", file1).Result;
             Assert.AreEqual(Accepted, r1.Status);
 
             //Player 2 joins game
             dynamic file2 = new ExpandoObject();
-            file2.UserToken = p2_token.Data;
+            file2.UserToken = p2_token;
             file2.TimeLimit = 30;
             Response r2 = client.DoPostAsync("games", file2).Result;
             Assert.AreEqual(Created, r2.Status);
 
             //Asserts that the two players have the same game id
-            Assert.AreEqual(r1.Data, r2.Data);
+            Assert.AreEqual(r1.Data["GameID"], r2.Data["GameID"]);
         }
 
         /// <summary>
@@ -217,7 +215,7 @@ namespace Boggle
             Response r1 = client.DoPostAsync("users", user1).Result;
 
             dynamic file1 = new ExpandoObject();
-            file1.UserToken = r1.Data;
+            file1.UserToken = r1.Data["UserToken"];
             file1.TimeLimit = 60;
 
             //Sends the same user token twice
@@ -241,13 +239,13 @@ namespace Boggle
 
             //Joins game
             dynamic file1 = new ExpandoObject();
-            file1.UserToken = r1.Data;
+            file1.UserToken = r1.Data["UserToken"];
             file1.TimeLimit = 60;
             Response r2 = client.DoPostAsync("games", file1).Result;
 
             //Sends cancel request
             dynamic file2 = new ExpandoObject();
-            file2.UserToken = r1.Data;
+            file2.UserToken = r1.Data["UserToken"];
             Response r3 = client.DoPutAsync(file2, "games").Result;
             Assert.AreEqual(OK, r3.Status);
         }
@@ -265,7 +263,7 @@ namespace Boggle
 
             //Sends cancel request
             dynamic file1 = new ExpandoObject();
-            file1.UserToken = r1.Data;
+            file1.UserToken = r1.Data["UserToken"];
             Response r2 = client.DoPutAsync(file1, "games").Result;
             Assert.AreEqual(Forbidden, r2.Status);
         }
@@ -428,30 +426,30 @@ namespace Boggle
 
             //Joins game
             dynamic file1 = new ExpandoObject();
-            file1.UserToken = r1.Data;
+            file1.UserToken = r1.Data["UserToken"];
             file1.TimeLimit = 10;
             Response r3 = client.DoPostAsync("games", file1).Result;
             dynamic file2 = new ExpandoObject();
-            file2.UserToken = r2.Data;
+            file2.UserToken = r2.Data["UserToken"];
             file2.TimeLimit = 55;
             Response r4 = client.DoPostAsync("games", file2).Result;
 
             //Cancels game
             dynamic file3 = new ExpandoObject();
-            file1.UserToken = r3.Data;
+            file1.UserToken = r1.Data["UserToken"];
             Response r5 = client.DoPutAsync(file1, "games").Result;
             Assert.AreEqual(Forbidden, r5.Status);
 
             //Sends play word command after game is already cancelled
             dynamic file4 = new ExpandoObject();
-            file4.UserToken = r3.Data;
+            file4.UserToken = r1.Data["UserToken"];
             file4.Word = "noted";
             Response r6 = client.DoPutAsync(file4, "games/" + r3.Data);
             Assert.AreEqual(Conflict, r6.Status);
 
             //Sends play word command after other user cancelled game
             dynamic file5 = new ExpandoObject();
-            file5.UserToken = r4.Data;
+            file5.UserToken = r2.Data["UserToken"];
             file5.Word = "fish";
             Response r7 = client.DoPutAsync(file5, "games/" + r4.Data);
             Assert.AreEqual(Conflict, r7.Status);
@@ -595,14 +593,14 @@ namespace Boggle
 
             //Joins game
             dynamic file1 = new ExpandoObject();
-            file1.UserToken = r1.Data;
+            file1.UserToken = r1.Data["UserToken"];
             file1.TimeLimit = 40;
             Response r2 = client.DoPostAsync("games", file1).Result;
 
             //Sends game status request
-            Response r3 = client.DoGetAsync("games/" + r2.Status).Result;
+            Response r3 = client.DoGetAsync("games/" + r2.Data["GameID"]).Result;
             Assert.AreEqual(OK, r3.Status);
-            Assert.AreEqual("Pending", r3.Data);
+            Assert.AreEqual("pending", r3.Data["GameState"].ToString());
         }
     }
 }
