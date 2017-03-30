@@ -29,12 +29,12 @@ namespace Boggle
         GameIDInfo JoinGame(JoinGameInfo user);
 
         //[WebInvoke(Method = "PUT", UriTemplate = "/games")]
-        //string CancelJoinRequest(UserInfo user);
+        //string CancelJoinRequest(UserID user);
 
         //[WebInvoke(Method = "PUT", UriTemplate = "/games/{GameID}")]
-        //string PlayWord(UserInfo user);
+        //string PlayWord(UserIDandPlayWord user, string gameID);
 
         //[WebInvoke(Method = "GET", UriTemplate = "/games/{GameID}")]
-        //string GameStatus(UserInfo user);
+        //string GameStatus(GameStatusInfo moreInfo, string gameID);
     }
 }
