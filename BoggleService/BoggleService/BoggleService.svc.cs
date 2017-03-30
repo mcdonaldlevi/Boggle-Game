@@ -23,7 +23,7 @@ namespace Boggle
     }
     public class UserInfo
     {
-        public string NickName { get; set; }
+        public string Nickname { get; set; }
     }
     public class JoinGameInfo
     {
@@ -115,11 +115,11 @@ namespace Boggle
         {
             lock (sync)
             {
-                if (user.NickName == "stall")
+                if (user.Nickname == "stall")
                 {
                     Thread.Sleep(5000);
                 }
-                if (user.NickName == null || user.NickName.Trim().Length == 0)
+                if (user.Nickname == null || user.Nickname.Trim().Length == 0)
                 {
                     SetStatus(Forbidden);
                     return null;
@@ -150,7 +150,7 @@ namespace Boggle
                     pendingGame.GameState = "pending";
                     BoggleBoard board = new BoggleBoard();
                     pendingGame.Board = board.ToString();
-                    pendingGame.Player1.Nickname = users[user.UserToken].NickName;
+                    pendingGame.Player1.Nickname = users[user.UserToken].Nickname;
                     string gameID = Guid.NewGuid().ToString();
                     SetStatus(Created);
                     return gameID;
@@ -164,7 +164,7 @@ namespace Boggle
                 {
                     pendingGame.Player2.UserToken = user.UserToken;
                     pendingGame.GameState = "active";
-                    pendingGame.Player2.Nickname = users[user.UserToken].NickName;
+                    pendingGame.Player2.Nickname = users[user.UserToken].Nickname;
                     games.Add(pendingGame.GameId, pendingGame);
                     SetStatus(Accepted);
                     string gameID = pendingGame.GameId;
