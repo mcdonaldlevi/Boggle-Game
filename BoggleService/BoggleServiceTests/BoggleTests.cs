@@ -602,5 +602,54 @@ namespace Boggle
             Assert.AreEqual(OK, r3.Status);
             Assert.AreEqual("pending", r3.Data["GameState"].ToString());
         }
+
+        [TestMethod]
+        public void GameStatusTest3()
+        {
+            //Creates user1
+            dynamic user1 = new ExpandoObject();
+            user1.Nickname = "Ron";
+            Response r1 = client.DoPostAsync("users", user1).Result;
+
+            //Creates user2
+            dynamic user2 = new ExpandoObject();
+            user2.Nickname = "Jill";
+            Response r2 = client.DoPostAsync("users", user2).Result;
+
+            //Joins game
+            dynamic file1 = new ExpandoObject();
+            file1.UserToken = r1.Data["UserToken"];
+            file1.TimeLimit = 45;
+            Response r3 = client.DoPostAsync("games", file1).Result;
+            dynamic file2 = new ExpandoObject();
+            file2.UserToken = r2.Data["UserToken"];
+            file2.TimeLimit = 25;
+            Response r4 = client.DoPostAsync("games", file2).Result;
+
+            //Sends word to game
+            dynamic file3 = new ExpandoObject();
+            file3.UserToken = r2.Data["UserToken"];
+            file3.Word = "past";
+            Response r5 = client.DoPutAsync(file3, "games/" + r3.Data);
+
+            //Gets game status while active
+            Response r6 = client.DoGetAsync("games/" + r2.Data["GameID"], "yes").Result;
+            Assert.AreEqual(OK, r3.Status);
+            Assert.AreEqual("active", r5.Data["GameState"].ToString());
+            //Asserts 16 letters given
+            Assert.AreEqual(r6.Data["Board"].ToString(), 16);
+            //Asserts time limit is average of two given
+            Assert.AreEqual(r6.Data["TimeLimit"], 35);
+            //Asserts time left is between 25 and 45
+            Assert.AreEqual(r6.Data["TimeLeft"], 35, 9);
+            //Asserts name of player 1
+            Assert.AreEqual(r6.Data["Player1"]["Nickname"], "Ron");
+            //Asserts name of player 2
+            Assert.AreEqual(r6.Data["Player2"]["Nickname"], "Jill");
+            //Asserts score of player 1
+            Assert.AreEqual(r6.Data["Player1"]["Score"], 0);
+            //Asserts score of player 2
+            Assert.AreEqual(r6.Data["Player1"]["Score"], 1);
+        }
     }
 }
