@@ -234,7 +234,7 @@ namespace Boggle
             else if(pendingGame.GameState == "inactive" && games.ContainsKey(gameID))
             {
                 SetStatus(OK);
-                games[gameID].TimeLeft = (games[gameID].TimeLimit - (int)games[gameID].myStopWatch.ElapsedMilliseconds) / 1000;
+                games[gameID].TimeLeft = games[gameID].TimeLimit - ((int)games[gameID].myStopWatch.ElapsedMilliseconds) / 1000;
                 return games[gameID];
             }
             else

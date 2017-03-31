@@ -50,7 +50,7 @@ namespace Boggle
         {
             GameId = copyFrom.GameId ;
             Board = copyFrom.Board;
-            aTimer = copyFrom.aTimer;
+            aTimer = new System.Timers.Timer();
             GameState = copyFrom.GameState;
             Player1 = copyFrom.Player1;
             Player2 = copyFrom.Player2;
