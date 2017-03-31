@@ -282,7 +282,7 @@ namespace Boggle
 
             //Joins game
             dynamic file1 = new ExpandoObject();
-            file1.UserToken = r1.Data;
+            file1.UserToken = r1.Data["UserToken"];
             file1.TimeLimit = 45;
             Response r2 = client.DoPostAsync("games", file1).Result;
 
@@ -323,11 +323,11 @@ namespace Boggle
             dynamic file3 = new ExpandoObject();
             file3.UserToken = r1.Data["UserToken"];
             file3.Word = "";
-            Response r5 = client.DoPutAsync(file3, "games/" + r3.Data["GameID"]);
+            Response r5 = client.DoPutAsync(file3, "games/" + r3.Data["GameID"]).Result;
             Assert.AreEqual(Forbidden, r5.Status);
             dynamic file4 = new ExpandoObject();
             file4.UserToken = r2.Data["UserToken"];
-            Response r6 = client.DoPutAsync(file4, "games/" + r4.Data["GameID"]);
+            Response r6 = client.DoPutAsync(file4, "games/" + r4.Data["GameID"]).Result;
             Assert.AreEqual(Forbidden, r6.Status);
         }
 
@@ -388,11 +388,11 @@ namespace Boggle
 
             //Joins game
             dynamic file1 = new ExpandoObject();
-            file1.UserToken = r1.Data;
+            file1.UserToken = r1.Data["UserToken"];
             file1.TimeLimit = 44;
             Response r3 = client.DoPostAsync("games", file1).Result;
             dynamic file2 = new ExpandoObject();
-            file2.UserToken = r2.Data;
+            file2.UserToken = r2.Data["UserToken"];
             file2.TimeLimit = 63;
             Response r4 = client.DoPostAsync("games", file2).Result;
 
@@ -475,24 +475,24 @@ namespace Boggle
 
             //Joins game
             dynamic file1 = new ExpandoObject();
-            file1.UserToken = r1.Data;
+            file1.UserToken = r1.Data["UserToken"];
             file1.TimeLimit = 70;
             Response r3 = client.DoPostAsync("games", file1).Result;
             dynamic file2 = new ExpandoObject();
-            file2.UserToken = r2.Data;
+            file2.UserToken = r2.Data["UserToken"];
             file2.TimeLimit = 32;
             Response r4 = client.DoPostAsync("games", file2).Result;
 
             //Sends correct play word command
             dynamic file4 = new ExpandoObject();
-            file4.UserToken = r3.Data;
+            file4.UserToken = r3.Data["UserToken"];
             file4.Word = "noted";
             Response r6 = client.DoPutAsync(file4, "games/" + r3.Data).Result;
             Assert.AreEqual(r6.Data, 1);
 
             //Sends incorrect play word command
             dynamic file5 = new ExpandoObject();
-            file5.UserToken = r3.Data;
+            file5.UserToken = r3.Data["UserToken"];
             file5.Word = "einvc";
             Response r7 = client.DoPutAsync(file5, "games/" + r3.Data).Result;
             Assert.AreEqual(r7.Data, 0);
@@ -516,17 +516,17 @@ namespace Boggle
 
             //Joins game
             dynamic file1 = new ExpandoObject();
-            file1.UserToken = r1.Data;
+            file1.UserToken = r1.Data["UserToken"];
             file1.TimeLimit = 44;
             Response r3 = client.DoPostAsync("games", file1).Result;
             dynamic file2 = new ExpandoObject();
-            file2.UserToken = r2.Data;
+            file2.UserToken = r2.Data["UserToken"];
             file2.TimeLimit = 2;
             Response r4 = client.DoPostAsync("games", file2).Result;
 
             //Sends correct play word command before trim
             dynamic file4 = new ExpandoObject();
-            file4.UserToken = r3.Data;
+            file4.UserToken = r3.Data["UserToken"];
             file4.Word = "EnD iN g";
             Response r6 = client.DoPutAsync(file4, "games/" + r3.Data).Result;
             Assert.AreEqual(r6.Data, 1);
@@ -635,7 +635,7 @@ namespace Boggle
             dynamic file3 = new ExpandoObject();
             file3.UserToken = r2.Data["UserToken"];
             file3.Word = "past";
-            Response r5 = client.DoPutAsync(file3, "games/" + r3.Data["GameID"]);
+            Response r5 = client.DoPutAsync(file3, "games/" + r3.Data["GameID"]).Result;
 
             //Gets game status while active
             Response r6 = client.DoGetAsync("games/" + r2.Data["GameID"], "yes").Result;
