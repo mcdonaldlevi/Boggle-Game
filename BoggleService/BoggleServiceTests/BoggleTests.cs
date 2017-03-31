@@ -4,6 +4,7 @@ using static System.Net.HttpStatusCode;
 using System.Diagnostics;
 using Newtonsoft.Json;
 using System.Dynamic;
+using System.Threading;
 
 namespace Boggle
 {
@@ -603,6 +604,9 @@ namespace Boggle
             Assert.AreEqual("pending", r3.Data["GameState"].ToString());
         }
 
+        /// <summary>
+        /// Tries to get game status when game is active
+        /// </summary>
         [TestMethod]
         public void GameStatusTest3()
         {
@@ -635,7 +639,7 @@ namespace Boggle
             //Gets game status while active
             Response r6 = client.DoGetAsync("games/" + r2.Data["GameID"], "yes").Result;
             Assert.AreEqual(OK, r3.Status);
-            Assert.AreEqual("active", r5.Data["GameState"].ToString());
+            Assert.AreEqual("active", r6.Data["GameState"].ToString());
             //Asserts 16 letters given
             Assert.AreEqual(r6.Data["Board"].ToString(), 16);
             //Asserts time limit is average of two given
@@ -650,6 +654,94 @@ namespace Boggle
             Assert.AreEqual(r6.Data["Player1"]["Score"], 0);
             //Asserts score of player 2
             Assert.AreEqual(r6.Data["Player1"]["Score"], 1);
+        }
+
+        /// <summary>
+        /// Tries to get brief game status when game is active
+        /// </summary>
+        [TestMethod]
+        public void GamiStatusTest4()
+        {
+            //Creates user1
+            dynamic user1 = new ExpandoObject();
+            user1.Nickname = "Conner";
+            Response r1 = client.DoPostAsync("users", user1).Result;
+
+            //Creates user2
+            dynamic user2 = new ExpandoObject();
+            user2.Nickname = "Mohammed";
+            Response r2 = client.DoPostAsync("users", user2).Result;
+
+            //Joins game
+            dynamic file1 = new ExpandoObject();
+            file1.UserToken = r1.Data["UserToken"];
+            file1.TimeLimit = 1000;
+            Response r3 = client.DoPostAsync("games", file1).Result;
+            dynamic file2 = new ExpandoObject();
+            file2.UserToken = r2.Data["UserToken"];
+            file2.TimeLimit = 500;
+            Response r4 = client.DoPostAsync("games", file2).Result;
+
+            //Gets game status while active
+            Response r5 = client.DoGetAsync("games/" + r2.Data["GameID"]).Result;
+            Assert.AreEqual(OK, r3.Status);
+            Assert.AreEqual("active", r5.Data["GameState"].ToString());
+            //Asserts time left is between 740 and 760
+            Assert.AreEqual(r5.Data["TimeLeft"], 750, 10);
+            //Asserts name of player 1
+            Assert.AreEqual(r5.Data["Player1"]["Nickname"], "Conner");
+            //Asserts name of player 2
+            Assert.AreEqual(r5.Data["Player2"]["Nickname"], "Mohammed");
+            //Asserts score of player 1
+            Assert.AreEqual(r5.Data["Player1"]["Score"], 0);
+            //Asserts score of player 2
+            Assert.AreEqual(r5.Data["Player1"]["Score"], 0);
+        }
+
+        [TestMethod]
+        public void GameStatusTest5()
+        {
+            //Creates user1
+            dynamic user1 = new ExpandoObject();
+            user1.Nickname = "Ashley";
+            Response r1 = client.DoPostAsync("users", user1).Result;
+
+            //Creates user2
+            dynamic user2 = new ExpandoObject();
+            user2.Nickname = "Peter";
+            Response r2 = client.DoPostAsync("users", user2).Result;
+
+            //Joins game
+            dynamic file1 = new ExpandoObject();
+            file1.UserToken = r1.Data["UserToken"];
+            file1.TimeLimit = 1;
+            Response r3 = client.DoPostAsync("games", file1).Result;
+            dynamic file2 = new ExpandoObject();
+            file2.UserToken = r2.Data["UserToken"];
+            file2.TimeLimit = 1;
+            Response r4 = client.DoPostAsync("games", file2).Result;
+
+            Thread.Sleep(1000);
+
+            //Gets game status when completed
+            Response r5  = client.DoGetAsync("games/" + r2.Data["GameID"]).Result;
+            Assert.AreEqual(OK, r3.Status);
+            Assert.AreEqual("active", r5.Data["GameState"].ToString());
+
+            //Asserts 16 letters given
+            Assert.AreEqual(r5.Data["Board"].ToString(), 16);
+            //Asserts time limit is average of two given
+            Assert.AreEqual(r5.Data["TimeLimit"], 35);
+            //Asserts time left is between 25 and 45
+            Assert.AreEqual(r5.Data["TimeLeft"], 35, 9);
+            //Asserts name of player 1
+            Assert.AreEqual(r5.Data["Player1"]["Nickname"], "Ron");
+            //Asserts name of player 2
+            Assert.AreEqual(r5.Data["Player2"]["Nickname"], "Jill");
+            //Asserts score of player 1
+            Assert.AreEqual(r5.Data["Player1"]["Score"], 0);
+            //Asserts score of player 2
+            Assert.AreEqual(r5.Data["Player1"]["Score"], 1);
         }
     }
 }
