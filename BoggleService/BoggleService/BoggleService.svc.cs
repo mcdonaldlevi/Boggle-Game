@@ -132,7 +132,7 @@ namespace Boggle
                     GameInfo newGame = new GameInfo(pendingGame);
                     newGame.aTimer.Interval = pendingGame.TimeLimit * 1000;
                     newGame.aTimer.Enabled = true;
-                    newGame.timeLeft.Start();                   
+                    newGame.myStopWatch.Start();                   
                     newGame.GameState = "active";
                     games.Add(newGame.GameId, newGame);
                     SetStatus(Created);
@@ -234,6 +234,7 @@ namespace Boggle
             else if(pendingGame.GameState == "inactive" && games.ContainsKey(gameID))
             {
                 SetStatus(OK);
+                games[gameID].TimeLeft = (games[gameID].TimeLimit - (int)games[gameID].myStopWatch.ElapsedMilliseconds) / 1000;
                 return games[gameID];
             }
             else

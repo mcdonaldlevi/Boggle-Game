@@ -35,12 +35,10 @@ namespace Boggle
         public string Board { get; set; }
         public int TimeLimit { get; set; }
         public int TimeLeft
-        {
-           get { return (TimeLimit - (int)timeLeft.ElapsedTicks) / 1000; }
-        }
+        { get; set;}
         public Player Player1 { get; set; }
         public Player Player2 { get; set; }
-        public Stopwatch timeLeft = new Stopwatch();
+        public Stopwatch myStopWatch = new Stopwatch();
         public System.Timers.Timer aTimer = new System.Timers.Timer();
         public GameInfo() 
         {
@@ -57,7 +55,7 @@ namespace Boggle
             Player1 = copyFrom.Player1;
             Player2 = copyFrom.Player2;
             TimeLimit = copyFrom.TimeLimit;
-            timeLeft = copyFrom.timeLeft;
+            myStopWatch = copyFrom.myStopWatch;
             aTimer.Elapsed += ATimer_Elapsed;
             aTimer.Enabled = false;
         }
@@ -65,7 +63,7 @@ namespace Boggle
         private void ATimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
             GameState = "completed";
-            timeLeft.Stop();
+            myStopWatch.Stop();
         }
     }
     public class Player

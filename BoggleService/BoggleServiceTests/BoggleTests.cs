@@ -344,28 +344,28 @@ namespace Boggle
             //Creates User 2
             dynamic user2 = new ExpandoObject();
             user2.Nickname = "Sam";
-            Response r2 = client.DoPostAsync("user", user2).Result;
+            Response r2 = client.DoPostAsync("users", user2).Result;
 
             //Joins game
             dynamic file1 = new ExpandoObject();
-            file1.UserToken = r1.Data;
+            file1.UserToken = r1.Data["UserToken"];
             file1.TimeLimit = 25;
             Response r3 = client.DoPostAsync("games", file1).Result;
             dynamic file2 = new ExpandoObject();
-            file2.UserToken = r2.Data;
+            file2.UserToken = r2.Data["UserToken"];
             file2.TimeLimit = 20;
             Response r4 = client.DoPostAsync("games", file2).Result;
 
             //Sends play word command when string is empty after trim
             dynamic file3 = new ExpandoObject();
-            file3.UserToken = r1.Data;
+            file3.UserToken = r1.Data["UserToken"];
             file3.Word = "    ";
-            Response r5 = client.DoPutAsync(file3, "games/" + r3.Data).Result;
+            Response r5 = client.DoPutAsync(file3, "games/" + r3.Data["GameID"]).Result;
             Assert.AreEqual(Forbidden, r5.Status);
             dynamic file4 = new ExpandoObject();
-            file4.UserToken = r2.Data;
+            file4.UserToken = r2.Data["UserToken"];
             file4.Word = "";
-            Response r6 = client.DoPutAsync(file4, "games/" + r4.Data).Result;
+            Response r6 = client.DoPutAsync(file4, "games/" + r4.Data["GameID"]).Result;
             Assert.AreEqual(Forbidden, r6.Status);
         }
 
