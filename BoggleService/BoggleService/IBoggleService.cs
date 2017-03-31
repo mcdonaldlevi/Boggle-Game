@@ -31,10 +31,10 @@ namespace Boggle
         [WebInvoke(Method = "PUT", UriTemplate = "/games")]
         void CancelJoinRequest(UserID user);
 
-        [WebInvoke(Method = "PUT", UriTemplate = "/games/{GameID}?Brief={brief}")]
-        ScoreInfo PlayWord(UserIDandPlayWord user, string brief);
+        [WebInvoke(Method = "PUT", UriTemplate = "/games/{GameID}")]
+        ScoreInfo PlayWord(UserIDandPlayWord user, string GameID);
 
-        //[WebInvoke(Method = "GET", UriTemplate = "/games/{GameID}")]
-        //GameInfo GameStatus(GameStatusInfo moreInfo, string gameID);
+        [WebGet(UriTemplate = "/games/{GameID}?Brief={brief}")]
+        GameInfo GameStatus(string brief, string gameID);
     }
 }

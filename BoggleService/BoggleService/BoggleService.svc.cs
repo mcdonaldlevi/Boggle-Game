@@ -105,6 +105,7 @@ namespace Boggle
                 {
                     pendingGame = new GameInfo();
                     pendingGame.Player1 = new Player();
+                    pendingGame.Player1.WordsPlayed = new List<WordPlayed>();
                     pendingGame.Player1.UserToken = user.UserToken;
                     pendingGame.TimeLimit = user.TimeLimit;
                     pendingGame.GameState = "pending";
@@ -125,8 +126,10 @@ namespace Boggle
                 else
                 {
                     pendingGame.Player2 = new Player { UserToken = user.UserToken };
+                    pendingGame.Player2.WordsPlayed = new List<WordPlayed>();
                     pendingGame.GameState = "active";
                     pendingGame.Player2.Nickname = users[user.UserToken].Nickname;
+                    pendingGame.TimeLimit = (pendingGame.TimeLimit + user.TimeLimit)/ 2;
                     GameInfo newGame = pendingGame;
                     games.Add(pendingGame.GameId, newGame);
                     SetStatus(Created);
@@ -212,7 +215,7 @@ namespace Boggle
                 }
             }
         }
-        public GameInfo GameStatus(GameStatusInfo moreInfo, string gameID)
+        public GameInfo GameStatus(string brief, string gameID)
         {
             if(pendingGame.GameId == gameID)
             {
