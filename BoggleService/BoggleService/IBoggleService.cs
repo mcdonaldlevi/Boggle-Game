@@ -28,13 +28,13 @@ namespace Boggle
         [WebInvoke(Method = "POST", UriTemplate = "/games")]
         GameIDInfo JoinGame(JoinGameInfo user);
 
-        //[WebInvoke(Method = "PUT", UriTemplate = "/games")]
-        //string CancelJoinRequest(UserID user);
+        [WebInvoke(Method = "PUT", UriTemplate = "/games")]
+        void CancelJoinRequest(UserID user);
 
-        //[WebInvoke(Method = "PUT", UriTemplate = "/games/{GameID}")]
-        //string PlayWord(UserIDandPlayWord user, string gameID);
+        [WebInvoke(Method = "PUT", UriTemplate = "/games/{GameID}")]
+        ScoreInfo PlayWord(UserIDandPlayWord user, string gameID);
 
         //[WebInvoke(Method = "GET", UriTemplate = "/games/{GameID}")]
-        //string GameStatus(GameStatusInfo moreInfo, string gameID);
+        //GameInfo GameStatus(GameStatusInfo moreInfo, string gameID);
     }
 }

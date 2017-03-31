@@ -197,7 +197,7 @@ namespace Boggle
             Response p1_token = client.DoPostAsync("users", user1).Result;
 
             dynamic file1 = new ExpandoObject();
-            file1.UserToken = "this token iz legit lulz";
+            file1.UserToken = null;
             file1.TimeLimit = 30;
             Response r1 = client.DoPostAsync("games", file1).Result;
             Assert.AreEqual(Forbidden, r1.Status);

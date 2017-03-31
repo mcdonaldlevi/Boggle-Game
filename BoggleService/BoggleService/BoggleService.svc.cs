@@ -12,9 +12,9 @@ namespace Boggle
     public class BoggleService : IBoggleService
     {
         private static Dictionary<String, GameInfo> games = new Dictionary<string, GameInfo>();
-        private static Dictionary<String, UserInfo> users = new Dictionary<String, UserInfo>();
+        private static Dictionary<String, UserInfo> users = new Dictionary<string, UserInfo>();
         private static readonly object sync = new object();
-        private GameInfo pendingGame = null;
+        private static GameInfo pendingGame = new GameInfo { GameState = "inactive" };
         /// <summary>
         /// The most recent call to SetStatus determines the response code used when
         /// an http response is sent.
@@ -101,8 +101,10 @@ namespace Boggle
                     return null;
                 }
 
-                if (pendingGame == null)
+                if (pendingGame.GameState == "inactive" )
                 {
+                    pendingGame = new GameInfo();
+                    pendingGame.Player1 = new Player();
                     pendingGame.Player1.UserToken = user.UserToken;
                     pendingGame.TimeLimit = user.TimeLimit;
                     pendingGame.GameState = "pending";
@@ -110,8 +112,9 @@ namespace Boggle
                     pendingGame.Board = board.ToString();
                     pendingGame.Player1.Nickname = users[user.UserToken].Nickname;
                     string gameID = Guid.NewGuid().ToString();
-                    SetStatus(Created);
-                    GameIDInfo returnGame = new GameIDInfo { GameID = int.Parse(gameID) };
+                    pendingGame.GameId = gameID;
+                    SetStatus(Accepted);
+                    GameIDInfo returnGame = new GameIDInfo { GameID = gameID };
                     return returnGame;
                 }
                 if (pendingGame.Player1.UserToken == user.UserToken)
@@ -121,20 +124,21 @@ namespace Boggle
                 }
                 else
                 {
-                    pendingGame.Player2.UserToken = user.UserToken;
+                    pendingGame.Player2 = new Player { UserToken = user.UserToken };
                     pendingGame.GameState = "active";
                     pendingGame.Player2.Nickname = users[user.UserToken].Nickname;
-                    games.Add(pendingGame.GameId, pendingGame);
-                    SetStatus(Accepted);
+                    GameInfo newGame = pendingGame;
+                    games.Add(pendingGame.GameId, newGame);
+                    SetStatus(Created);
                     string gameID = pendingGame.GameId;
-                    pendingGame = null;
-                    GameIDInfo returnGame = new GameIDInfo { GameID = int.Parse(gameID) };
+                    pendingGame.GameState = "inactive";
+                    GameIDInfo returnGame = new GameIDInfo { GameID = gameID };
                     return returnGame;
                 }
             }
 
         }
-        public void CancelJoinGame(UserID user)
+        public void CancelJoinRequest(UserID user)
         {
             lock (sync)
             {
@@ -144,7 +148,7 @@ namespace Boggle
                 }
                 else
                 {
-                    pendingGame = null;
+                    pendingGame.GameState = "inactive";
                     SetStatus(OK);
                 }
             }
@@ -208,7 +212,7 @@ namespace Boggle
                 }
             }
         }
-        private GameInfo GameStatus(GameStatusInfo moreInfo, string gameID)
+        public GameInfo GameStatus(GameStatusInfo moreInfo, string gameID)
         {
             if(pendingGame.GameId == gameID)
             {
