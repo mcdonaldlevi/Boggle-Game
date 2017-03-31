@@ -321,11 +321,11 @@ namespace Boggle
             //Sends play word command without word played
             dynamic file3 = new ExpandoObject();
             file3.UserToken = r1.Data;
-            Response r5 = client.DoPutAsync(file3, "games/" + r3.Data);
+            Response r5 = client.DoPutAsync(file3, "games/" + r3.Data).Result;
             Assert.AreEqual(Forbidden, r5.Status);
             dynamic file4 = new ExpandoObject();
             file4.UserToken = r2.Data;
-            Response r6 = client.DoPutAsync(file4, "games/" + r4.Data);
+            Response r6 = client.DoPutAsync(file4, "games/" + r4.Data).Result;
             Assert.AreEqual(Forbidden, r6.Status);
         }
 
@@ -359,12 +359,12 @@ namespace Boggle
             dynamic file3 = new ExpandoObject();
             file3.UserToken = r1.Data;
             file3.Word = "    ";
-            Response r5 = client.DoPutAsync(file3, "games/" + r3.Data);
+            Response r5 = client.DoPutAsync(file3, "games/" + r3.Data).Result;
             Assert.AreEqual(Forbidden, r5.Status);
             dynamic file4 = new ExpandoObject();
             file4.UserToken = r2.Data;
             file4.Word = "";
-            Response r6 = client.DoPutAsync(file4, "games/" + r4.Data);
+            Response r6 = client.DoPutAsync(file4, "games/" + r4.Data).Result;
             Assert.AreEqual(Forbidden, r6.Status);
         }
 
@@ -398,13 +398,13 @@ namespace Boggle
             dynamic file3 = new ExpandoObject();
             file3.UserToken = "Fake token";
             file3.Word = "slurp";
-            Response r5 = client.DoPutAsync(file3, "games/" + r3.Data);
+            Response r5 = client.DoPutAsync(file3, "games/" + r3.Data).Result;
             Assert.AreEqual(Forbidden, r5.Status);
 
             //Sends play word command without token
             dynamic file4 = new ExpandoObject();
             file4.Word = "knock";
-            Response r6 = client.DoPutAsync(file4, "games/" + r4.Data);
+            Response r6 = client.DoPutAsync(file4, "games/" + r4.Data).Result;
             Assert.AreEqual(Forbidden, r6.Status);
         }
 
@@ -444,14 +444,14 @@ namespace Boggle
             dynamic file4 = new ExpandoObject();
             file4.UserToken = r1.Data["UserToken"];
             file4.Word = "noted";
-            Response r6 = client.DoPutAsync(file4, "games/" + r3.Data);
+            Response r6 = client.DoPutAsync(file4, "games/" + r3.Data).Result;
             Assert.AreEqual(Conflict, r6.Status);
 
             //Sends play word command after other user cancelled game
             dynamic file5 = new ExpandoObject();
             file5.UserToken = r2.Data["UserToken"];
             file5.Word = "fish";
-            Response r7 = client.DoPutAsync(file5, "games/" + r4.Data);
+            Response r7 = client.DoPutAsync(file5, "games/" + r4.Data).Result;
             Assert.AreEqual(Conflict, r7.Status);
         }
 
@@ -485,14 +485,14 @@ namespace Boggle
             dynamic file4 = new ExpandoObject();
             file4.UserToken = r3.Data;
             file4.Word = "noted";
-            Response r6 = client.DoPutAsync(file4, "games/" + r3.Data);
+            Response r6 = client.DoPutAsync(file4, "games/" + r3.Data).Result;
             Assert.AreEqual(r6.Data, 1);
 
             //Sends incorrect play word command
             dynamic file5 = new ExpandoObject();
             file5.UserToken = r3.Data;
             file5.Word = "einvc";
-            Response r7 = client.DoPutAsync(file5, "games/" + r3.Data);
+            Response r7 = client.DoPutAsync(file5, "games/" + r3.Data).Result;
             Assert.AreEqual(r7.Data, 0);
         }
 
@@ -526,7 +526,7 @@ namespace Boggle
             dynamic file4 = new ExpandoObject();
             file4.UserToken = r3.Data;
             file4.Word = "EnD iN g";
-            Response r6 = client.DoPutAsync(file4, "games/" + r3.Data);
+            Response r6 = client.DoPutAsync(file4, "games/" + r3.Data).Result;
             Assert.AreEqual(r6.Data, 1);
         }
 
@@ -560,7 +560,7 @@ namespace Boggle
             dynamic file4 = new ExpandoObject();
             file4.UserToken = r3.Data;
             file4.Word = "okay";
-            Response r6 = client.DoPutAsync(file4, "games/" + r3.Data);
+            Response r6 = client.DoPutAsync(file4, "games/" + r3.Data).Result;
             Assert.AreEqual(OK, r6.Status);
         }
 
