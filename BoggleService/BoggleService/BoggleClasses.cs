@@ -51,7 +51,7 @@ namespace Boggle
     }
     public class GameIDInfo
     {
-        public int GameID { get; set; }
+        public string GameID { get; set; }
     }
     public class ScoreInfo
     {
