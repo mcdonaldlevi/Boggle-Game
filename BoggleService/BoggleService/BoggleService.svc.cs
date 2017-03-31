@@ -127,14 +127,18 @@ namespace Boggle
                 {
                     pendingGame.Player2 = new Player { UserToken = user.UserToken };
                     pendingGame.Player2.WordsPlayed = new List<WordPlayed>();
-                    pendingGame.GameState = "active";
                     pendingGame.Player2.Nickname = users[user.UserToken].Nickname;
                     pendingGame.TimeLimit = (pendingGame.TimeLimit + user.TimeLimit)/ 2;
-                    GameInfo newGame = pendingGame;
-                    games.Add(pendingGame.GameId, newGame);
+                    GameInfo newGame = new GameInfo(pendingGame);
+                    newGame.aTimer.Interval = pendingGame.TimeLimit * 1000;
+                    newGame.aTimer.Enabled = true;
+                    newGame.timeLeft.Start();                   
+                    newGame.GameState = "active";
+                    games.Add(newGame.GameId, newGame);
                     SetStatus(Created);
                     string gameID = pendingGame.GameId;
                     pendingGame.GameState = "inactive";
+                    pendingGame.aTimer.Enabled = false;
                     GameIDInfo returnGame = new GameIDInfo { GameID = gameID };
                     return returnGame;
                 }
@@ -160,9 +164,14 @@ namespace Boggle
         {
             lock (sync)
             {
-                if (user.UserToken == null || user.UserToken.Trim().Length == 0 || user.Word == null || user.Word.Trim().Length == 0)
+                if (user.UserToken == null || user.UserToken.Trim().Length == 0 || user.Word == null || user.Word.Trim().Length == 0 || !games.ContainsKey(gameID))
                 {
                     SetStatus(Forbidden);
+                    return null;
+                }
+                if(games[gameID].GameState != "active")
+                {
+                    SetStatus(Conflict);
                     return null;
                 }
                 else
@@ -217,12 +226,12 @@ namespace Boggle
         }
         public GameInfo GameStatus(string brief, string gameID)
         {
-            if(pendingGame.GameId == gameID)
+            if(pendingGame.GameState == "pending")
             {
                 SetStatus(OK);
                 return pendingGame;
             }
-            else if(games.ContainsKey(gameID))
+            else if(pendingGame.GameState == "inactive" && games.ContainsKey(gameID))
             {
                 SetStatus(OK);
                 return games[gameID];
