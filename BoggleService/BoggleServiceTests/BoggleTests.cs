@@ -621,7 +621,7 @@ namespace Boggle
 
             //Sends wrong word to game
             dynamic file3 = new ExpandoObject();
-            file3.UserToken = r2.Data["UserToken"];
+            file3.UserToken = r1.Data["UserToken"];
             file3.Word = "iosr";
             Response r5 = client.DoPutAsync(file3, "games/" + r3.Data["GameID"]).Result;
 
@@ -755,21 +755,13 @@ namespace Boggle
             //Asserts score of player 1
             if (r5.Data["Player2"]["Nickname"].ToString().Equals("Ashley"))
             {
-                Assert.AreEqual(Int32.Parse(r5.Data["Player1"]["Score"].ToString()), 0);
-                Assert.AreEqual(Int32.Parse(r5.Data["Player2"]["Score"].ToString()), -1);
-                //Asserts word score of player 2
-                Assert.AreEqual(Int32.Parse(r5.Data["Player2"]["WordsPlayed"][0]["Score"].ToString()), -1);
-                //Asserts word played of player 2
                 Assert.AreEqual(r5.Data["Player2"]["WordsPlayed"][0]["Word"].ToString(), "einvc");
+                Assert.AreEqual(r5.Data["Player2"]["WordsPlayed"][0]["Score"].ToString(), "-1");
             }
             else
             {
-                Assert.AreEqual(Int32.Parse(r5.Data["Player1"]["Score"].ToString()), -1);
-                Assert.AreEqual(Int32.Parse(r5.Data["Player2"]["Score"].ToString()), 0);
-                //Asserts word score of player 1
-                Assert.AreEqual(Int32.Parse(r5.Data["Player1"]["WordsPlayed"][0]["Score"].ToString()), -1);
-                //Asserts word played of player 2
                 Assert.AreEqual(r5.Data["Player1"]["WordsPlayed"][0]["Word"].ToString(), "einvc");
+                Assert.AreEqual(r5.Data["Player1"]["WordsPlayed"][0]["Score"].ToString(), "-1");
             }
             
         }
