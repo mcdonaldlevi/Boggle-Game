@@ -636,13 +636,20 @@ namespace Boggle
             //Asserts time left is between 25 and 45
             Assert.AreEqual(Int32.Parse(r6.Data["TimeLeft"].ToString()), 35, 9);
             //Asserts name of player 1
-            Assert.AreEqual(r6.Data["Player1"]["Nickname"].ToString(), "Ron");
-            //Asserts name of player 2
-            Assert.AreEqual(r6.Data["Player2"]["Nickname"].ToString(), "Jill");
-            //Asserts score of player 1
-            Assert.AreEqual(Int32.Parse(r6.Data["Player1"]["Score"].ToString()), 0);
-            //Asserts score of player 2
-            Assert.AreEqual(Int32.Parse(r6.Data["Player2"]["Score"].ToString()), -1);
+            if (r6.Data["Player2"]["Nickname"].ToString().Equals("Jill"))
+            {
+                Assert.AreEqual(Int32.Parse(r6.Data["Player1"]["Score"].ToString()), 0);
+                Assert.AreEqual(r6.Data["Player1"]["Nickname"].ToString(), "Ron");
+                Assert.AreEqual(Int32.Parse(r6.Data["Player2"]["Score"].ToString()), -1);
+                Assert.AreEqual(r6.Data["Player2"]["Nickname"].ToString(), "Jill");
+            }
+            else
+            {
+                Assert.AreEqual(Int32.Parse(r6.Data["Player1"]["Score"].ToString()), -1);
+                Assert.AreEqual(r6.Data["Player1"]["Nickname"].ToString(), "Jill");
+                Assert.AreEqual(Int32.Parse(r6.Data["Player2"]["Score"].ToString()), 0);
+                Assert.AreEqual(r6.Data["Player2"]["Nickname"].ToString(), "Ron");
+            }
         }
 
         /// <summary>
