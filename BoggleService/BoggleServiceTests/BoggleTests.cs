@@ -453,7 +453,7 @@ namespace Boggle
         }
 
         /// <summary>
-        /// User joins a game and gets one point for a correct word and loses a point for an incorrect word
+        /// User joins a game and loses a point for an incorrect word
         /// </summary>
         [TestMethod]
         public void PlayWordTest5()
