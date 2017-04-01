@@ -384,7 +384,7 @@ namespace Boggle
             //Creates User 2
             dynamic user2 = new ExpandoObject();
             user2.Nickname = "Walter";
-            Response r2 = client.DoPostAsync("user", user2).Result;
+            Response r2 = client.DoPostAsync("users", user2).Result;
 
             //Joins game
             dynamic file1 = new ExpandoObject();
@@ -400,13 +400,13 @@ namespace Boggle
             dynamic file3 = new ExpandoObject();
             file3.UserToken = "Fake token";
             file3.Word = "slurp";
-            Response r5 = client.DoPutAsync(file3, "games/" + r3.Data).Result;
+            Response r5 = client.DoPutAsync(file3, "games/" + r3.Data["GameID"]).Result;
             Assert.AreEqual(Forbidden, r5.Status);
 
             //Sends play word command without token
             dynamic file4 = new ExpandoObject();
             file4.Word = "knock";
-            Response r6 = client.DoPutAsync(file4, "games/" + r4.Data).Result;
+            Response r6 = client.DoPutAsync(file4, "games/" + r4.Data["GameID"]).Result;
             Assert.AreEqual(Forbidden, r6.Status);
         }
 
@@ -424,37 +424,32 @@ namespace Boggle
             //Creates User 2
             dynamic user2 = new ExpandoObject();
             user2.Nickname = "Dennis";
-            Response r2 = client.DoPostAsync("user", user2).Result;
+            Response r2 = client.DoPostAsync("users", user2).Result;
 
             //Joins game
             dynamic file1 = new ExpandoObject();
             file1.UserToken = r1.Data["UserToken"];
-            file1.TimeLimit = 10;
+            file1.TimeLimit = 5;
             Response r3 = client.DoPostAsync("games", file1).Result;
             dynamic file2 = new ExpandoObject();
             file2.UserToken = r2.Data["UserToken"];
-            file2.TimeLimit = 55;
+            file2.TimeLimit = 5;
             Response r4 = client.DoPostAsync("games", file2).Result;
 
-            //Cancels game
+            Thread.Sleep(6000);
+
+            //Sends play word command after game is already ended
             dynamic file3 = new ExpandoObject();
-            file1.UserToken = r1.Data["UserToken"];
-            Response r5 = client.DoPutAsync(file1, "games").Result;
-            Assert.AreEqual(Forbidden, r5.Status);
-
-            //Sends play word command after game is already cancelled
+            file3.UserToken = r1.Data["UserToken"];
+            file3.Word = "noted";
+            Response r5 = client.DoPutAsync(file3, "games/" + r3.Data["GameID"]).Result;
+            Assert.AreEqual(Conflict, r5.Status);
+            
             dynamic file4 = new ExpandoObject();
-            file4.UserToken = r1.Data["UserToken"];
-            file4.Word = "noted";
-            Response r6 = client.DoPutAsync(file4, "games/" + r3.Data).Result;
+            file4.UserToken = r2.Data["UserToken"];
+            file4.Word = "fish";
+            Response r6 = client.DoPutAsync(file4, "games/" + r4.Data["GameID"]).Result;
             Assert.AreEqual(Conflict, r6.Status);
-
-            //Sends play word command after other user cancelled game
-            dynamic file5 = new ExpandoObject();
-            file5.UserToken = r2.Data["UserToken"];
-            file5.Word = "fish";
-            Response r7 = client.DoPutAsync(file5, "games/" + r4.Data).Result;
-            Assert.AreEqual(Conflict, r7.Status);
         }
 
         /// <summary>
@@ -471,7 +466,7 @@ namespace Boggle
             //Creates User 2
             dynamic user2 = new ExpandoObject();
             user2.Nickname = "Roberto";
-            Response r2 = client.DoPostAsync("user", user2).Result;
+            Response r2 = client.DoPostAsync("users", user2).Result;
 
             //Joins game
             dynamic file1 = new ExpandoObject();
@@ -483,23 +478,16 @@ namespace Boggle
             file2.TimeLimit = 32;
             Response r4 = client.DoPostAsync("games", file2).Result;
 
-            //Sends correct play word command
-            dynamic file4 = new ExpandoObject();
-            file4.UserToken = r3.Data["UserToken"];
-            file4.Word = "noted";
-            Response r6 = client.DoPutAsync(file4, "games/" + r3.Data).Result;
-            Assert.AreEqual(r6.Data, 1);
-
             //Sends incorrect play word command
-            dynamic file5 = new ExpandoObject();
-            file5.UserToken = r3.Data["UserToken"];
-            file5.Word = "einvc";
-            Response r7 = client.DoPutAsync(file5, "games/" + r3.Data).Result;
-            Assert.AreEqual(r7.Data, 0);
+            dynamic file3 = new ExpandoObject();
+            file3.UserToken = r1.Data["UserToken"];
+            file3.Word = "einvc";
+            Response r5 = client.DoPutAsync(file3, "games/" + r3.Data["GameID"]).Result;
+            Assert.AreEqual(Int32.Parse(r5.Data["Score"].ToString()), -1);
         }
 
         /// <summary>
-        /// User joins game and sends a word that would be correct after whitespace and capitals are ignored
+        /// User joins game and sends a word that would be incorrect after whitespace and capitals are ignored
         /// </summary>
         [TestMethod]
         public void PlayWordTest6()
@@ -512,7 +500,7 @@ namespace Boggle
             //Creates User 2
             dynamic user2 = new ExpandoObject();
             user2.Nickname = "Krillin";
-            Response r2 = client.DoPostAsync("user", user2).Result;
+            Response r2 = client.DoPostAsync("users", user2).Result;
 
             //Joins game
             dynamic file1 = new ExpandoObject();
@@ -521,15 +509,15 @@ namespace Boggle
             Response r3 = client.DoPostAsync("games", file1).Result;
             dynamic file2 = new ExpandoObject();
             file2.UserToken = r2.Data["UserToken"];
-            file2.TimeLimit = 2;
+            file2.TimeLimit = 10;
             Response r4 = client.DoPostAsync("games", file2).Result;
 
-            //Sends correct play word command before trim
+            //Sends incorrect play word command before trim
             dynamic file4 = new ExpandoObject();
-            file4.UserToken = r3.Data["UserToken"];
+            file4.UserToken = r1.Data["UserToken"];
             file4.Word = "EnD iN g";
-            Response r6 = client.DoPutAsync(file4, "games/" + r3.Data).Result;
-            Assert.AreEqual(r6.Data, 1);
+            Response r6 = client.DoPutAsync(file4, "games/" + r3.Data["GameID"]).Result;
+            Assert.AreEqual(Int32.Parse(r6.Data["Score"].ToString()), -1);
         }
 
         /// <summary>
@@ -555,15 +543,15 @@ namespace Boggle
             Response r3 = client.DoPostAsync("games", file1).Result;
             dynamic file2 = new ExpandoObject();
             file2.UserToken = r2.Data["UserToken"];
-            file2.TimeLimit = 100;
+            file2.TimeLimit = 50;
             Response r4 = client.DoPostAsync("games", file2).Result;
 
-            //Sends correct play word command before trim
+            //Sends incorrect play word command before trim
             dynamic file4 = new ExpandoObject();
-            file4.UserToken = r2.Data["UserToken"];
+            file4.UserToken = r1.Data["UserToken"];
             file4.Word = "okay";
-            Response r6 = client.DoPutAsync(file4, "games/" + r3.Data["GameID"]).Result;
-            Assert.AreEqual(OK, r6.Status);
+            Response r5 = client.DoPutAsync(file4, "games/" + r3.Data["GameID"]).Result;
+            Assert.AreEqual(OK, r5.Status);
         }
 
         /// <summary>
@@ -631,30 +619,30 @@ namespace Boggle
             file2.TimeLimit = 40;
             Response r4 = client.DoPostAsync("games", file2).Result;
 
-            //Sends word to game
+            //Sends wrong word to game
             dynamic file3 = new ExpandoObject();
             file3.UserToken = r2.Data["UserToken"];
-            file3.Word = "past";
+            file3.Word = "iosr";
             Response r5 = client.DoPutAsync(file3, "games/" + r3.Data["GameID"]).Result;
 
             //Gets game status while active
-            Response r6 = client.DoGetAsync("games/" + r2.Data["GameID"], "yes").Result;
-            Assert.AreEqual(OK, r3.Status);
+            Response r6 = client.DoGetAsync("games/" + r3.Data["GameID"]).Result;
+            Assert.AreEqual(OK, r6.Status);
             Assert.AreEqual("active", r6.Data["GameState"].ToString());
             //Asserts 16 letters given
-            Assert.AreEqual(r6.Data["Board"].ToString(), 16);
+            Assert.AreEqual(r6.Data["Board"].ToString().Length, 16);
             //Asserts time limit is average of two given
-            Assert.AreEqual(r6.Data["TimeLimit"], 35);
+            Assert.AreEqual(Int32.Parse(r6.Data["TimeLimit"].ToString()), 42);
             //Asserts time left is between 25 and 45
-            Assert.AreEqual(r6.Data["TimeLeft"], 35, 9);
+            Assert.AreEqual(Int32.Parse(r6.Data["TimeLeft"].ToString()), 35, 9);
             //Asserts name of player 1
-            Assert.AreEqual(r6.Data["Player1"]["Nickname"], "Ron");
+            Assert.AreEqual(r6.Data["Player1"]["Nickname"].ToString(), "Ron");
             //Asserts name of player 2
-            Assert.AreEqual(r6.Data["Player2"]["Nickname"], "Jill");
+            Assert.AreEqual(r6.Data["Player2"]["Nickname"].ToString(), "Jill");
             //Asserts score of player 1
-            Assert.AreEqual(r6.Data["Player1"]["Score"], 0);
+            Assert.AreEqual(Int32.Parse(r6.Data["Player1"]["Score"].ToString()), 0);
             //Asserts score of player 2
-            Assert.AreEqual(r6.Data["Player1"]["Score"], 1);
+            Assert.AreEqual(Int32.Parse(r6.Data["Player2"]["Score"].ToString()), -1);
         }
 
         /// <summary>
@@ -676,27 +664,33 @@ namespace Boggle
             //Joins game
             dynamic file1 = new ExpandoObject();
             file1.UserToken = r1.Data["UserToken"];
-            file1.TimeLimit = 1000;
+            file1.TimeLimit = 30;
             Response r3 = client.DoPostAsync("games", file1).Result;
             dynamic file2 = new ExpandoObject();
             file2.UserToken = r2.Data["UserToken"];
-            file2.TimeLimit = 500;
+            file2.TimeLimit = 10;
             Response r4 = client.DoPostAsync("games", file2).Result;
 
             //Gets game status while active
-            Response r5 = client.DoGetAsync("games/" + r2.Data["GameID"]).Result;
-            Assert.AreEqual(OK, r3.Status);
+            Response r5 = client.DoGetAsync("games/" + r3.Data["GameID"]).Result;
+            Assert.AreEqual(OK, r5.Status);
             Assert.AreEqual("active", r5.Data["GameState"].ToString());
-            //Asserts time left is between 740 and 760
-            Assert.AreEqual(r5.Data["TimeLeft"], 750, 10);
+            //Asserts time left is between 20 and 30
+            Assert.AreEqual(Int32.Parse(r5.Data["TimeLeft"].ToString()), 20, 10);
             //Asserts name of player 1
-            Assert.AreEqual(r5.Data["Player1"]["Nickname"], "Conner");
+            if (r5.Data["Player2"]["Nickname"].ToString().Equals("Conner"))
+                Assert.AreEqual(r5.Data["Player1"]["Nickname"].ToString(), "Mohammed");
+            else
+                Assert.AreEqual(r5.Data["Player1"]["Nickname"].ToString(), "Conner");
             //Asserts name of player 2
-            Assert.AreEqual(r5.Data["Player2"]["Nickname"], "Mohammed");
+            if (r5.Data["Player1"]["Nickname"].ToString().Equals("Mohammed"))
+                Assert.AreEqual(r5.Data["Player2"]["Nickname"].ToString(), "Conner");
+            else
+                Assert.AreEqual(r5.Data["Player2"]["Nickname"].ToString(), "Mohammed");
             //Asserts score of player 1
-            Assert.AreEqual(r5.Data["Player1"]["Score"], 0);
+            Assert.AreEqual(Int32.Parse(r5.Data["Player1"]["Score"].ToString()), 0);
             //Asserts score of player 2
-            Assert.AreEqual(r5.Data["Player1"]["Score"], 0);
+            Assert.AreEqual(Int32.Parse(r5.Data["Player2"]["Score"].ToString()), 0);
         }
 
         [TestMethod]
@@ -715,34 +709,62 @@ namespace Boggle
             //Joins game
             dynamic file1 = new ExpandoObject();
             file1.UserToken = r1.Data["UserToken"];
-            file1.TimeLimit = 1;
+            file1.TimeLimit = 5;
             Response r3 = client.DoPostAsync("games", file1).Result;
             dynamic file2 = new ExpandoObject();
             file2.UserToken = r2.Data["UserToken"];
-            file2.TimeLimit = 1;
+            file2.TimeLimit = 5;
             Response r4 = client.DoPostAsync("games", file2).Result;
 
-            Thread.Sleep(1000);
+            //Sends incorrect play word command
+            dynamic wordSend = new ExpandoObject();
+            wordSend.UserToken = r1.Data["UserToken"];
+            wordSend.Word = "einvc";
+            Response wordResponse = client.DoPutAsync(wordSend, "games/" + r3.Data["GameID"]).Result;
+
+            Thread.Sleep(6000);
 
             //Gets game status when completed
-            Response r5  = client.DoGetAsync("games/" + r2.Data["GameID"]).Result;
-            Assert.AreEqual(OK, r3.Status);
-            Assert.AreEqual("active", r5.Data["GameState"].ToString());
+            Response r5  = client.DoGetAsync("games/" + r3.Data["GameID"]).Result;
+            Assert.AreEqual(OK, r5.Status);
+            Assert.AreEqual("completed", r5.Data["GameState"].ToString());
 
             //Asserts 16 letters given
-            Assert.AreEqual(r5.Data["Board"].ToString(), 16);
+            Assert.AreEqual(r5.Data["Board"].ToString().Length, 16);
             //Asserts time limit is average of two given
-            Assert.AreEqual(r5.Data["TimeLimit"], 35);
-            //Asserts time left is between 25 and 45
-            Assert.AreEqual(r5.Data["TimeLeft"], 35, 9);
+            Assert.AreEqual(Int32.Parse(r5.Data["TimeLimit"].ToString()), 5);
+            //Asserts time is up
+            Assert.AreEqual(Int32.Parse(r5.Data["TimeLeft"].ToString()), 0);
             //Asserts name of player 1
-            Assert.AreEqual(r5.Data["Player1"]["Nickname"], "Ron");
+            if (r5.Data["Player2"]["Nickname"].ToString().Equals("Peter"))
+                Assert.AreEqual(r5.Data["Player1"]["Nickname"].ToString(), "Ashley");
+            else
+                Assert.AreEqual(r5.Data["Player1"]["Nickname"].ToString(), "Peter");
             //Asserts name of player 2
-            Assert.AreEqual(r5.Data["Player2"]["Nickname"], "Jill");
+            if (r5.Data["Player1"]["Nickname"].ToString().Equals("Ashley"))
+                Assert.AreEqual(r5.Data["Player2"]["Nickname"].ToString(), "Peter");
+            else
+                Assert.AreEqual(r5.Data["Player2"]["Nickname"].ToString(), "Ashley");
             //Asserts score of player 1
-            Assert.AreEqual(r5.Data["Player1"]["Score"], 0);
-            //Asserts score of player 2
-            Assert.AreEqual(r5.Data["Player1"]["Score"], 1);
+            if (r5.Data["Player2"]["Nickname"].ToString().Equals("Ashley"))
+            {
+                Assert.AreEqual(Int32.Parse(r5.Data["Player1"]["Score"].ToString()), 0);
+                Assert.AreEqual(Int32.Parse(r5.Data["Player2"]["Score"].ToString()), -1);
+                //Asserts word score of player 2
+                Assert.AreEqual(Int32.Parse(r5.Data["Player2"]["WordsPlayed"][0]["Score"].ToString()), -1);
+                //Asserts word played of player 2
+                Assert.AreEqual(r5.Data["Player2"]["WordsPlayed"][0]["Word"].ToString(), "einvc");
+            }
+            else
+            {
+                Assert.AreEqual(Int32.Parse(r5.Data["Player1"]["Score"].ToString()), -1);
+                Assert.AreEqual(Int32.Parse(r5.Data["Player2"]["Score"].ToString()), 0);
+                //Asserts word score of player 1
+                Assert.AreEqual(Int32.Parse(r5.Data["Player1"]["WordsPlayed"][0]["Score"].ToString()), -1);
+                //Asserts word played of player 2
+                Assert.AreEqual(r5.Data["Player1"]["WordsPlayed"][0]["Word"].ToString(), "einvc");
+            }
+            
         }
     }
 }
