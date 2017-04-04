@@ -594,65 +594,6 @@ namespace Boggle
         }
 
         /// <summary>
-        /// Tries to get game status when game is active
-        /// </summary>
-        [TestMethod]
-        public void GameStatusTest3()
-        {
-            //Creates user1
-            dynamic user1 = new ExpandoObject();
-            user1.Nickname = "Ron";
-            Response r1 = client.DoPostAsync("users", user1).Result;
-
-            //Creates user2
-            dynamic user2 = new ExpandoObject();
-            user2.Nickname = "Jill";
-            Response r2 = client.DoPostAsync("users", user2).Result;
-
-            //Joins game
-            dynamic file1 = new ExpandoObject();
-            file1.UserToken = r1.Data["UserToken"];
-            file1.TimeLimit = 45;
-            Response r3 = client.DoPostAsync("games", file1).Result;
-            dynamic file2 = new ExpandoObject();
-            file2.UserToken = r2.Data["UserToken"];
-            file2.TimeLimit = 40;
-            Response r4 = client.DoPostAsync("games", file2).Result;
-
-            //Sends wrong word to game
-            dynamic file3 = new ExpandoObject();
-            file3.UserToken = r2.Data["UserToken"];
-            file3.Word = "iosr";
-            Response r5 = client.DoPutAsync(file3, "games/" + r3.Data["GameID"]).Result;
-
-            //Gets game status while active
-            Response r6 = client.DoGetAsync("games/" + r3.Data["GameID"]).Result;
-            Assert.AreEqual(OK, r6.Status);
-            Assert.AreEqual("active", r6.Data["GameState"].ToString());
-            //Asserts 16 letters given
-            Assert.AreEqual(r6.Data["Board"].ToString().Length, 16);
-            //Asserts time limit is average of two given
-            Assert.AreEqual(Int32.Parse(r6.Data["TimeLimit"].ToString()), 42);
-            //Asserts time left is between 25 and 45
-            Assert.AreEqual(Int32.Parse(r6.Data["TimeLeft"].ToString()), 35, 9);
-            //Asserts name of player 1
-            if (r6.Data["Player2"]["Nickname"].ToString().Equals("Jill"))
-            {
-                Assert.AreEqual(Int32.Parse(r6.Data["Player1"]["Score"].ToString()), 0);
-                Assert.AreEqual(r6.Data["Player1"]["Nickname"].ToString(), "Ron");
-                Assert.AreEqual(Int32.Parse(r6.Data["Player2"]["Score"].ToString()), -1);
-                Assert.AreEqual(r6.Data["Player2"]["Nickname"].ToString(), "Jill");
-            }
-            else
-            {
-                Assert.AreEqual(Int32.Parse(r6.Data["Player1"]["Score"].ToString()), -1);
-                Assert.AreEqual(r6.Data["Player1"]["Nickname"].ToString(), "Jill");
-                Assert.AreEqual(Int32.Parse(r6.Data["Player2"]["Score"].ToString()), 0);
-                Assert.AreEqual(r6.Data["Player2"]["Nickname"].ToString(), "Ron");
-            }
-        }
-
-        /// <summary>
         /// Tries to get brief game status when game is active
         /// </summary>
         [TestMethod]
@@ -755,21 +696,13 @@ namespace Boggle
             //Asserts score of player 1
             if (r5.Data["Player2"]["Nickname"].ToString().Equals("Ashley"))
             {
-                Assert.AreEqual(Int32.Parse(r5.Data["Player1"]["Score"].ToString()), 0);
-                Assert.AreEqual(Int32.Parse(r5.Data["Player2"]["Score"].ToString()), -1);
-                //Asserts word score of player 2
-                Assert.AreEqual(Int32.Parse(r5.Data["Player2"]["WordsPlayed"][0]["Score"].ToString()), -1);
-                //Asserts word played of player 2
                 Assert.AreEqual(r5.Data["Player2"]["WordsPlayed"][0]["Word"].ToString(), "einvc");
+                Assert.AreEqual(r5.Data["Player2"]["WordsPlayed"][0]["Score"].ToString(), "-1");
             }
             else
             {
-                Assert.AreEqual(Int32.Parse(r5.Data["Player1"]["Score"].ToString()), -1);
-                Assert.AreEqual(Int32.Parse(r5.Data["Player2"]["Score"].ToString()), 0);
-                //Asserts word score of player 1
-                Assert.AreEqual(Int32.Parse(r5.Data["Player1"]["WordsPlayed"][0]["Score"].ToString()), -1);
-                //Asserts word played of player 2
                 Assert.AreEqual(r5.Data["Player1"]["WordsPlayed"][0]["Word"].ToString(), "einvc");
+                Assert.AreEqual(r5.Data["Player1"]["WordsPlayed"][0]["Score"].ToString(), "-1");
             }
             
         }
