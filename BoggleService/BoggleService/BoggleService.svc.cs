@@ -183,6 +183,7 @@ namespace Boggle
                         {
                             WordPlayed wordScore = new WordPlayed { Word = user.Word, Score = getScore(user.Word) };
                             games[gameID].Player1.WordsPlayed.Add(wordScore);
+                            games[gameID].Player1.Score += getScore(user.Word);
                             ScoreInfo returnscore = new ScoreInfo { Score = getScore(user.Word) };
                             return returnscore;
                         }
