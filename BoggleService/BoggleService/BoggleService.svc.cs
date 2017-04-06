@@ -94,7 +94,7 @@ namespace Boggle
                 using (SqlTransaction trans = conn.BeginTransaction())
                 {
                     using (SqlCommand command =
-                        new SqlCommand("insert into Users (UserID, Name) values(@UserID, @Nickname)",
+                        new SqlCommand("insert into Users (UserID, Nickname) values(@UserID, @Nickname)",
                                         conn,
                                         trans))
                     {
@@ -123,7 +123,7 @@ namespace Boggle
                 conn.Open();
                 using (SqlTransaction trans = conn.BeginTransaction())
                 {
-                    using (SqlCommand command = new SqlCommand("select UserID from users where UserID = @UserID", conn, trans))
+                    using (SqlCommand command = new SqlCommand("select UserID from Users where UserID = @UserID", conn, trans))
                     {
                         command.Parameters.AddWithValue("@UserID", user.UserToken);
                         using (SqlDataReader reader = command.ExecuteReader())
@@ -138,12 +138,12 @@ namespace Boggle
                     }
                     if (pendingGame.GameState == "inactive")
                     {
-                        using (SqlCommand command = new SqlCommand("insert into Games (GameID, TimeLimit) values(@GameID, @TimeLimit)", conn, trans))
+                        using (SqlCommand command = new SqlCommand("insert into Games (Player1, TimeLimit) values (@Player1, @TimeLimit)", conn, trans))
                         {
                             string gameID = Guid.NewGuid().ToString();
-                            command.Parameters.AddWithValue("@GameID", gameID);
-                            command.Parameters.AddWithValue("@TimeLimit", user.TimeLimit * 1000);
-
+                            command.Parameters.AddWithValue("@Player1", user.UserToken);
+                            command.Parameters.AddWithValue("@TimeLimit", user.TimeLimit);
+                            command.ExecuteNonQuery();
                             SetStatus(Accepted);
                             pendingGame = new GameInfo { GameState = "pending" };
 
@@ -153,7 +153,7 @@ namespace Boggle
                     }
                     else
                     {
-                        using (SqlCommand command = new SqlCommand("insert into Games (TimeLimit, StartTime) values(@TimeLimit, @StartTime)", conn, trans))
+                        using (SqlCommand command = new SqlCommand("insert into Games (Player2, TimeLimit, StartTime, Board) values(@Player2, @StartTime)", conn, trans))
                         {
                             string gameID = new SqlCommand("select 'GameID' from Games", conn, trans).ExecuteReader().ToString();
                             string player1TimeLimit = new SqlCommand("select 'TimeLimit' from Games", conn, trans).ExecuteReader().ToString();
@@ -163,7 +163,7 @@ namespace Boggle
 
                             SetStatus(Created);
                             pendingGame = new GameInfo { GameState = "inactive" };
-
+                            command.ExecuteNonQuery();
                             trans.Commit();
                             return new GameIDInfo { GameID = gameID };
                         }
