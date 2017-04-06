@@ -113,6 +113,66 @@ namespace Boggle
 
         public GameIDInfo JoinGame(JoinGameInfo user)
         {
+            lock (sync)
+            {
+                if (user.UserToken == null || user.UserToken.Trim().Length == 0)
+                {
+                    SetStatus(Forbidden);
+                    return null;
+                }
+                using (SqlConnection conn = new SqlConnection(BoggleDB))
+                {
+                    conn.Open();
+                    using (SqlTransaction trans = conn.BeginTransaction())
+                    {
+                        using (SqlCommand command = new SqlCommand("select UserID from users where UserID = @UserID", conn, trans))
+                        {
+                            command.Parameters.AddWithValue("@UserID", user.UserToken);
+                            using (SqlDataReader reader = command.ExecuteReader())
+                            {
+                                if (!reader.HasRows)
+                                {
+                                    SetStatus(Forbidden);
+                                    trans.Commit();
+                                    return null;
+                                }
+                            }
+                        }
+
+
+                        if (pendingGame.GameState == "inactive")
+                        {
+                            using (SqlCommand command = new SqlCommand("insert into Table (GameID, TimeLimit) values(@GameID, @TimeLimit)", conn, trans))
+                            {
+                                string gameID = Guid.NewGuid().ToString();
+                                command.Parameters.AddWithValue("@GameID", gameID);
+                                command.Parameters.AddWithValue("@TimeLimit", user.TimeLimit * 1000);
+
+                                SetStatus(Accepted);
+                                pendingGame = new GameInfo { GameState = "pending" };
+
+                                trans.Commit();
+                                return new GameIDInfo { GameID = gameID };
+                            }
+                        }
+                        else if (pendingGame.GameState == "pending")
+                        {
+                            using (SqlCommand command = new SqlCommand("insert into Table (TimeLimit) values(@TimeLimit)", conn, trans))
+                            {
+                                string gameID = new SqlCommand("select 'GameID' from Table", conn, trans).ExecuteReader().ToString();
+                                string player1TimeLimit = new SqlCommand("select 'TimeLimit' from Table", conn, trans).ExecuteReader().ToString();
+                                int newTimeLimit = (Int32.Parse(player1TimeLimit) + user.TimeLimit) / 2;
+                                command.Parameters.AddWithValue("@TimeLimit", newTimeLimit);
+
+                                SetStatus(Created);
+                                pendingGame = new GameInfo { GameState = "inactive" };
+
+                                trans.Commit();
+                                return new GameIDInfo { GameID = gameID };
+                            }
+                        }
+                    }
+                }
 
             if (user.UserToken == null || user.UserToken.Trim().Length == 0)
             {
@@ -145,6 +205,24 @@ namespace Boggle
                     //}
                 }
 
+
+                    if (pendingGame.GameState == "inactive")
+                    {
+                        pendingGame = new GameInfo();
+                        pendingGame.Player1 = new Player();
+                        pendingGame.Player1.WordsPlayed = new List<WordPlayed>();
+                        pendingGame.Player1.UserToken = user.UserToken;
+                        pendingGame.TimeLimit = user.TimeLimit;
+                        pendingGame.GameState = "pending";
+                        BoggleBoard board = new BoggleBoard();
+                        pendingGame.Board = board.ToString();
+                        pendingGame.Player1.Nickname = users[user.UserToken].Nickname;
+                        string gameID = Guid.NewGuid().ToString();
+                        pendingGame.GameId = gameID;
+                        SetStatus(Accepted);
+                        GameIDInfo returnGame = new GameIDInfo { GameID = gameID };
+                        return returnGame;
+                    }
                 if (pendingGame.GameState == "inactive")
                 {
                     pendingGame = new GameInfo();
