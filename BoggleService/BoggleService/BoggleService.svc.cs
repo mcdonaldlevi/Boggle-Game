@@ -127,16 +127,69 @@ namespace Boggle
                             if (!reader.HasRows)
                             {
                                 SetStatus(Forbidden);
+                                reader.Close();
                                 trans.Commit();
                                 return null;
                             }
                         }
                     }
-                    using (SqlCommand command = new SqlCommand("select Player2 from Games where Player2 == @Player2"))
+                    int gameID = 0;
+                    int player1TimeLimit = 0;
+                    using (SqlCommand command = new SqlCommand("select GameID, TimeLimit from Games where Player2 is null", conn, trans))
                     {
-                        command.Parameters.AddWithValue("@Player2", null);
                         using (SqlDataReader reader = command.ExecuteReader())
                         {
+                            if (reader.HasRows)
+                            {
+                                reader.Read();
+                                gameID = (int)reader["GameID"];
+                                player1TimeLimit = (int)reader["TimeLimit"];
+                            }
+                        }
+                    }
+                    if (gameID == 0)
+                    {
+                        using (SqlCommand command = new SqlCommand("insert into Games (Player1, TimeLimit) values (@Player1, @TimeLimit)", conn, trans))
+                        {
+                            command.Parameters.AddWithValue("@Player1", user.UserToken);
+                            command.Parameters.AddWithValue("@TimeLimit", user.TimeLimit);
+                            command.ExecuteNonQuery();
+                            SetStatus(Accepted);
+                            trans.Commit();
+                        }
+                        using (SqlCommand command = new SqlCommand("select GameID from Games where Player1 = @Player1", conn, trans))
+                        {
+                            command.Parameters.AddWithValue("@Player1", user.UserToken);
+                            using (SqlDataReader reader = command.ExecuteReader())
+                            {
+                                reader.Read();
+                                gameID = (int)reader["GameID"];
+                            }
+                        }
+                        return new GameIDInfo { GameID = gameID.ToString() };
+                    }
+                    else
+                    {
+                        using (SqlCommand command = new SqlCommand(
+                            "update Games set Player2 = @Player2, TimeLimit = @TimeLimit, Board = @Board, StartTime = @StartTime where GameID = @GameID"
+                            , conn, trans))
+                        {
+                            int newTimeLimit = (player1TimeLimit + user.TimeLimit) / 2;
+                            command.Parameters.AddWithValue("@GameID", gameID);
+                            command.Parameters.AddWithValue("@Player2", user.UserToken);
+                            command.Parameters.AddWithValue("@TimeLimit", newTimeLimit);
+                            command.Parameters.AddWithValue("@Board", new BoggleBoard().ToString());
+                            command.Parameters.AddWithValue("@StartTime", DateTime.Now);
+                            command.ExecuteNonQuery();
+                            SetStatus(Created);
+                            trans.Commit();
+                            return new GameIDInfo { GameID = gameID.ToString() };
+                        }
+                    }
+                }
+            }
+        }
+        
                             if (!reader.HasRows)
                             {
                                 using (SqlCommand cmd = new SqlCommand("insert into Games (Player1, TimeLimit) values (@Player1, @TimeLimit)", conn, trans))
