@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
+using System.Data.SqlClient;
 using System.IO;
 using System.Net;
 using System.ServiceModel.Web;
@@ -11,10 +13,15 @@ namespace Boggle
     
     public class BoggleService : IBoggleService
     {
+        private static string BoggleDB;
         private static Dictionary<String, GameInfo> games = new Dictionary<string, GameInfo>();
         private static Dictionary<String, UserInfo> users = new Dictionary<string, UserInfo>();
         private static readonly object sync = new object();
         private static GameInfo pendingGame = new GameInfo { GameState = "inactive" };
+        static BoggleService()
+        {
+            BoggleDB = ConfigurationManager.ConnectionStrings["BoggleDB"].ConnectionString;
+        }
         /// <summary>
         /// The most recent call to SetStatus determines the response code used when
         /// an http response is sent.
@@ -70,27 +77,40 @@ namespace Boggle
         }
         public UserID CreateUser(UserInfo user)
         {
-            lock (sync)
-            {
+
                 if (user.Nickname == "stall")
                 {
                     Thread.Sleep(5000);
                 }
-                if (user.Nickname == null || user.Nickname.Trim().Length == 0)
+                if (user.Nickname == null || user.Nickname.Trim().Length == 0 || user.Nickname.Trim().Length > 50)
                 {
                     SetStatus(Forbidden);
                     return null;
                 }
-                else
+            using (SqlConnection conn = new SqlConnection(BoggleDB))
+            {
+                // Connections must be opened
+                conn.Open();
+                using (SqlTransaction trans = conn.BeginTransaction())
                 {
-                    string userID = Guid.NewGuid().ToString();
-                    users.Add(userID, user);
-                    SetStatus(Created);
-                    UserID returnUser = new UserID { UserToken = userID };
-                    return returnUser;
+                    using (SqlCommand command =
+                        new SqlCommand("insert into Users (UserID, Name) values(@UserID, @Nickname)",
+                                        conn,
+                                        trans))
+                    {
+                        string userID = Guid.NewGuid().ToString();
+                        command.Parameters.AddWithValue("@UserID", userID);
+                        command.Parameters.AddWithValue("@Nickname", user.Nickname.Trim());
+                        command.ExecuteNonQuery();
+                        SetStatus(Created);
+                        trans.Commit();
+                        UserID returnUser = new UserID { UserToken = userID };
+                        return returnUser;
+                    }
                 }
             }
-        }
+            }
+        
         public GameIDInfo JoinGame(JoinGameInfo user)
         {
             lock (sync)
@@ -100,24 +120,45 @@ namespace Boggle
                     SetStatus(Forbidden);
                     return null;
                 }
-
-                if (pendingGame.GameState == "inactive" )
+                using (SqlConnection conn = new SqlConnection(BoggleDB))
                 {
-                    pendingGame = new GameInfo();
-                    pendingGame.Player1 = new Player();
-                    pendingGame.Player1.WordsPlayed = new List<WordPlayed>();
-                    pendingGame.Player1.UserToken = user.UserToken;
-                    pendingGame.TimeLimit = user.TimeLimit;
-                    pendingGame.GameState = "pending";
-                    BoggleBoard board = new BoggleBoard();
-                    pendingGame.Board = board.ToString();
-                    pendingGame.Player1.Nickname = users[user.UserToken].Nickname;
-                    string gameID = Guid.NewGuid().ToString();
-                    pendingGame.GameId = gameID;
-                    SetStatus(Accepted);
-                    GameIDInfo returnGame = new GameIDInfo { GameID = gameID };
-                    return returnGame;
+                    conn.Open();
+                    using (SqlTransaction trans = conn.BeginTransaction())
+                    {
+                        using (SqlCommand command = new SqlCommand("select UserID from users where UserID = @UserID", conn, trans))
+                        {
+                            command.Parameters.AddWithValue("@UserID", user.UserToken);
+                            using (SqlDataReader reader = command.ExecuteReader())
+                            {
+                                if (!reader.HasRows)
+                                {
+                                    SetStatus(Forbidden);
+                                    trans.Commit();
+                                    return null;
+                                }
+                            }
+                        }
+                        using (SqlCommand command = new SqlCommand("insert into Table (UserID, "))
+                    }
                 }
+
+                    if (pendingGame.GameState == "inactive")
+                    {
+                        pendingGame = new GameInfo();
+                        pendingGame.Player1 = new Player();
+                        pendingGame.Player1.WordsPlayed = new List<WordPlayed>();
+                        pendingGame.Player1.UserToken = user.UserToken;
+                        pendingGame.TimeLimit = user.TimeLimit;
+                        pendingGame.GameState = "pending";
+                        BoggleBoard board = new BoggleBoard();
+                        pendingGame.Board = board.ToString();
+                        pendingGame.Player1.Nickname = users[user.UserToken].Nickname;
+                        string gameID = Guid.NewGuid().ToString();
+                        pendingGame.GameId = gameID;
+                        SetStatus(Accepted);
+                        GameIDInfo returnGame = new GameIDInfo { GameID = gameID };
+                        return returnGame;
+                    }
                 if (pendingGame.Player1.UserToken == user.UserToken)
                 {
                     SetStatus(Conflict);
