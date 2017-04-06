@@ -190,43 +190,7 @@ namespace Boggle
             }
         }
         
-                            if (!reader.HasRows)
-                            {
-                                using (SqlCommand cmd = new SqlCommand("insert into Games (Player1, TimeLimit) values (@Player1, @TimeLimit)", conn, trans))
-                                {
-     
-                                    cmd.Parameters.AddWithValue("@Player1", user.UserToken);
-                                    cmd.Parameters.AddWithValue("@TimeLimit", user.TimeLimit);
-                                    cmd.ExecuteNonQuery();
-                                    SetStatus(Accepted);
-                                }
-                                using (SqlCommand cmd = new SqlCommand("select GameID from Games where Player2 == @Player2"))
-                                {
-                                    command.Parameters.AddWithValue("@Player2", null);
-                                    using (SqlDataReader rdr = command.ExecuteReader())
-                                    {
-                                        return new GameIDInfo { GameID = (string)rdr["GameID"] };
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                using (SqlCommand cmd = new SqlCommand("insert into Games ( Player2, Board, StartTime,TimeLimit) values(@TimeLimit)", conn, trans))
-                                {
-                                    string gameID = new SqlCommand("select 'GameID' from Table", conn, trans).ExecuteReader().ToString();
-                                    string player1TimeLimit = new SqlCommand("select 'TimeLimit' from Table", conn, trans).ExecuteReader().ToString();
-                                    int newTimeLimit = (Int32.Parse(player1TimeLimit) + user.TimeLimit) / 2;
-                                    cmd.Parameters.AddWithValue("@TimeLimit", newTimeLimit);
-                                    SetStatus(Created);                                    
-                                    trans.Commit();
-                                    return new GameIDInfo { GameID = gameID };
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+                            
 
         public void CancelJoinRequest(UserID user)
         {
