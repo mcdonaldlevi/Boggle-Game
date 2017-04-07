@@ -119,6 +119,20 @@ namespace Boggle
                 conn.Open();
                 using (SqlTransaction trans = conn.BeginTransaction())
                 {
+                    using(SqlCommand command = new SqlCommand("select GameID from Games where Player1 = @UserID or Player2 = @UserID", conn, trans))
+                    {
+                        command.Parameters.AddWithValue("@UserID", user.UserToken);
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        {
+                            if (reader.HasRows)
+                            {
+                                SetStatus(Conflict);
+                                reader.Close();
+                                trans.Commit();
+                                return null;
+                            }
+                        }
+                    }
                     using (SqlCommand command = new SqlCommand("select UserID from Users where UserID = @UserID", conn, trans))
                     {
                         command.Parameters.AddWithValue("@UserID", user.UserToken);
