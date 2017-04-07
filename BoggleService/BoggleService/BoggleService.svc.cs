@@ -261,6 +261,7 @@ namespace Boggle
                 return null;
             }
             int score = 0;
+            Boolean wordValid = false;
             using (SqlConnection conn = new SqlConnection(BoggleDB))
             {
                 conn.Open();
@@ -307,9 +308,14 @@ namespace Boggle
                                 return null;
                             }
                             BoggleBoard board = new BoggleBoard((string)reader["Board"]);
-                            if (!board.CanBeFormed(user.Word))
+                            if (board.CanBeFormed(user.Word))
                             {
-                                score = -1;
+                                wordValid = true;
+                            }
+                            else
+                            { 
+                                if(user.Word.Length > 2)
+                                    score = -1;
                             }
                         }
                     }
@@ -477,13 +483,22 @@ namespace Boggle
         }
         private int getScore(string word)
         {
-            if (word.Length < 3)
-                return 0;
-            else if (word.Length == 3)
-                return 1;
-            else
+            switch (word.Length)
             {
-                return word.Length - 3;
+                case 1:
+                case 2:
+                    return 0;
+                case 3:
+                case 4:
+                    return 1;
+                case 5:
+                    return 2;
+                case 6:
+                    return 3;
+                case 7:
+                    return 5;
+                default:
+                    return 11;
             }
         }
     }
