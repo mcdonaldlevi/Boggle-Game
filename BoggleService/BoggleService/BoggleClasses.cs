@@ -38,32 +38,10 @@ namespace Boggle
         { get; set;}
         public Player Player1 { get; set; }
         public Player Player2 { get; set; }
-        public Stopwatch myStopWatch = new Stopwatch();
-        public System.Timers.Timer aTimer = new System.Timers.Timer();
+
         public GameInfo() 
         {
-            aTimer.Elapsed += ATimer_Elapsed;
-            aTimer.Enabled = false;
             
-        }
-        public GameInfo(GameInfo copyFrom)
-        {
-            GameId = copyFrom.GameId ;
-            Board = copyFrom.Board;
-            aTimer = new System.Timers.Timer();
-            GameState = copyFrom.GameState;
-            Player1 = copyFrom.Player1;
-            Player2 = copyFrom.Player2;
-            TimeLimit = copyFrom.TimeLimit;
-            myStopWatch = copyFrom.myStopWatch;
-            aTimer.Elapsed += ATimer_Elapsed;
-            aTimer.Enabled = false;
-        }
-
-        private void ATimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-        {
-            GameState = "completed";
-            myStopWatch.Stop();
         }
     }
     public class Player
