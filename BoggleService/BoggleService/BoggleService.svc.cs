@@ -10,7 +10,7 @@ using static System.Net.HttpStatusCode;
 
 namespace Boggle
 {
-    
+
     public class BoggleService : IBoggleService
     {
         private static string BoggleDB;
@@ -74,15 +74,15 @@ namespace Boggle
         public UserID CreateUser(UserInfo user)
         {
 
-                if (user.Nickname == "stall")
-                {
-                    Thread.Sleep(5000);
-                }
-                if (user.Nickname == null || user.Nickname.Trim().Length == 0 || user.Nickname.Trim().Length > 50)
-                {
-                    SetStatus(Forbidden);
-                    return null;
-                }
+            if (user.Nickname == "stall")
+            {
+                Thread.Sleep(5000);
+            }
+            if (user.Nickname == null || user.Nickname.Trim().Length == 0 || user.Nickname.Trim().Length > 50)
+            {
+                SetStatus(Forbidden);
+                return null;
+            }
             using (SqlConnection conn = new SqlConnection(BoggleDB))
             {
                 conn.Open();
@@ -104,7 +104,7 @@ namespace Boggle
                     }
                 }
             }
-            }
+        }
 
         public GameIDInfo JoinGame(JoinGameInfo user)
         {
@@ -119,7 +119,7 @@ namespace Boggle
                 conn.Open();
                 using (SqlTransaction trans = conn.BeginTransaction())
                 {
-                    using(SqlCommand command = new SqlCommand("select GameID from Games where Player1 = @UserID or Player2 = @UserID", conn, trans))
+                    using (SqlCommand command = new SqlCommand("select GameID from Games where Player1 = @UserID or Player2 = @UserID", conn, trans))
                     {
                         command.Parameters.AddWithValue("@UserID", user.UserToken);
                         using (SqlDataReader reader = command.ExecuteReader())
@@ -138,7 +138,7 @@ namespace Boggle
                         command.Parameters.AddWithValue("@UserID", user.UserToken);
                         using (SqlDataReader reader = command.ExecuteReader())
                         {
-                            if (!reader.HasRows)
+                            if (!reader.HasRows || user.TimeLimit > 120 || user.TimeLimit < 5)
                             {
                                 SetStatus(Forbidden);
                                 reader.Close();
@@ -203,8 +203,8 @@ namespace Boggle
                 }
             }
         }
-        
-                            
+
+
 
         public void CancelJoinRequest(UserID user)
         {
@@ -266,6 +266,22 @@ namespace Boggle
                 conn.Open();
                 using (SqlTransaction trans = conn.BeginTransaction())
                 {
+                    using (SqlCommand command = new SqlCommand("select Player2 from Games where GameID = @GameID and Player2 is not null", conn, trans))
+                    {
+                        command.Parameters.AddWithValue("@GameID", gameID);
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        {
+                            if (!reader.Read())
+                            {
+                                SetStatus(Conflict);
+                                reader.Close();
+                                trans.Commit();
+                                return null;
+                            }
+                            else
+                                reader.Close();
+                        }
+                    }
                     using (SqlCommand command = new SqlCommand("select GameID,Player1, Player2, TimeLimit, StartTime, Board from Games where GameID = @GameID", conn, trans))
                     {
                         command.Parameters.AddWithValue("@GameID", gameID);
@@ -278,7 +294,7 @@ namespace Boggle
                                 return null;
                             }
                             reader.Read();
-                            if((string)reader["Player1"] != user.UserToken && (string)reader["Player2"] != user.UserToken)
+                            if ((string)reader["Player1"] != user.UserToken && (string)reader["Player2"] != user.UserToken)
                             {
                                 SetStatus(Forbidden);
                                 return null;
@@ -291,26 +307,26 @@ namespace Boggle
                                 return null;
                             }
                             BoggleBoard board = new BoggleBoard((string)reader["Board"]);
-                            if(!board.CanBeFormed(user.Word))
+                            if (!board.CanBeFormed(user.Word))
                             {
                                 score = -1;
                             }
                         }
                     }
-                    using (SqlCommand command = new SqlCommand("select Word from Words where Player = @Player", conn, trans))
+                    if (score == 0)
                     {
-                        command.Parameters.AddWithValue("@Player", user.Word);
-                        using (SqlDataReader reader = command.ExecuteReader())
+                        using (SqlCommand command = new SqlCommand("select Word from Words where Player = @Player", conn, trans))
                         {
-                            while(reader.Read())
+                            command.Parameters.AddWithValue("@Player", user.UserToken);
+                            using (SqlDataReader reader = command.ExecuteReader())
                             {
-                                if ((string)reader["Word"] == user.Word)
+                                score = getScore(user.Word);
+                                while (reader.Read())
                                 {
-                                    score = 0;
-                                }
-                                else
-                                {
-                                    score = getScore(user.Word);
+                                    if ((string)reader["Word"] == user.Word)
+                                    {
+                                        score = 0;
+                                    }
                                 }
                             }
                         }
@@ -327,8 +343,8 @@ namespace Boggle
                         return returnscore;
                     }
                 }
-            }           
-            
+            }
+
         }
         public GameInfo GameStatus(string brief, string gameID)
         {
@@ -432,7 +448,7 @@ namespace Boggle
                                         while (rdr.Read())
                                         {
                                             WordPlayed wordscore = new WordPlayed { Word = (string)rdr["Word"], Score = (int)rdr["Score"] };
-                                            
+
                                             returnGame.Player1.WordsPlayed.Add(wordscore);
                                             returnGame.Player1.Score += (int)rdr["Score"];
                                         }
@@ -469,7 +485,6 @@ namespace Boggle
             {
                 return word.Length - 3;
             }
-
         }
     }
 }
