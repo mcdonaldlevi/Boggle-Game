@@ -208,38 +208,51 @@ namespace Boggle
 
         public void CancelJoinRequest(UserID user)
         {
-
+            if (user.UserToken == null || user.UserToken.Trim().Length == 0)
+            {
+                SetStatus(Forbidden);
+                return;
+            }
             using (SqlConnection conn = new SqlConnection(BoggleDB))
             {
                 conn.Open();
                 using (SqlTransaction trans = conn.BeginTransaction())
                 {
-                    using (SqlCommand command = new SqlCommand("select UserID from users where UserID = @UserID", conn, trans))
+                    Boolean userExists;
+                    using (SqlCommand command = new SqlCommand("select UserID from Users where UserID = @UserID", conn, trans))
                     {
                         command.Parameters.AddWithValue("@UserID", user.UserToken);
                         using (SqlDataReader reader = command.ExecuteReader())
                         {
-                            if (!reader.HasRows || user.UserToken == null ||
-                                user.UserToken.Trim().Length == 0)
+                            userExists = reader.Read();
+                            reader.Close();
+                        }
+                    }
+                    using (SqlCommand command = new SqlCommand("select Player1 from Games where Player1 = @Player1 and Player2 is null", conn, trans))
+                    {
+                        command.Parameters.AddWithValue("@Player1", user.UserToken);
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        {
+                            if (!userExists || !reader.Read() || user.UserToken == null)
                             {
                                 SetStatus(Forbidden);
+                                reader.Close();
                                 trans.Commit();
-                            }
-                            else
-                            {
-                                using (SqlCommand cmd = new SqlCommand("delete GameID from Games where Player1 = @Player1"))
-                                {
-                                    cmd.Parameters.AddWithValue("@Player1", user.UserToken);
-                                    cmd.ExecuteNonQuery();
-                                    trans.Commit();
-                                }
-                                SetStatus(OK);
+                                return;
                             }
                         }
+                    }
+                    using (SqlCommand cmd = new SqlCommand("delete from Games where Player1 = @Player1", conn, trans))
+                    {
+                        cmd.Parameters.AddWithValue("@Player1", user.UserToken);
+                        cmd.ExecuteNonQuery();
+                        SetStatus(OK);
+                        trans.Commit();
                     }
                 }
             }
         }
+
         public ScoreInfo PlayWord(UserIDandPlayWord user, string gameID)
         {
             if (user.UserToken == null || user.UserToken.Trim().Length == 0 || user.Word == null || user.Word.Trim().Length == 0)
