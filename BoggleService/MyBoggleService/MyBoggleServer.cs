@@ -197,11 +197,11 @@ namespace Boggle
                 {
                     if(urlCall == "users")
                     {
-                        CreateUser(json, out status);
+                        myServer.CreateUser(json, out status);
                     }
                     else if(urlCall == "games")
                     {
-                        JoinGameInfo(json, out status);
+                        myServer.JoinGame(json, out status);
                     }
                 }
                 else if(httpMethod == "PUT")
@@ -209,14 +209,14 @@ namespace Boggle
                     if(urlCall == "games")
                     {
                         if (urlParam == "")
-                            CancelJoinRequest(json, out status);
+                            myServer.CancelJoinRequest(json, out status);
                         else
-                            PlayWord(json, out status);
+                            myServer.PlayWord(json, out status);
                     }
                 }
                 else if(httpMethod == "GET" && urlCall == "games" && urlParam != "")
                 {
-                    GameStatus(json, out status);
+                    myServer.GameStatus(json, out status);
                 }
             }
         }
