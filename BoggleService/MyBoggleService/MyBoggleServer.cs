@@ -22,7 +22,6 @@ namespace Boggle
 
         // Listens for incoming connection requests
         private TcpListener server;
-        public BoggleService myServer;
 
         /// <summary>
         /// Creates a BoggleServer that listens for connection requests on port 6000.
@@ -31,7 +30,6 @@ namespace Boggle
         {
             // A TcpListener listens for incoming connection requests
             server = new TcpListener(IPAddress.Any, port);
-            myServer = new BoggleService();
             // Start the TcpListener
             server.Start();
 
@@ -68,6 +66,7 @@ namespace Boggle
     /// </summary>
     class ClientConnection
     {
+        private BoggleService myServer = new BoggleService();
         // Incoming/outgoing is UTF8-encoded.  This is a multi-byte encoding.  The first 128 Unicode characters
         // (which corresponds to the old ASCII character set and contains the common keyboard characters) are
         // encoded into a single byte.  The rest of the Unicode characters can take from 2 to 4 bytes to encode.
@@ -148,10 +147,10 @@ namespace Boggle
                 string httpMethod;
                 string urlParam;
                 string urlCall;
-                int bodyLength;
+                int bodyLength = 0;
                 string jsonThing;
-                Regex contentLine = new Regex(@"Content-Length: (?<bodyLength>\d+)");
-                Regex urlLine = new Regex(@"(?<httpMethod>\.+ /BoggleService.svc/(?<urlCall>\.*)/(?<urlParam>\.*)? HTTP/1.1");
+                Regex contentLine = new Regex(@"Content-Length:\s(?<bodyLength>\d+)");
+                Regex urlLine = new Regex(@"^(?<httpMethod>.+)\s/BoggleService.svc/(?<urlCall>.*)/(?<urlParam>.*)?\sHTTP/1.1");
                 int lastNewline = -1;
                 int start = 0;
                 for (int i = 0; i < incoming.Length; i++)
@@ -159,33 +158,31 @@ namespace Boggle
 
                     if (incoming[i] == '\n')
                     {
-                        if (urlLine.IsMatch(incoming.ToString(start, i)))
+                        if (urlLine.IsMatch(incoming.ToString(start, i - start)))
                         {
                             Match match = urlLine.Match(incoming.ToString(start, i));
                             httpMethod = match.Groups["httpMethod"].Value;
                             urlParam = match.Groups["urlParam"].Value;
                             urlCall = match.Groups["urlCall"].Value;
                         }
-                        else if(contentLine.IsMatch(incoming.ToString(start, i)))
+                        else if (contentLine.IsMatch(incoming.ToString(start, i - start)))
                         {
-                            Match match = contentLine.Match(incoming.ToString(start, i));
+                            Match match = contentLine.Match(incoming.ToString(start, i - start));
                             bodyLength = int.Parse(match.Groups["bodyLength"].Value);
-                            if(incoming[i+1] == '\r')
-                            {
-                                if(incoming.Length == i + bodyLength +1)
-                                {
-                                    jsonThing = incoming.ToString(i + 2, i + 2 + bodyLength);
-                                    socket.Close();
-                                    finish = true;
-                                }
-                            }
+
                         }
+
                         lastNewline = i;
                         start = i + 1;
                     }
+                    if (incoming[i] == '\r')
+                    {
+                        jsonThing = incoming.ToString(i + 1, incoming.Length - (i + 1));
+                        finish = true;
+                    }
                 }
                 incoming.Remove(0, lastNewline + 1);
-                myServer
+
                 if (finish)
                 {
                     socket.BeginReceive(incomingBytes, 0, incomingBytes.Length,
@@ -193,6 +190,8 @@ namespace Boggle
                 }
             }
         }
+            
+        
 
         /// <summary>
         /// Sends a string to the client
