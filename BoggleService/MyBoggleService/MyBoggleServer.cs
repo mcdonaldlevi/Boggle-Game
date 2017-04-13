@@ -10,27 +10,30 @@ namespace Boggle
 {
     public class BoggleServer
     {
+        
         /// <summary>
         /// Launches a BoggleServer on port 6000.  Keeps the main
         /// thread active so we can send output to the console.
         /// </summary>
         static void Main(string[] args)
         {
+            
             new BoggleServer(6000);
             Console.ReadLine();
         }
 
         // Listens for incoming connection requests
         private TcpListener server;
+        public BoggleService myServer;
 
         /// <summary>
-        /// Creates a BoggleServer that listens for connection requests on port 4000.
+        /// Creates a BoggleServer that listens for connection requests on port 6000.
         /// </summary>
         public BoggleServer(int port)
         {
             // A TcpListener listens for incoming connection requests
             server = new TcpListener(IPAddress.Any, port);
-
+            myServer = new BoggleService();
             // Start the TcpListener
             server.Start();
 
