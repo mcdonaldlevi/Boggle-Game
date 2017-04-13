@@ -146,11 +146,11 @@ namespace Boggle
                 incoming.Append(incomingChars, 0, charsRead);
 
                 bool finish = false;
-                string httpMethod;
-                string urlParam;
-                string urlCall;
+                string httpMethod = null;
+                string urlParam = null;
+                string urlCall= null;
                 int bodyLength = 0;
-                string jsonThing;
+                string jsonThing = null;
                 Regex contentLine = new Regex(@"Content-Length:\s(?<bodyLength>\d+)");
                 Regex urlLine = new Regex(@"^(?<httpMethod>.+)\s/BoggleService.svc/(?<urlCall>.*)/(?<urlParam>.*)?\sHTTP/1.1");
                 int lastNewline = -1;
