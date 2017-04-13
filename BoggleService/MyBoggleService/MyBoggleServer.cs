@@ -3,6 +3,8 @@ using System.Text;
 using System.Net;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
+using System.IO;
+using System.Collections.Generic;
 
 namespace Boggle
 {
@@ -142,11 +144,11 @@ namespace Boggle
                 incoming.Append(incomingChars, 0, charsRead);
 
                 bool finish = false;
-                string httpMethod;
-                string urlParam;
-                string urlCall;
+                string httpMethod = "";
+                string urlParam = "";
+                string urlCall = "";
                 int bodyLength;
-                string jsonThing;
+                string jsonThing = "";
                 Regex contentLine = new Regex(@"Content-Length: (?<bodyLength>\d+)");
                 Regex urlLine = new Regex(@"(?<httpMethod>\.+ /BoggleService.svc/(?<urlCall>\.*)/(?<urlParam>\.*)? HTTP/1.1");
                 int lastNewline = -1;
@@ -182,11 +184,39 @@ namespace Boggle
                     }
                 }
                 incoming.Remove(0, lastNewline + 1);
+
+                dynamic json = Newtonsoft.Json.JsonConvert.SerializeObject(jsonThing);
+                HttpStatusCode status;
                 
                 if (finish)
                 {
                     socket.BeginReceive(incomingBytes, 0, incomingBytes.Length,
                         SocketFlags.None, MessageReceived, null);
+                }
+                if(httpMethod == "POST")
+                {
+                    if(urlCall == "users")
+                    {
+                        CreateUser(json, out status);
+                    }
+                    else if(urlCall == "games")
+                    {
+                        JoinGameInfo(json, out status);
+                    }
+                }
+                else if(httpMethod == "PUT")
+                {
+                    if(urlCall == "games")
+                    {
+                        if (urlParam == "")
+                            CancelJoinRequest(json, out status);
+                        else
+                            PlayWord(json, out status);
+                    }
+                }
+                else if(httpMethod == "GET" && urlCall == "games" && urlParam != "")
+                {
+                    GameStatus(json, out status);
                 }
             }
         }
