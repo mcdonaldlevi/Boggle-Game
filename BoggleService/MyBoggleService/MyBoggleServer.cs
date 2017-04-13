@@ -4,7 +4,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
 
-namespace Chat
+namespace Boggle
 {
     public class BoggleServer
     {
@@ -182,7 +182,7 @@ namespace Chat
                     }
                 }
                 incoming.Remove(0, lastNewline + 1);
-
+                
                 if (finish)
                 {
                     socket.BeginReceive(incomingBytes, 0, incomingBytes.Length,
