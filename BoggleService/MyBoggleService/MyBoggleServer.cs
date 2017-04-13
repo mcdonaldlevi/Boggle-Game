@@ -2,6 +2,7 @@
 using System.Text;
 using System.Net;
 using System.Net.Sockets;
+using System.Text.RegularExpressions;
 
 namespace Chat
 {
@@ -139,26 +140,54 @@ namespace Chat
                 // Convert the bytes into characters and appending to incoming
                 int charsRead = decoder.GetChars(incomingBytes, 0, bytesRead, incomingChars, 0, false);
                 incoming.Append(incomingChars, 0, charsRead);
-                //Console.WriteLine(incoming);
 
-                // Echo any complete lines, after capitalizing them
+                bool finish = false;
+                string httpMethod;
+                string urlParam;
+                string urlCall;
+                int bodyLength;
+                string jsonThing;
+                Regex contentLine = new Regex(@"Content-Length: (?<bodyLength>\d+)");
+                Regex urlLine = new Regex(@"(?<httpMethod>\.+ /BoggleService.svc/(?<urlCall>\.*)/(?<urlParam>\.*)? HTTP/1.1");
                 int lastNewline = -1;
                 int start = 0;
                 for (int i = 0; i < incoming.Length; i++)
                 {
+
                     if (incoming[i] == '\n')
                     {
-                        String line = incoming.ToString(start, i + 1 - start);
-                        SendMessage(line.ToUpper());
+                        if (urlLine.IsMatch(incoming.ToString(start, i)))
+                        {
+                            Match match = urlLine.Match(incoming.ToString(start, i));
+                            httpMethod = match.Groups["httpMethod"].Value;
+                            urlParam = match.Groups["urlParam"].Value;
+                            urlCall = match.Groups["urlCall"].Value;
+                        }
+                        else if(contentLine.IsMatch(incoming.ToString(start, i)))
+                        {
+                            Match match = contentLine.Match(incoming.ToString(start, i));
+                            bodyLength = int.Parse(match.Groups["bodyLength"].Value);
+                            if(incoming[i+1] == '\r')
+                            {
+                                if(incoming.Length == i + bodyLength +1)
+                                {
+                                    jsonThing = incoming.ToString(i + 2, i + 2 + bodyLength);
+                                    socket.Close();
+                                    finish = true;
+                                }
+                            }
+                        }
                         lastNewline = i;
                         start = i + 1;
                     }
                 }
                 incoming.Remove(0, lastNewline + 1);
 
-                // Ask for some more data
-                socket.BeginReceive(incomingBytes, 0, incomingBytes.Length,
-                    SocketFlags.None, MessageReceived, null);
+                if (finish)
+                {
+                    socket.BeginReceive(incomingBytes, 0, incomingBytes.Length,
+                        SocketFlags.None, MessageReceived, null);
+                }
             }
         }
 

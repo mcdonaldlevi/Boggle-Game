@@ -63,7 +63,6 @@
     <Compile Include="BoggleClasses.cs" />
     <Compile Include="BoggleService.cs" />
     <Compile Include="MyBoggleServer.cs" />
-    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
