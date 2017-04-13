@@ -70,6 +70,8 @@ namespace Boggle
     /// </summary>
     class ClientConnection
     {
+        private BoggleService myServer = new BoggleService();
+
         // Incoming/outgoing is UTF8-encoded.  This is a multi-byte encoding.  The first 128 Unicode characters
         // (which corresponds to the old ASCII character set and contains the common keyboard characters) are
         // encoded into a single byte.  The rest of the Unicode characters can take from 2 to 4 bytes to encode.
@@ -196,30 +198,26 @@ namespace Boggle
                     socket.BeginReceive(incomingBytes, 0, incomingBytes.Length,
                         SocketFlags.None, MessageReceived, null);
                 }
-                if(httpMethod == "POST")
+                if (httpMethod == "POST")
                 {
-                    if(urlCall == "users")
-                    {
-                        CreateUser(json, out status);
-                    }
-                    else if(urlCall == "games")
-                    {
-                        JoinGameInfo(json, out status);
-                    }
+                    if (urlCall == "users")
+                        myServer.CreateUser(json, out status);
+                    else if (urlCall == "games")
+                        myServer.JoinGame(json, out status);
                 }
-                else if(httpMethod == "PUT")
+                else if (httpMethod == "PUT")
                 {
-                    if(urlCall == "games")
+                    if (urlCall == "games")
                     {
                         if (urlParam == "")
-                            CancelJoinRequest(json, out status);
+                            myServer.CancelJoinRequest(json, out status);
                         else
-                            PlayWord(json, out status);
+                            myServer.PlayWord(json, urlParam, out status);
                     }
                 }
-                else if(httpMethod == "GET" && urlCall == "games" && urlParam != "")
+                else if (httpMethod == "GET" && urlCall == "games" && urlParam != "")
                 {
-                    GameStatus(json, out status);
+                    myServer.GameStatus(json, urlParam, out status);
                 }
             }
         }
