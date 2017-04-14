@@ -18,7 +18,7 @@ namespace Boggle
         static void Main(string[] args)
         {
             
-            new BoggleServer(6000);
+            new BoggleServer(60000);
             Console.ReadLine();
         }
 
@@ -187,6 +187,7 @@ namespace Boggle
                 incoming.Remove(0, lastNewline + 1);
 
                 dynamic json = Newtonsoft.Json.JsonConvert.SerializeObject(jsonThing);
+                string returnString = null;
                 HttpStatusCode status;
                 
                 if (finish)
@@ -197,23 +198,23 @@ namespace Boggle
                 if (httpMethod == "POST")
                 {
                     if (urlCall == "users")
-                        myServer.CreateUser(json, out status);
+                        returnString = Newtonsoft.Json.JsonConvert.SerializeObject(myServer.CreateUser(json, out status));
                     else if (urlCall == "games")
-                        myServer.JoinGame(json, out status);
+                        returnString = Newtonsoft.Json.JsonConvert.SerializeObject(myServer.JoinGame(json, out status));
                 }
                 else if (httpMethod == "PUT")
                 {
                     if (urlCall == "games")
                     {
                         if (urlParam == "")
-                            myServer.CancelJoinRequest(json, out status);
+                            returnString = Newtonsoft.Json.JsonConvert.SerializeObject(myServer.CancelJoinRequest(json, out status));
                         else
-                            myServer.PlayWord(json, urlParam, out status);
+                            returnString = Newtonsoft.Json.JsonConvert.SerializeObject(myServer.PlayWord(json, urlParam, out status));
                     }
                 }
                 else if (httpMethod == "GET" && urlCall == "games" && urlParam != "")
                 {
-                    myServer.GameStatus(json, urlParam, out status);
+                    returnString = Newtonsoft.Json.JsonConvert.SerializeObject(myServer.GameStatus(json, urlParam, out status));
                 }
             }
         }
