@@ -152,6 +152,8 @@ namespace Boggle
                 string urlCall= null;
                 int bodyLength = 0;
                 string jsonThing = null;
+                //Needs to be a parameter?
+                string brief = "yes";
                 Regex contentLine = new Regex(@"Content-Length:\s(?<bodyLength>\d+)");
                 Regex urlLine = new Regex(@"^(?<httpMethod>.+)\s/BoggleService.svc/(?<urlCall>.*)/(?<urlParam>.*)?\sHTTP/1.1");
                 int lastNewline = -1;
@@ -186,9 +188,15 @@ namespace Boggle
                 }
                 incoming.Remove(0, lastNewline + 1);
 
-                dynamic json = Newtonsoft.Json.JsonConvert.SerializeObject(jsonThing);
+                //TEMP CODE FOR TESTING CREATE USER, DELETE WHEN PARSING WORKS
+                httpMethod = "POST";
+                urlCall = "users";
+                jsonThing = "{\"Nickname\": \"qwfp\"}";
+
+
+                dynamic json = Newtonsoft.Json.JsonConvert.DeserializeObject(jsonThing);
                 string returnString = null;
-                HttpStatusCode status;
+                HttpStatusCode status = HttpStatusCode.Forbidden;
                 
                 if (finish)
                 {
@@ -198,24 +206,51 @@ namespace Boggle
                 if (httpMethod == "POST")
                 {
                     if (urlCall == "users")
-                        returnString = Newtonsoft.Json.JsonConvert.SerializeObject(myServer.CreateUser(json, out status));
+                    {
+                        UserInfo userInfo = new UserInfo();
+                        userInfo.Nickname = json.Nickname;
+                        returnString = Newtonsoft.Json.JsonConvert.SerializeObject(myServer.CreateUser(userInfo, out status));
+                    }
                     else if (urlCall == "games")
-                        returnString = Newtonsoft.Json.JsonConvert.SerializeObject(myServer.JoinGame(json, out status));
+                    {
+                        JoinGameInfo gameInfo = new JoinGameInfo();
+                        gameInfo.UserToken = json.UserToken;
+                        gameInfo.TimeLimit = json.TimeLimit;
+                        returnString = Newtonsoft.Json.JsonConvert.SerializeObject(myServer.JoinGame(gameInfo, out status));
+                    }
                 }
                 else if (httpMethod == "PUT")
                 {
                     if (urlCall == "games")
                     {
-                        if (urlParam == "")
-                            returnString = Newtonsoft.Json.JsonConvert.SerializeObject(myServer.CancelJoinRequest(json, out status));
+                        if (urlParam == null)
+                        {
+                            UserID user = new UserID();
+                            user.UserToken = json.UserToken;
+                            myServer.CancelJoinRequest(user, out status);
+                        }
                         else
-                            returnString = Newtonsoft.Json.JsonConvert.SerializeObject(myServer.PlayWord(json, urlParam, out status));
+                        {
+                            UserIDandPlayWord idAndWord = new UserIDandPlayWord();
+                            idAndWord.UserToken = json.UserToken;
+                            idAndWord.Word = json.Word;
+                            returnString = Newtonsoft.Json.JsonConvert.SerializeObject(myServer.PlayWord(idAndWord, urlParam, out status));
+                        }
                     }
                 }
-                else if (httpMethod == "GET" && urlCall == "games" && urlParam != "")
+                else if (httpMethod == "GET" && urlCall == "games" && urlParam != null)
                 {
-                    returnString = Newtonsoft.Json.JsonConvert.SerializeObject(myServer.GameStatus(json, urlParam, out status));
+                    returnString = Newtonsoft.Json.JsonConvert.SerializeObject(myServer.GameStatus(brief, urlParam, out status));
                 }
+
+                byte[] returnStringBytes = Encoding.ASCII.GetBytes(returnString);
+
+                string returnHeader = "HTTP/1.1 " + (int)status + " " + status +
+                    "\nContent-Length: " + returnStringBytes.Length +
+                    "\nContent-Type: application / json; charset=utf-8";
+
+                pendingBytes = Encoding.ASCII.GetBytes(returnHeader + "\r\n" + returnString);
+                SendBytes();
             }
         }
             
