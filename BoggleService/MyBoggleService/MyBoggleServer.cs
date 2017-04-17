@@ -154,10 +154,11 @@ namespace Boggle
                 string jsonThing = null;
                 //Needs to be a parameter?
                 string brief = "yes";
-                Regex contentLine = new Regex(@"Content-Length:\s(?<bodyLength>\d+)");
-                Regex urlLine = new Regex(@"^(?<httpMethod>.+)\s/BoggleService.svc/(?<urlCall>.*)/(?<urlParam>.*)?\sHTTP/1.1");
+                Regex contentLine = new Regex(@"content-length:\s(?<bodyLength>\d+)");
+                Regex urlLine = new Regex(@"^(?<httpMethod>.+)\s/BoggleService.svc/(?<urlCall>.*)/?(?<urlParam>.*)?\sHTTP/1.1");
                 int lastNewline = -1;
                 int start = 0;
+                string myString = incoming.ToString();
                 for (int i = 0; i < incoming.Length; i++)
                 {
 
@@ -180,18 +181,18 @@ namespace Boggle
                         lastNewline = i;
                         start = i + 1;
                     }
-                    if (incoming[i] == '\r')
+                    if (incoming[i] == '\r' && incoming[i+1] == '\n' && incoming[i+2] == '\r' && incoming[i+3] == '\n')
                     {
-                        jsonThing = incoming.ToString(i + 1, incoming.Length - (i + 1));
+                        jsonThing = incoming.ToString(i + 4, incoming.Length - (i + 4));
                         finish = true;
                     }
                 }
                 incoming.Remove(0, lastNewline + 1);
 
                 //TEMP CODE FOR TESTING CREATE USER, DELETE WHEN PARSING WORKS
-                httpMethod = "POST";
-                urlCall = "users";
-                jsonThing = "{\"Nickname\": \"qwfp\"}";
+                //httpMethod = "POST";
+                //urlCall = "users";
+                //jsonThing = "{\"Nickname\": \"qwfp\"}";
 
 
                 dynamic json = Newtonsoft.Json.JsonConvert.DeserializeObject(jsonThing);
@@ -200,8 +201,8 @@ namespace Boggle
                 
                 if (finish)
                 {
-                    socket.BeginReceive(incomingBytes, 0, incomingBytes.Length,
-                        SocketFlags.None, MessageReceived, null);
+                    //socket.BeginReceive(incomingBytes, 0, incomingBytes.Length,
+                      //  SocketFlags.None, MessageReceived, null);
                 }
                 if (httpMethod == "POST")
                 {
@@ -249,8 +250,9 @@ namespace Boggle
                     "\nContent-Length: " + returnStringBytes.Length +
                     "\nContent-Type: application / json; charset=utf-8";
 
-                pendingBytes = Encoding.ASCII.GetBytes(returnHeader + "\r\n" + returnString);
-                SendBytes();
+                //pendingBytes = Encoding.ASCII.GetBytes(returnHeader + "\r\n" + returnString);
+                string notherString = returnHeader + "\r\n" + returnString;
+                SendMessage(notherString);
             }
         }
             
