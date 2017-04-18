@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using System.IO;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace Boggle
 {
@@ -19,7 +20,7 @@ namespace Boggle
         {
             
             new BoggleServer(60000);
-            Console.ReadLine();
+             Console.ReadLine();
         }
 
         // Listens for incoming connection requests
@@ -152,7 +153,7 @@ namespace Boggle
                 string jsonThing = null;
                 //Needs to be a parameter?
                 string brief = "yes";
-                Regex contentLine = new Regex(@"content-length:\s(?<bodyLength>\d+)");
+                Regex contentLine = new Regex(@"Content-Length:\s(?<bodyLength>\d+)");
                 Regex urlLine = new Regex(@"^(?<httpMethod>.+)\s/BoggleService.svc/(?<urlCall>.*)/?(?<urlParam>.*)?\sHTTP/1.1");
                 int lastNewline = -1;
                 int start = 0;
@@ -176,16 +177,19 @@ namespace Boggle
                                 Match match = contentLine.Match(incoming.ToString(start, i - start));
                                 bodyLength = int.Parse(match.Groups["bodyLength"].Value);
                                 hasBody = true;
-
                             }
+                            
 
+                            else if (hasBody && incoming[i+1] == '\r' && incoming[i + 2] == '\n')
+                            {
+                                if (incoming.Length == i + 4 + bodyLength)
+                                {
+                                    jsonThing = incoming.ToString(i + 4, bodyLength);
+                                    finish = true;
+                                }
+                            }
                             lastNewline = i;
                             start = i + 1;
-                        }
-                        if (hasBody && incoming[i] == '\r' && incoming[i + 1] == '\n' && incoming[i + 2] == '\r' && incoming[i + 3] == '\n')
-                        {
-                            jsonThing = incoming.ToString(i + 4, incoming.Length - (i + 4));
-                            finish = true;
                         }
                     }
                 }
@@ -196,15 +200,18 @@ namespace Boggle
                 //urlCall = "users";
                 //jsonThing = "{\"Nickname\": \"qwfp\"}";
 
+                if (jsonThing == "" )
+                {
 
+                }
                 dynamic json = Newtonsoft.Json.JsonConvert.DeserializeObject(jsonThing);
                 string returnString = null;
                 HttpStatusCode status = HttpStatusCode.Forbidden;
                 
                 if (finish)
                 {
-                    //socket.BeginReceive(incomingBytes, 0, incomingBytes.Length,
-                      //  SocketFlags.None, MessageReceived, null);
+                    socket.BeginReceive(incomingBytes, 0, incomingBytes.Length,
+                        SocketFlags.None, MessageReceived, null);
                 }
                 if (httpMethod == "POST")
                 {
