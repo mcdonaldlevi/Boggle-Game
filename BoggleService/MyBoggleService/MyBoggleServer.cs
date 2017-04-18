@@ -115,8 +115,6 @@ namespace Boggle
             incoming = new StringBuilder();
             outgoing = new StringBuilder();
 
-            // Send a welcome message to the remote client
-            SendMessage("Welcome!\r\n");
 
             // Ask the socket to call MessageReceive as soon as up to 1024 bytes arrive.
             socket.BeginReceive(incomingBytes, 0, incomingBytes.Length,
@@ -159,32 +157,36 @@ namespace Boggle
                 int lastNewline = -1;
                 int start = 0;
                 string myString = incoming.ToString();
+                bool hasBody = false;
                 for (int i = 0; i < incoming.Length; i++)
                 {
-
-                    if (incoming[i] == '\n')
+                    if (!finish)
                     {
-                        if (urlLine.IsMatch(incoming.ToString(start, i - start)))
+                        if (incoming[i] == '\n')
                         {
-                            Match match = urlLine.Match(incoming.ToString(start, i));
-                            httpMethod = match.Groups["httpMethod"].Value;
-                            urlParam = match.Groups["urlParam"].Value;
-                            urlCall = match.Groups["urlCall"].Value;
+                            if (urlLine.IsMatch(incoming.ToString(start, i - start)))
+                            {
+                                Match match = urlLine.Match(incoming.ToString(start, i));
+                                httpMethod = match.Groups["httpMethod"].Value;
+                                urlParam = match.Groups["urlParam"].Value;
+                                urlCall = match.Groups["urlCall"].Value;
+                            }
+                            else if (contentLine.IsMatch(incoming.ToString(start, i - start)))
+                            {
+                                Match match = contentLine.Match(incoming.ToString(start, i - start));
+                                bodyLength = int.Parse(match.Groups["bodyLength"].Value);
+                                hasBody = true;
+
+                            }
+
+                            lastNewline = i;
+                            start = i + 1;
                         }
-                        else if (contentLine.IsMatch(incoming.ToString(start, i - start)))
+                        if (hasBody && incoming[i] == '\r' && incoming[i + 1] == '\n' && incoming[i + 2] == '\r' && incoming[i + 3] == '\n')
                         {
-                            Match match = contentLine.Match(incoming.ToString(start, i - start));
-                            bodyLength = int.Parse(match.Groups["bodyLength"].Value);
-
+                            jsonThing = incoming.ToString(i + 4, incoming.Length - (i + 4));
+                            finish = true;
                         }
-
-                        lastNewline = i;
-                        start = i + 1;
-                    }
-                    if (incoming[i] == '\r' && incoming[i+1] == '\n' && incoming[i+2] == '\r' && incoming[i+3] == '\n')
-                    {
-                        jsonThing = incoming.ToString(i + 4, incoming.Length - (i + 4));
-                        finish = true;
                     }
                 }
                 incoming.Remove(0, lastNewline + 1);
@@ -247,8 +249,8 @@ namespace Boggle
                 byte[] returnStringBytes = Encoding.ASCII.GetBytes(returnString);
 
                 string returnHeader = "HTTP/1.1 " + (int)status + " " + status +
-                    "\nContent-Length: " + returnStringBytes.Length +
-                    "\nContent-Type: application / json; charset=utf-8";
+                    "\r\nContent-Length: " + returnStringBytes.Length +
+                    "\r\nContent-Type: application / json; charset=utf-8\r\n";
 
                 //pendingBytes = Encoding.ASCII.GetBytes(returnHeader + "\r\n" + returnString);
                 string notherString = returnHeader + "\r\n" + returnString;
