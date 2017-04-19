@@ -228,7 +228,14 @@ namespace Boggle
                                 JoinGameInfo gameInfo = new JoinGameInfo();
                                 gameInfo.UserToken = json.UserToken;
                                 gameInfo.TimeLimit = json.TimeLimit;
-                                returnString = Newtonsoft.Json.JsonConvert.SerializeObject(myServer.JoinGame(gameInfo, out status));
+                                if (gameInfo.TimeLimit < 20 || gameInfo.TimeLimit > 120)
+                                {
+                                    returnString = "";
+                                }
+                                else
+                                {
+                                    returnString = Newtonsoft.Json.JsonConvert.SerializeObject(myServer.JoinGame(gameInfo, out status));
+                                }
                             }
                         }
                         else if (httpMethod == "PUT")
