@@ -178,14 +178,22 @@ namespace Boggle
                                 bodyLength = int.Parse(match.Groups["bodyLength"].Value);
                                 hasBody = true;
                             }
-                            
 
-                            else if (hasBody && incoming[i+1] == '\r' && incoming[i + 2] == '\n')
+
+                            if (incoming.ToString(i, 4) == "\n\r\n\r")
                             {
-                                if (incoming.Length == i + 4 + bodyLength)
+                                if (hasBody)
                                 {
-                                    jsonThing = incoming.ToString(i + 4, bodyLength);
-                                    finish = true;
+                                    if (incoming.Length == i + 4 + bodyLength)
+                                    {
+                                        finish = true;
+                                        jsonThing = incoming.ToString(i + 4, bodyLength);
+                                    }
+                                    else
+                                    {
+                                        socket.BeginReceive(incomingBytes, 0, incomingBytes.Length,
+                            SocketFlags.None, MessageReceived, null);
+                                    }
                                 }
                             }
                             lastNewline = i;
