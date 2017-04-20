@@ -221,6 +221,7 @@ namespace Boggle
                             if (!reader.HasRows)
                             {
                                 status = Forbidden;
+                                reader.Close();
                                 trans.Commit();
                                 return null;
                             }

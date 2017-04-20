@@ -154,7 +154,7 @@ namespace Boggle
                 //Needs to be a parameter?
                 string brief = "yes";
                 Regex contentLine = new Regex(@"Content-Length:\s(?<bodyLength>\d+)");
-                Regex urlLine = new Regex(@"^(?<httpMethod>.+)\s/BoggleService.svc/(?<urlCall>.*)/?(?<urlParam>.*)?\sHTTP/1.1");
+                Regex urlLine = new Regex(@"^(?<httpMethod>[A-Z]+)\s/BoggleService.svc/(?<urlCall>[a-z]+)/?(?<urlParam>\d+)?(\?brief=)?(?<brief>[a-z]+)?\sHTTP/1.1");
                 int lastNewline = -1;
                 int start = 0;
                 string myString = incoming.ToString();
@@ -172,6 +172,7 @@ namespace Boggle
                                 httpMethod = match.Groups["httpMethod"].Value;
                                 urlParam = match.Groups["urlParam"].Value;
                                 urlCall = match.Groups["urlCall"].Value;
+                                brief = match.Groups["brief"].Value;
                             }
                             else if (contentLine.IsMatch(incoming.ToString(start, i - start)))
                             {
@@ -207,7 +208,7 @@ namespace Boggle
                 //httpMethod = "POST";
                 //urlCall = "users";
                 //jsonThing = "{\"Nickname\": \"qwfp\"}";
-                if (finish)
+                if (finish || !hasBody)
                 {
                     HttpStatusCode status = HttpStatusCode.Forbidden;
                     string returnString = null;
@@ -228,7 +229,7 @@ namespace Boggle
                                 JoinGameInfo gameInfo = new JoinGameInfo();
                                 gameInfo.UserToken = json.UserToken;
                                 gameInfo.TimeLimit = json.TimeLimit;
-                                if (gameInfo.TimeLimit < 20 || gameInfo.TimeLimit > 120)
+                                if (gameInfo.TimeLimit < 10 || gameInfo.TimeLimit >= 120)
                                 {
                                     returnString = "";
                                 }
