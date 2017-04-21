@@ -256,6 +256,7 @@ namespace Boggle
                                 status = Forbidden;
                                 return null;
                             }
+                            dynamic thing = reader["StartTime"];
                             DateTime time = (DateTime)reader["StartTime"];
                             TimeSpan limit = new TimeSpan(0, 0, (int)reader["TimeLimit"]);
                             if (DateTime.Now >= time.Add(limit))
