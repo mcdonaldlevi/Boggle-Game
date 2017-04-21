@@ -243,7 +243,7 @@ namespace Boggle
                         {
                             if (urlCall == "games")
                             {
-                                if (urlParam == null)
+                                if (urlParam == "")
                                 {
                                     UserID user = new UserID();
                                     user.UserToken = json.UserToken;
