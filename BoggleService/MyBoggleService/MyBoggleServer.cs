@@ -229,7 +229,7 @@ namespace Boggle
                                 JoinGameInfo gameInfo = new JoinGameInfo();
                                 gameInfo.UserToken = json.UserToken;
                                 gameInfo.TimeLimit = json.TimeLimit;
-                                if (gameInfo.TimeLimit < 10 || gameInfo.TimeLimit >= 120)
+                                if (gameInfo.TimeLimit < 5 || gameInfo.TimeLimit >= 120)
                                 {
                                     returnString = "";
                                 }
@@ -273,7 +273,7 @@ namespace Boggle
                     {
                         returnString = Newtonsoft.Json.JsonConvert.SerializeObject(myServer.GameStatus(brief, urlParam, out status));
                     }
-                    else
+                    if (returnString == null)
                     {
                         returnString = "";
                     }

@@ -85,7 +85,7 @@ namespace Boggle
                         command.Parameters.AddWithValue("@UserID", user.UserToken);
                         using (SqlDataReader reader = command.ExecuteReader())
                         {
-                            if (!reader.HasRows)
+                            if (!reader.Read())
                             {
                                 status = Forbidden;
                                 reader.Close();
@@ -213,7 +213,32 @@ namespace Boggle
                 conn.Open();
                 using (SqlTransaction trans = conn.BeginTransaction())
                 {
-                    using (SqlCommand command = new SqlCommand("select GameID,Player1, Player2, TimeLimit, StartTime, Board from Games where GameID = @GameID", conn, trans))
+                    using (SqlCommand command = new SqlCommand("select Player2 from Games where GameID = @GameID", conn, trans))
+                    {
+                        command.Parameters.AddWithValue("@GameID", gameID);
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                if (reader["Player2"] == DBNull.Value)
+                                {
+                                    status = Conflict;
+                                    reader.Close();
+                                    trans.Commit();
+                                    return null;
+                                }
+                            }
+                            else
+                            {
+                                status = Forbidden;
+                                reader.Close();
+                                trans.Commit();
+                                return null;
+                            }
+                            
+                        }
+                    }
+                        using (SqlCommand command = new SqlCommand("select GameID,Player1, Player2, TimeLimit, StartTime, Board from Games where GameID = @GameID", conn, trans))
                     {
                         command.Parameters.AddWithValue("@GameID", gameID);
                         using (SqlDataReader reader = command.ExecuteReader())
@@ -239,12 +264,21 @@ namespace Boggle
                                 return null;
                             }
                             BoggleBoard board = new BoggleBoard((string)reader["Board"]);
-                            if (!board.CanBeFormed(user.Word))
+                            if (user.Word.Length < 3)
+                            {
+                                score = 0;
+                            }
+                            else if (!board.CanBeFormed(user.Word))
                             {
                                 score = -1;
                             }
+                            else
+                            {
+                                score = getScore(user.Word);
+                            }
                         }
                     }
+
                     using (SqlCommand command = new SqlCommand("select Word from Words where Player = @Player", conn, trans))
                     {
                         command.Parameters.AddWithValue("@Player", user.Word);
@@ -256,13 +290,10 @@ namespace Boggle
                                 {
                                     score = 0;
                                 }
-                                else
-                                {
-                                    score = getScore(user.Word);
-                                }
                             }
                         }
                     }
+
                     using (SqlCommand command = new SqlCommand("insert into Words(Word, GameID, Player, Score) values(@Word, @GameID, @Player, @Score)", conn, trans))
                     {
                         command.Parameters.AddWithValue("@Word", user.Word);
@@ -413,15 +444,23 @@ namespace Boggle
         }
         private int getScore(string word)
         {
-            if (word.Length < 3)
-                return 0;
-            else if (word.Length == 3)
-                return 1;
-            else
+            switch (word.Length)
             {
-                return word.Length - 3;
+                case 1:
+                case 2:
+                    return 0;
+                case 3:
+                case 4:
+                    return 1;
+                case 5:
+                    return 2;
+                case 6:
+                    return 3;
+                case 7:
+                    return 5;
+                default:
+                    return 11;
             }
-
         }
     }
 }
