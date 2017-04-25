@@ -171,7 +171,8 @@ namespace CustomNetworking
         /// </summary>
         public void BeginReceive(ReceiveCallback callback, object payload, int length = 0)
         {
-            byte[] incomingBytes = (byte[])payload;
+            socket.BeginReceive(incomingBytes, 0, incomingBytes.Length, SocketFlags.None, null, null);
+            
             int charsRead = decoder.GetChars(incomingBytes,0, incomingBytes.Length, incomingChars, 0, false);
             incoming.Append(incomingChars, incoming.Length, charsRead);
             int startLine = 0;
