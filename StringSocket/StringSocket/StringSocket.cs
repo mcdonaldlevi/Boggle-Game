@@ -62,6 +62,12 @@ namespace CustomNetworking
         // Encoding used for sending and receiving
         private Encoding encoding;
 
+        private Decoder decoder;
+        private const int BUFFER_SIZE = 1024;
+        private byte[] incomingBytes = new byte[BUFFER_SIZE];
+        private char[] incomingChars = new char[BUFFER_SIZE];
+        private StringBuilder incoming = new StringBuilder();
+        private byte[] outgoing = new byte[BUFFER_SIZE];
         /// <summary>
         /// Creates a StringSocket from a regular Socket, which should already be connected.  
         /// The read and write methods of the regular Socket must not be called after the
@@ -72,7 +78,10 @@ namespace CustomNetworking
         {
             socket = s;
             encoding = e;
-            // TODO: Complete implementation of StringSocket
+            decoder = encoding.GetDecoder();
+            
+
+            
         }
 
         /// <summary>
@@ -117,7 +126,9 @@ namespace CustomNetworking
         /// </summary>
         public void BeginSend(String s, SendCallback callback, object payload)
         {
-            // TODO: Implement BeginSend
+            byte[] outGoingBytes = encoding.GetBytes(s.ToCharArray());
+            socket.BeginSend(outGoingBytes, 0 ,outGoingBytes.Length, SocketFlags.None, MessageSent, null);
+            callback(true, payload);
         }
 
         /// <summary>
@@ -160,6 +171,22 @@ namespace CustomNetworking
         /// </summary>
         public void BeginReceive(ReceiveCallback callback, object payload, int length = 0)
         {
+            byte[] incomingBytes = (byte[])payload;
+            int charsRead = decoder.GetChars(incomingBytes,0, incomingBytes.Length, incomingChars, 0, false);
+            incoming.Append(incomingChars, incoming.Length, charsRead);
+            int startLine = 0;
+            for(int i = 0; i < incoming.ToString().Length; i++)
+            {
+                if(incoming[i] == '\n')
+                {
+                    callback(incoming.ToString(startLine, i), payload);
+                    startLine = i + 1;
+                }
+            }
+            
+
+
+
             // TODO: Implement BeginReceive
         }
 
@@ -170,6 +197,12 @@ namespace CustomNetworking
         {
             Shutdown(SocketShutdown.Both);
             Close();
+        }
+        private void MessageSent(IAsyncResult result)
+        {
+            // Find out how many bytes were actually sent
+            int bytesSent = socket.EndSend(result);
+            Console.WriteLine("\t" + bytesSent + " bytes were successfully sent");
         }
     }
 }
