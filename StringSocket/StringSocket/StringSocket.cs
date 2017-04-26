@@ -172,9 +172,15 @@ namespace CustomNetworking
         public void BeginReceive(ReceiveCallback callback, object payload, int length = 0)
         {
             socket.BeginReceive(incomingBytes, 0, incomingBytes.Length, SocketFlags.None, null, null);
-            
-            int charsRead = decoder.GetChars(incomingBytes,0, incomingBytes.Length, incomingChars, 0, false);
-            incoming.Append(incomingChars, incoming.Length, charsRead);
+
+            int charsRead = decoder.GetChars(incomingBytes, 0, incomingBytes.Length, incomingChars, 0, false);
+            if (length != 0)
+            {
+                incoming.Append(incomingChars, incoming.Length, length);
+                incoming.Append('\n');
+            }
+            else
+                incoming.Append(incomingChars, incoming.Length, charsRead);
             int startLine = 0;
             for(int i = 0; i < incoming.ToString().Length; i++)
             {
