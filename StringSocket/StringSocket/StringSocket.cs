@@ -237,7 +237,7 @@ namespace CustomNetworking
                 {
                     lock (incoming)
                     {
-                        incoming.Append(CharsToAdd.ToArray());
+                        incoming.Append(CharsToAdd.ToArray(), 0, length);
                         incoming.Append('\n');
                     }
                 }
