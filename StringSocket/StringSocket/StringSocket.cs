@@ -58,16 +58,21 @@ namespace CustomNetworking
     {
         // Underlying socket
         private Socket socket;
-
         // Encoding used for sending and receiving
         private Encoding encoding;
-
+        private bool recieveRunning = false;
+        private bool sendRunning = false;
         private Decoder decoder;
         private const int BUFFER_SIZE = 1024;
         private byte[] incomingBytes = new byte[BUFFER_SIZE];
         private char[] incomingChars = new char[BUFFER_SIZE];
         private StringBuilder incoming = new StringBuilder();
         private byte[] outgoing = new byte[BUFFER_SIZE];
+        private ReceiveCallback callback;
+        private object payload;
+        private int length;
+        private Queue<recieveCallBackWithPara> recieveQueue = new Queue<recieveCallBackWithPara>();
+        private Queue<sendCallBackWithPara> sendQueue = new Queue<sendCallBackWithPara>();
         /// <summary>
         /// Creates a StringSocket from a regular Socket, which should already be connected.  
         /// The read and write methods of the regular Socket must not be called after the
@@ -79,9 +84,6 @@ namespace CustomNetworking
             socket = s;
             encoding = e;
             decoder = encoding.GetDecoder();
-            
-
-            
         }
 
         /// <summary>
@@ -127,8 +129,21 @@ namespace CustomNetworking
         public void BeginSend(String s, SendCallback callback, object payload)
         {
             byte[] outGoingBytes = encoding.GetBytes(s.ToCharArray());
-            socket.BeginSend(outGoingBytes, 0 ,outGoingBytes.Length, SocketFlags.None, MessageSent, null);
-            callback(true, payload);
+            
+            sendCallBackWithPara myCallback = new sendCallBackWithPara {callback = callback, payload = payload };
+            lock(sendQueue)
+                sendQueue.Enqueue(myCallback);
+            if(sendRunning)
+            {
+
+            }
+            else
+            {
+                socket.BeginSend(outGoingBytes, 0, outGoingBytes.Length, SocketFlags.None, MessageSent, null);
+
+            }
+
+
         }
 
         /// <summary>
@@ -169,32 +184,26 @@ namespace CustomNetworking
         /// from buffering an unbounded number of incoming bytes beyond what is required to service
         /// the pending callbacks.
         /// </summary>
-        public void BeginReceive(ReceiveCallback callback, object payload, int length = 0)
+        public void BeginReceive(ReceiveCallback Callback, object Payload, int Length = 0)
         {
-            socket.BeginReceive(incomingBytes, 0, incomingBytes.Length, SocketFlags.None, null, null);
+            callback = Callback;
+            payload = Payload;
+            length = Length;
+            recieveCallBackWithPara myInfo = new recieveCallBackWithPara
+            { payload = payload, callback = callback, length = length };
+            lock (recieveQueue)
+            {
+                recieveQueue.Enqueue(myInfo);
 
-            int charsRead = decoder.GetChars(incomingBytes, 0, incomingBytes.Length, incomingChars, 0, false);
-            if (length != 0)
-            {
-                incoming.Append(incomingChars, incoming.Length, length);
-                incoming.Append('\n');
-            }
-            else
-                incoming.Append(incomingChars, incoming.Length, charsRead);
-            int startLine = 0;
-            for(int i = 0; i < incoming.ToString().Length; i++)
-            {
-                if(incoming[i] == '\n')
+                if (recieveQueue.Count > 1)
                 {
-                    callback(incoming.ToString(startLine, i), payload);
-                    startLine = i + 1;
+
+                }
+                else
+                {
+                    socket.BeginReceive(incomingBytes, 0, incomingBytes.Length, SocketFlags.None, RecievingMessage, null);
                 }
             }
-            
-
-
-
-            // TODO: Implement BeginReceive
         }
 
         /// <summary>
@@ -207,9 +216,84 @@ namespace CustomNetworking
         }
         private void MessageSent(IAsyncResult result)
         {
-            // Find out how many bytes were actually sent
-            int bytesSent = socket.EndSend(result);
-            Console.WriteLine("\t" + bytesSent + " bytes were successfully sent");
+            sendRunning = true;
+            sendCallBackWithPara mySendCallback = sendQueue.Dequeue();
+            mySendCallback.callback(true, mySendCallback.payload);
+            sendRunning = false;
+
+        }
+        private void RecievingMessage(IAsyncResult result)
+        {
+            lock (incomingBytes)
+            {
+                recieveRunning = true;
+                int charsRead = decoder.GetChars(incomingBytes, 0, incomingBytes.Length, incomingChars, 0, false);
+                List<char> CharsToAdd = new List<char>();
+                for (int i = 0; i < BUFFER_SIZE && incomingChars[i] != '\0'; i++)
+                {
+                    CharsToAdd.Add(incomingChars[i]);
+                }
+                if (length != 0)
+                {
+                    lock (incoming)
+                    {
+                        incoming.Append(CharsToAdd.ToArray());
+                        incoming.Append('\n');
+                    }
+                }
+                else
+                {
+                    lock (incoming)
+                    {
+                        incoming.Append(CharsToAdd.ToArray());
+                    }
+
+                }
+
+
+                lock (incoming)
+                {
+
+                    for (int i = 0; i < incoming.ToString().Length; i++)
+                    {
+                        if (incoming[i] == '\n')
+                        {
+                            recieveCallBackWithPara myCallback = recieveQueue.Dequeue();
+                            string mystring = incoming.ToString(0, i);
+                            myCallback.callback(incoming.ToString(0, i), myCallback.payload);
+
+                            recieveRunning = false;
+                            incoming.Clear();
+
+                        }
+                    }
+                    if (recieveQueue.Count > 0)
+                    {
+                        socket.BeginReceive(incomingBytes, 0, incomingBytes.Length, SocketFlags.None, RecievingMessage, null);
+                    }
+                }
+            }
+            
+        }
+            
+        
+        /// <summary>
+        /// struct to store the required info in queue
+        /// </summary>
+        public struct recieveCallBackWithPara
+        {
+            public object payload { get; set; }
+            public int length { get; set; }
+            public ReceiveCallback callback { get; set; }
+            
+        }
+        public struct sendCallBackWithPara
+        {
+            public object payload { get; set; }
+            public SendCallback callback { get; set; }
+            public int length;
         }
     }
 }
+
+
